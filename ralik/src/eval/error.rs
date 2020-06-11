@@ -33,11 +33,4 @@ pub enum EvalError {
 }
 
 #[derive(Error, Debug)]
-pub enum CallError {
-	#[error("Member function `{member_name}` does not exist for objects of type `{type_name}`")]
-	FunctionDoesNotExist {
-		member_name: String,
-		type_name: String,
-		// backtrace: std::backtrace::Backtrace,
-	},
-}
+pub enum CallError {}

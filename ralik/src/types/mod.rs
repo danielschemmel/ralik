@@ -16,20 +16,10 @@ pub struct Type {
 	functions: HashMap<String, MemberFunction>,
 }
 
+// Common
 impl Type {
 	pub fn name(&self) -> &str {
 		&self.name
-	}
-
-	pub fn call(&self, name: &str, arguments: &[Value]) -> Result<Value, CallError> {
-		self
-			.functions
-			.get(name)
-			.ok_or_else(|| CallError::FunctionDoesNotExist {
-				member_name: name.to_string(),
-				type_name: self.name().to_string(),
-			})
-			.and_then(|function| function(arguments))
 	}
 }
 
@@ -53,5 +43,24 @@ struct FunctionNameListFormatter<'a> {
 impl<'a> fmt::Debug for FunctionNameListFormatter<'a> {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.debug_list().entries(self.functions.keys()).finish()
+	}
+}
+
+// Functions
+impl Type {
+	pub fn get_function(&self, key: &str) -> Option<&MemberFunction> {
+		self.functions.get(key)
+	}
+
+	pub fn get_function_mut(&mut self, key: &str) -> Option<&mut MemberFunction> {
+		self.functions.get_mut(key)
+	}
+
+	pub fn insert_function(&mut self, key: String, value: MemberFunction) -> Option<MemberFunction> {
+		self.functions.insert(key, value)
+	}
+
+	pub fn remove_function(&mut self, key: &str) -> Option<(String, MemberFunction)> {
+		self.functions.remove_entry(key)
 	}
 }

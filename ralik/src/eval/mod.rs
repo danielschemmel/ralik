@@ -4,6 +4,9 @@ use super::{Context, Value};
 mod error;
 pub use error::{CallError, EvalError};
 
+mod member_function;
+use member_function::{call_member_function_0, call_member_function_1, call_member_function_n};
+
 pub trait Eval {
 	fn eval(&self, context: &Context) -> Result<Value, EvalError>;
 }
@@ -14,36 +17,15 @@ impl Eval for Expression {
 			Expression::Atomic(expression) => expression.eval(context),
 			Expression::Prefix(expression, prefix) => {
 				let value = expression.eval(context)?;
-				let r#type = value.get_type();
 				match prefix {
-					Prefix::Not(span) => r#type
-						.call(crate::ops::PREFIX_NOT, &[value])
-						.map_err(|source| EvalError::CallError {
-							source,
-							span: span.clone(),
-						}),
-					Prefix::Minus(span) => {
-						r#type
-							.call(crate::ops::PREFIX_MINUS, &[value])
-							.map_err(|source| EvalError::CallError {
-								source,
-								span: span.clone(),
-							})
-					}
+					Prefix::Not(span) => call_member_function_0(crate::ops::PREFIX_NOT, value, span),
+					Prefix::Minus(span) => call_member_function_0(crate::ops::PREFIX_MINUS, value, span),
 				}
 			}
 			Expression::Suffix(expression, suffix) => {
 				let value = expression.eval(context)?;
 				match suffix {
-					Suffix::Unwrap(span) => {
-						let r#type = value.get_type();
-						r#type
-							.call(crate::ops::UNWRAP, &[value])
-							.map_err(|source| EvalError::CallError {
-								source,
-								span: span.clone(),
-							})
-					}
+					Suffix::Unwrap(span) => call_member_function_0(crate::ops::UNWRAP, value, span),
 					Suffix::Field(name, span) => value.field(name).cloned().ok_or_else(|| EvalError::InvalidFieldAccess {
 						member_name: name.clone(),
 						type_name: value.get_type().name().to_string(),
@@ -61,23 +43,10 @@ impl Eval for Expression {
 							})
 					}
 					Suffix::ArrayIndex(index, span) => {
-						let r#type = value.get_type();
-						r#type
-							.call(crate::ops::ARRAY_INDEX, &[value, index.eval(context)?])
-							.map_err(|source| EvalError::CallError {
-								source,
-								span: span.clone(),
-							})
+						call_member_function_1(crate::ops::ARRAY_INDEX, value, index, span, context)
 					}
 					Suffix::FunctionCall(name, name_span, arguments, _arguments_span) => {
-						let r#type = value.get_type();
-						let arguments = std::iter::once(Ok(value))
-							.chain(arguments.arguments.iter().map(|argument| argument.eval(context)))
-							.collect::<Result<Vec<Value>, EvalError>>()?;
-						r#type.call(name, &arguments).map_err(|source| EvalError::CallError {
-							source,
-							span: name_span.clone(),
-						})
+						call_member_function_n(name, value, &arguments.arguments, name_span, context)
 					}
 				}
 			}
@@ -131,5 +100,11 @@ impl Eval for AtomicExpression {
 				})
 			}
 		}
+	}
+}
+
+impl<T: Eval> Eval for Box<T> {
+	fn eval(&self, context: &Context) -> Result<Value, EvalError> {
+		(**self).eval(context)
 	}
 }
