@@ -3,6 +3,8 @@
 		"backtrace",
 		"eval",
 		"ralik",
+		"readline",
+		"rustyline",
 		"structopt",
 		"thiserror"
 	]

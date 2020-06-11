@@ -1,4 +1,6 @@
 use anyhow::Result;
+use rustyline::error::ReadlineError;
+use rustyline::Editor;
 
 #[derive(structopt::StructOpt, Debug)]
 #[structopt(
@@ -37,33 +39,39 @@ fn set_ctrlc_handler() -> Result<std::sync::mpsc::Receiver<()>> {
 const PROMPT: &str = "> ";
 
 pub fn main(args: Args) -> Result<ReturnCode> {
-	set_ctrlc_handler()?;
+	set_ctrlc_handler()?; // only active when not replaced by rustyline
 
 	println!("{:?}", args);
 	let context = ralik::Context::new();
 
-	use std::io::BufRead;
-	use std::io::Write;
-	let stdin = std::io::stdin();
-	let stdin = stdin.lock();
-	let stdout = std::io::stdout();
-	print!("{}", PROMPT);
-	stdout.lock().flush().unwrap();
-	for line in stdin.lines() {
-		match ralik::eval_str(&line.unwrap(), &context) {
-			Ok(expr) => {
-				println!("{:+#?}", expr);
+	let mut rl = Editor::<()>::new();
+	loop {
+		match rl.readline(PROMPT) {
+			Ok(line) => {
+				rl.add_history_entry(line.as_str());
+				match ralik::eval_str(&line, &context) {
+					Ok(expr) => {
+						println!("{:+#?}", expr);
+					}
+					Err(err) => {
+						print_error_chain(&err);
+					}
+				}
+			}
+			Err(ReadlineError::Interrupted) => {
+				// just reset the prompt
+			}
+			Err(ReadlineError::Eof) => {
+				if atty::is(atty::Stream::Stdin) {
+					println!("exit()");
+				}
+				break;
 			}
 			Err(err) => {
-				print_error_chain(&err);
+				println!("Error: {:?}", err);
+				break;
 			}
 		}
-		print!("{}", PROMPT);
-		stdout.lock().flush().unwrap();
-	}
-
-	if atty::is(atty::Stream::Stdin) {
-		println!("exit()");
 	}
 
 	Ok(ReturnCode::Success)

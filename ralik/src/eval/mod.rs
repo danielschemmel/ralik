@@ -30,7 +30,7 @@ impl Eval for AtomicExpression {
 					name: "$".to_string(),
 					span: span.clone(),
 				}),
-			_ => unimplemented!()
+			_ => unimplemented!(),
 		}
 	}
 }
