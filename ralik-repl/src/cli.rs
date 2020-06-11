@@ -39,7 +39,7 @@ fn set_ctrlc_handler() -> Result<std::sync::mpsc::Receiver<()>> {
 const PROMPT: &str = "> ";
 
 pub fn main(args: Args) -> Result<ReturnCode> {
-	let _ctrlc = set_ctrlc_handler()?;
+	set_ctrlc_handler()?;
 
 	println!("{:?}", args);
 
