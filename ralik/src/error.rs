@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum ParseError {
+pub enum RunError {
 	#[error("Could not parse input")]
 	ParseError{
 		#[from]
