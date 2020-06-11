@@ -1,0 +1,5 @@
+[workspace]
+members = [
+	"ralik-repl",
+	"ralik",
+]

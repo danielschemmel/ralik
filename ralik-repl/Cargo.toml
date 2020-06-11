@@ -1,0 +1,25 @@
+[package]
+name = "ralik-repl"
+version = "0.0.0"
+authors = ["Daniel Schemmel <daniel@schemmel.net>"]
+edition = "2018"
+publish = false
+repository = "https://github.com/danielschemmel/ralik/"
+description = "The Rust ALIKe Read-Eval-Print-Loop"
+readme = "../README.md"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+anyhow = "1"
+atty = "0.2"
+build-info = { version = "0.0.19", default_features = false }
+ctrlc = "3"
+structopt = "0.3"
+
+ralik = { version = "0.0.0", path = "../ralik" }
+
+[dev-dependencies]
+pretty_assertions = "0.6"
+
+[build-dependencies]
+build-info-build = "0.0.19"
