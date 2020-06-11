@@ -3,7 +3,6 @@ use syn::{braced, bracketed, parenthesized, parse, Ident, LitBool, LitChar, LitI
 
 use super::ast;
 
-
 fn parse_arguments(input: parse::ParseStream) -> parse::Result<ast::Arguments> {
 	let mut arguments = Vec::new();
 	if !input.is_empty() {

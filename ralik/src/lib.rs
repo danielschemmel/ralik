@@ -11,17 +11,18 @@ mod syntax;
 use syntax::ast;
 
 mod value;
+pub use value::Value;
 
-fn run_expression(expression: syntax::ast::Expression) -> Result<syntax::ast::Expression, RunError> {
-	Ok(expression)
-}
-
-pub fn run_str(source: &str) -> Result<syntax::ast::Expression, RunError> {
+pub fn run_str(source: &str) -> Result<Value, RunError> {
 	let expression = syn::parse_str::<syntax::ast::Expression>(source)?;
 	run_expression(expression)
 }
 
-pub fn run_tokens(source: TokenStream) -> Result<syntax::ast::Expression, RunError> {
+pub fn run_tokens(source: TokenStream) -> Result<Value, RunError> {
 	let expression = syn::parse2::<syntax::ast::Expression>(source)?;
 	run_expression(expression)
+}
+
+fn run_expression(expression: syntax::ast::Expression) -> Result<Value, RunError> {
+	Ok(eval::eval(&expression)?)
 }
