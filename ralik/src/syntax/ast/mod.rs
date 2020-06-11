@@ -19,8 +19,8 @@ pub enum AtomicExpression {
 	LitChar(char, Span),
 	LitStr(String, Span),
 	Dollar(Span),
-	FunctionCall(String, Arguments, Span),
-	MacroCall(String, Arguments, Span),
+	FunctionCall(String, Span, Arguments, Span),
+	MacroCall(String, Span, Arguments, Span),
 }
 
 #[derive(Clone, Debug)]

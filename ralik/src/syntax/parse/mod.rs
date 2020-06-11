@@ -136,12 +136,17 @@ impl parse::Parse for ast::AtomicExpression {
 			if lookahead.peek(syn::token::Paren) {
 				let arguments;
 				parenthesized!(arguments in input);
-				let (arguments, span) = (parse_arguments(&arguments)?, arguments.span());
-				Ok(ast::AtomicExpression::FunctionCall(id.to_string(), arguments, span))
+				let (arguments, arguments_span) = (parse_arguments(&arguments)?, arguments.span());
+				Ok(ast::AtomicExpression::FunctionCall(
+					id.to_string(),
+					id.span(),
+					arguments,
+					arguments_span,
+				))
 			} else if lookahead.peek(Token![!]) {
 				input.parse::<Token![!]>()?;
 				let lookahead = input.lookahead1();
-				let (arguments, span) = if lookahead.peek(syn::token::Paren) {
+				let (arguments, arguments_span) = if lookahead.peek(syn::token::Paren) {
 					let arguments;
 					parenthesized!(arguments in input);
 					(parse_arguments(&arguments)?, arguments.span())
@@ -156,7 +161,12 @@ impl parse::Parse for ast::AtomicExpression {
 				} else {
 					return Err(lookahead.error());
 				};
-				Ok(ast::AtomicExpression::MacroCall(id.to_string(), arguments, span))
+				Ok(ast::AtomicExpression::MacroCall(
+					id.to_string(),
+					id.span(),
+					arguments,
+					arguments_span,
+				))
 			} else {
 				Err(lookahead.error())
 			}

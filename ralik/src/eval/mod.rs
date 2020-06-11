@@ -100,10 +100,10 @@ impl Eval for AtomicExpression {
 					name: "$".to_string(),
 					span: span.clone(),
 				}),
-			AtomicExpression::FunctionCall(name, arguments, span) => {
+			AtomicExpression::FunctionCall(name, name_span, arguments, _arguments_span) => {
 				let function = context.get_function(name).ok_or_else(|| EvalError::UnknownFunction {
 					name: name.clone(),
-					span: span.clone(),
+					span: name_span.clone(),
 				})?;
 				let arguments = arguments
 					.arguments
@@ -112,13 +112,13 @@ impl Eval for AtomicExpression {
 					.collect::<Result<Vec<Value>, EvalError>>()?;
 				function(&arguments).map_err(|source| EvalError::CallError {
 					source,
-					span: span.clone(),
+					span: name_span.clone(),
 				})
 			}
-			AtomicExpression::MacroCall(name, arguments, span) => {
+			AtomicExpression::MacroCall(name, name_span, arguments, _arguments_span) => {
 				let macro_function = context.get_macro(name).ok_or_else(|| EvalError::UnknownMacro {
 					name: name.clone(),
-					span: span.clone(),
+					span: name_span.clone(),
 				})?;
 				let arguments = arguments
 					.arguments
@@ -127,7 +127,7 @@ impl Eval for AtomicExpression {
 					.collect::<Result<Vec<Value>, EvalError>>()?;
 				macro_function(&arguments).map_err(|source| EvalError::CallError {
 					source,
-					span: span.clone(),
+					span: name_span.clone(),
 				})
 			}
 		}

@@ -16,17 +16,19 @@ impl fmt::Debug for super::AtomicExpression {
 			LitChar(value, span) => f.debug_tuple("LitChar").field(&value).field(span).finish(),
 			LitStr(value, span) => f.debug_tuple("LitStr").field(&value).field(span).finish(),
 			Dollar(span) => f.debug_tuple("Dollar").field(span).finish(),
-			FunctionCall(name, arguments, span) => f
+			FunctionCall(name, name_span, arguments, arguments_span) => f
 				.debug_tuple("FunctionCall")
 				.field(&name)
+				.field(&name_span)
 				.field(&arguments)
-				.field(span)
+				.field(&arguments_span)
 				.finish(),
-			MacroCall(name, arguments, span) => f
+			MacroCall(name, name_span, arguments, arguments_span) => f
 				.debug_tuple("MacroCall")
 				.field(&name)
+				.field(&name_span)
 				.field(&arguments)
-				.field(span)
+				.field(&arguments_span)
 				.finish(),
 		}
 	}
