@@ -2,7 +2,7 @@ use super::ast::{AtomicExpression, Expression, Prefix, Suffix};
 use super::{Context, Value};
 
 mod error;
-pub use error::EvalError;
+pub use error::{CallError, EvalError};
 
 pub trait Eval {
 	fn eval(&self, context: &Context) -> Result<Value, EvalError>;
@@ -44,7 +44,7 @@ impl Eval for AtomicExpression {
 			AtomicExpression::Dollar(span) => context
 				.get("$")
 				.cloned()
-				.ok_or_else(|| EvalError::VariableReferenceError {
+				.ok_or_else(|| EvalError::InvalidVariableReference {
 					name: "$".to_string(),
 					span: span.clone(),
 				}),

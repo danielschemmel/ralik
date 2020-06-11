@@ -13,6 +13,9 @@ mod eval;
 mod syntax;
 use syntax::ast;
 
+pub mod types;
+pub use types::Type;
+
 mod value;
 pub use value::Value;
 

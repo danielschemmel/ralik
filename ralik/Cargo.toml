@@ -12,6 +12,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 anyhow = "1"
+lazy_static = "1"
 num-bigint = "0.2"
 proc-macro2 = { version = "1", features = ["span-locations"] }
 quote = "1"

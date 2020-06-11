@@ -68,7 +68,12 @@ impl parse::Parse for ast::Suffix {
 					let parenthesized;
 					parenthesized!(parenthesized in input);
 					let arguments = parse_arguments(&parenthesized)?;
-					Ok(ast::Suffix::FunctionCall(id.to_string(), id.span(), arguments, parenthesized.span()))
+					Ok(ast::Suffix::FunctionCall(
+						id.to_string(),
+						id.span(),
+						arguments,
+						parenthesized.span(),
+					))
 				} else {
 					Ok(ast::Suffix::Field(id.to_string(), id.span()))
 				}
