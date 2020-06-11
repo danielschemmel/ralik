@@ -40,6 +40,7 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 	set_ctrlc_handler()?;
 
 	println!("{:?}", args);
+	let context = ralik::Context::new();
 
 	use std::io::BufRead;
 	use std::io::Write;
@@ -49,7 +50,7 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 	print!("{}", PROMPT);
 	stdout.lock().flush().unwrap();
 	for line in stdin.lines() {
-		match ralik::run_str(&line.unwrap()) {
+		match ralik::eval_str(&line.unwrap(), &context) {
 			Ok(expr) => {
 				println!("{:+#?}", expr);
 			}

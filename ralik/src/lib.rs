@@ -5,6 +5,9 @@ use proc_macro2::TokenStream;
 mod error;
 pub use error::RunError;
 
+mod context;
+pub use context::Context;
+
 mod eval;
 
 mod syntax;
@@ -13,16 +16,16 @@ use syntax::ast;
 mod value;
 pub use value::Value;
 
-pub fn run_str(source: &str) -> Result<Value, RunError> {
+pub fn eval_str(source: &str, context: &Context) -> Result<Value, RunError> {
 	let expression = syn::parse_str::<syntax::ast::Expression>(source)?;
-	run_expression(expression)
+	eval_expression(expression, context)
 }
 
-pub fn run_tokens(source: TokenStream) -> Result<Value, RunError> {
+pub fn eval_tokens(source: TokenStream, context: &Context) -> Result<Value, RunError> {
 	let expression = syn::parse2::<syntax::ast::Expression>(source)?;
-	run_expression(expression)
+	eval_expression(expression, context)
 }
 
-fn run_expression(expression: syntax::ast::Expression) -> Result<Value, RunError> {
-	Ok(eval::eval(&expression)?)
+fn eval_expression(expression: syntax::ast::Expression, context: &Context) -> Result<Value, RunError> {
+	Ok(eval::Eval::eval(&expression, context)?)
 }
