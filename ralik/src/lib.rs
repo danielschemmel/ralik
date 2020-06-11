@@ -9,6 +9,7 @@ mod context;
 pub use context::Context;
 
 mod eval;
+mod ops;
 
 mod syntax;
 use syntax::ast;

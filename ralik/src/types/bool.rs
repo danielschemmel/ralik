@@ -11,7 +11,6 @@ fn make_type() -> Type {
 	Type {
 		name: "bool".to_string(),
 		functions,
-		fields: HashMap::new(),
 	}
 }
 

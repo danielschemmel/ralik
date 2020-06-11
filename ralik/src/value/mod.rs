@@ -24,11 +24,21 @@ impl Value {
 		}
 	}
 
-	pub fn field(&self, name: &str) -> Option<&Value> {
-		None
+	pub fn field(&self, _name: &str) -> Option<&Value> {
+		match self {
+			Value::Bool(_) => None,
+			Value::Char(_) => None,
+			Value::Integer(_) => None,
+			Value::String(_) => None,
+		}
 	}
 
-	pub fn field_mut(&self, name: &str) -> Option<&mut Value> {
-		None
+	pub fn field_mut(&self, _name: &str) -> Option<&mut Value> {
+		match self {
+			Value::Bool(_) => None,
+			Value::Char(_) => None,
+			Value::Integer(_) => None,
+			Value::String(_) => None,
+		}
 	}
 }

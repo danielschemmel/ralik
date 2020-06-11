@@ -11,7 +11,6 @@ fn make_type() -> Type {
 	Type {
 		name: "String".to_string(),
 		functions,
-		fields: HashMap::new(),
 	}
 }
 
