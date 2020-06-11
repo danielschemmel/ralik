@@ -9,6 +9,7 @@ impl fmt::Debug for super::Value {
 			Bool(value) => f.debug_tuple("Bool").field(value).finish(),
 			Char(value) => f.debug_tuple("Char").field(value).finish(),
 			Integer(value) => f.debug_tuple("Integer").field(&IntegerFormatter(value)).finish(),
+			String(value) => f.debug_tuple("String").field(value).finish(),
 		}
 	}
 }

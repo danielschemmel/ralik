@@ -7,4 +7,5 @@ pub enum Value {
 	Bool(bool),
 	Char(char),
 	Integer(BigInt),
+	String(String),
 }

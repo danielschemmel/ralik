@@ -3,43 +3,102 @@ use syn::{braced, bracketed, parenthesized, parse, Ident, LitBool, LitChar, LitI
 
 use super::ast;
 
-fn parse_arguments(input: parse::ParseStream) -> parse::Result<ast::Arguments> {
-	let mut arguments = Vec::new();
-	if !input.is_empty() {
-		arguments.push(input.parse::<ast::Expression>()?);
-		parse_trailing_arguments_impl(&mut arguments, input)?;
+#[cfg(test)]
+mod test;
+
+impl parse::Parse for ast::Expression {
+	fn parse(input: parse::ParseStream) -> parse::Result<Self> {
+		let mut prefixes = Vec::new();
+		loop {
+			let lookahead = input.lookahead1();
+			if lookahead.peek(Token![!]) || lookahead.peek(Token![-]) {
+				prefixes.push(input.parse::<ast::Prefix>()?);
+			} else {
+				break;
+			}
+		}
+
+		let mut expression = ast::Expression::Atomic(input.parse::<ast::AtomicExpression>()?);
+		while !prefixes.is_empty() {
+			expression = ast::Expression::Prefix(Box::new(expression), prefixes.pop().unwrap())
+		}
+
+		while !input.is_empty() {
+			let lookahead = input.lookahead1();
+			if lookahead.peek(Token![?]) || lookahead.peek(Token![.]) || lookahead.peek(syn::token::Bracket) {
+				expression = ast::Expression::Suffix(Box::new(expression), input.parse::<ast::Suffix>()?);
+			} else {
+				break;
+			}
+		}
+
+		Ok(expression)
 	}
-	Ok(ast::Arguments { arguments })
 }
 
-/*
-fn parse_trailing_arguments(input: parse::ParseStream) -> parse::Result<Vec<Expression>> {
-	let mut args = Vec::new();
-	parse_trailing_arguments_impl(&mut args, input)?;
-	Ok(args)
-}
-*/
-
-fn parse_trailing_arguments_impl(args: &mut Vec<ast::Expression>, input: parse::ParseStream) -> parse::Result<()> {
-	while !input.is_empty() {
-		input.parse::<Token![,]>()?;
-		args.push(input.parse::<ast::Expression>()?);
+impl parse::Parse for ast::Prefix {
+	fn parse(input: parse::ParseStream) -> parse::Result<Self> {
+		let lookahead = input.lookahead1();
+		if lookahead.peek(Token![!]) {
+			let token = input.parse::<Token![!]>()?;
+			Ok(ast::Prefix::Not(token.span))
+		} else if lookahead.peek(Token![-]) {
+			let token = input.parse::<Token![-]>()?;
+			Ok(ast::Prefix::Minus(token.span))
+		} else {
+			Err(lookahead.error())
+		}
 	}
-	Ok(())
+}
+
+impl parse::Parse for ast::Suffix {
+	fn parse(input: parse::ParseStream) -> parse::Result<Self> {
+		let lookahead = input.lookahead1();
+		if lookahead.peek(Token![?]) {
+			let token = input.parse::<Token![?]>()?;
+			Ok(ast::Suffix::Unwrap(token.span))
+		} else if lookahead.peek(Token![.]) {
+			input.parse::<Token![.]>()?;
+			let lookahead = input.lookahead1();
+			if lookahead.peek(Ident) {
+				let id = input.parse::<Ident>()?;
+
+				let lookahead = input.lookahead1();
+				if lookahead.peek(syn::token::Paren) {
+					let parenthesized;
+					parenthesized!(parenthesized in input);
+					let arguments = parse_arguments(&parenthesized)?;
+					Ok(ast::Suffix::FunctionCall(id.to_string(), id.span(), arguments, parenthesized.span()))
+				} else {
+					Ok(ast::Suffix::Field(id.to_string(), id.span()))
+				}
+			} else if lookahead.peek(LitInt) {
+				let tuple_index = input.parse::<LitInt>()?;
+				Ok(ast::Suffix::TupleIndex(tuple_index.base10_parse()?, tuple_index.span()))
+			} else {
+				Err(lookahead.error())
+			}
+		} else if lookahead.peek(syn::token::Bracket) {
+			let bracketed;
+			bracketed!(bracketed in input);
+			let expression = bracketed.parse::<ast::Expression>()?;
+			Ok(ast::Suffix::ArrayIndex(Box::new(expression), bracketed.span()))
+		} else {
+			Err(lookahead.error())
+		}
+	}
 }
 
 impl parse::Parse for ast::AtomicExpression {
 	fn parse(input: parse::ParseStream) -> parse::Result<Self> {
 		let lookahead = input.lookahead1();
-		if lookahead.peek(Token![$]) {
-			let token = input.parse::<Token![$]>()?;
-			Ok(ast::AtomicExpression::Dollar(token.spans[0]))
-		} else if lookahead.peek(syn::token::Paren) {
-			let expr;
-			parenthesized!(expr in input);
+		if lookahead.peek(syn::token::Paren) {
+			let parenthesized;
+			parenthesized!(parenthesized in input);
+			let expression = parenthesized.parse::<ast::Expression>()?;
 			Ok(ast::AtomicExpression::Parenthesized(
-				Box::new(expr.parse::<ast::Expression>()?),
-				expr.span(),
+				Box::new(expression),
+				parenthesized.span(),
 			))
 		} else if lookahead.peek(LitBool) {
 			let lit_bool = input.parse::<LitBool>()?;
@@ -62,6 +121,9 @@ impl parse::Parse for ast::AtomicExpression {
 		} else if lookahead.peek(LitStr) {
 			let lit_str = input.parse::<LitStr>()?;
 			Ok(ast::AtomicExpression::LitStr(lit_str.value(), lit_str.span()))
+		} else if lookahead.peek(Token![$]) {
+			let token = input.parse::<Token![$]>()?;
+			Ok(ast::AtomicExpression::Dollar(token.spans[0]))
 		} else if lookahead.peek(Ident) {
 			let id = input.parse::<Ident>()?;
 
@@ -99,72 +161,19 @@ impl parse::Parse for ast::AtomicExpression {
 	}
 }
 
-impl parse::Parse for ast::Expression {
-	fn parse(input: parse::ParseStream) -> parse::Result<Self> {
-		let atom = input.parse::<ast::AtomicExpression>()?;
-
-		let mut suffixes = Vec::new();
-		while !input.is_empty() {
-			let lookahead = input.lookahead1();
-			if lookahead.peek(Token![,]) {
-				break;
-			} else if lookahead.peek(Token![?]) {
-				input.parse::<Token![?]>()?;
-				suffixes.push(ast::Suffix::Unwrap);
-			} else if lookahead.peek(Token![.]) {
-				input.parse::<Token![.]>()?;
-				let lookahead = input.lookahead1();
-				if lookahead.peek(Ident) {
-					let id = input.parse::<Ident>()?;
-
-					let lookahead = input.lookahead1();
-					if lookahead.peek(syn::token::Paren) {
-						let arguments;
-						parenthesized!(arguments in input);
-						let arguments = parse_arguments(&arguments)?;
-						suffixes.push(ast::Suffix::FunctionCall(id.to_string(), arguments));
-					} else {
-						suffixes.push(ast::Suffix::Field(id.to_string()));
-					}
-				} else if lookahead.peek(LitInt) {
-					let tuple_index = input.parse::<LitInt>()?;
-					suffixes.push(ast::Suffix::TupleIndex(tuple_index.base10_parse()?));
-				} else {
-					return Err(lookahead.error());
-				}
-			} else if lookahead.peek(syn::token::Bracket) {
-				let expr;
-				bracketed!(expr in input);
-				let expr = expr.parse::<ast::Expression>()?;
-				suffixes.push(ast::Suffix::ArrayIndex(Box::new(expr)));
-			} else {
-				return Err(lookahead.error());
-			}
-		}
-
-		Ok(Self { atom, suffixes })
+fn parse_arguments(input: parse::ParseStream) -> parse::Result<ast::Arguments> {
+	let mut arguments = Vec::new();
+	if !input.is_empty() {
+		arguments.push(input.parse::<ast::Expression>()?);
+		parse_trailing_arguments_impl(&mut arguments, input)?;
 	}
+	Ok(ast::Arguments { arguments })
 }
 
-#[cfg(test)]
-mod test {
-	use super::*;
-
-	use pretty_assertions::assert_eq;
-	use quote::quote;
-
-	#[test]
-	fn string_lit() {
-		let format = "This is a $test".to_string();
-		let ast = quote! {#format};
-		let result = syn::parse2::<ast::Expression>(ast).unwrap();
-		assert_eq!(result.suffixes.len(), 0);
-		match result.atom {
-			ast::AtomicExpression::LitStr(string, _span) => assert_eq!(string, format),
-			_ => panic!(
-				"Atom was expected to be a string literal, but is {:#?} instead.",
-				result.atom
-			),
-		}
+fn parse_trailing_arguments_impl(args: &mut Vec<ast::Expression>, input: parse::ParseStream) -> parse::Result<()> {
+	while !input.is_empty() {
+		input.parse::<Token![,]>()?;
+		args.push(input.parse::<ast::Expression>()?);
 	}
+	Ok(())
 }

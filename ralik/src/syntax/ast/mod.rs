@@ -5,19 +5,20 @@ mod debug;
 mod eq;
 
 #[derive(Clone, Debug)]
-pub struct Expression {
-	pub atom: AtomicExpression,
-	pub suffixes: Vec<Suffix>,
+pub enum Expression {
+	Atomic(AtomicExpression),
+	Suffix(Box<Expression>, Suffix),
+	Prefix(Box<Expression>, Prefix),
 }
 
 #[derive(Clone)]
 pub enum AtomicExpression {
-	Dollar(Span),
+	Parenthesized(Box<Expression>, Span),
 	LitBool(bool, Span),
 	LitInt(BigInt, Span),
 	LitChar(char, Span),
 	LitStr(String, Span),
-	Parenthesized(Box<Expression>, Span),
+	Dollar(Span),
 	FunctionCall(String, Arguments, Span),
 	MacroCall(String, Arguments, Span),
 }
@@ -28,10 +29,16 @@ pub struct Arguments {
 }
 
 #[derive(Clone, Debug)]
+pub enum Prefix {
+	Not(Span),
+	Minus(Span),
+}
+
+#[derive(Clone, Debug)]
 pub enum Suffix {
-	Unwrap,
-	Field(String),
-	TupleIndex(u32),
-	ArrayIndex(Box<Expression>),
-	FunctionCall(String, Arguments),
+	Unwrap(Span),
+	Field(String, Span),
+	TupleIndex(u32, Span),
+	ArrayIndex(Box<Expression>, Span),
+	FunctionCall(String, Span, Arguments, Span),
 }
