@@ -1,4 +1,5 @@
 use anyhow::Result;
+use rustyline::config::{Builder as EditorBuilder, CompletionType};
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
@@ -44,11 +45,15 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 	println!("{:?}", args);
 	let context = ralik::Context::new();
 
-	let mut rl = Editor::<()>::new();
+	let editor_config = EditorBuilder::new()
+		.completion_type(CompletionType::List)
+		.tab_stop(2)
+		.build();
+	let mut editor = Editor::<()>::with_config(editor_config);
 	loop {
-		match rl.readline(PROMPT) {
+		match editor.readline(PROMPT) {
 			Ok(line) => {
-				rl.add_history_entry(line.as_str());
+				editor.add_history_entry(line.as_str());
 				match ralik::eval_str(&line, &context) {
 					Ok(expr) => {
 						println!("{:+#?}", expr);
