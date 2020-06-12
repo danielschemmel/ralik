@@ -14,4 +14,10 @@ pub enum RunError {
 		cause: super::eval::EvalError,
 		// backtrace: std::backtrace::Backtrace,
 	},
+
+	#[error(transparent)]
+	Other {
+		#[from]
+		cause: anyhow::Error,
+	}
 }

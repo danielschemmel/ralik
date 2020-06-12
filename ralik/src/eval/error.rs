@@ -78,6 +78,12 @@ pub enum CallError {
 	InvalidNumberOfArguments { actual: usize, expected: usize },
 	#[error("An operation overflowed")]
 	Overflow(#[from] Overflow),
+
+	#[error(transparent)]
+	Other {
+		#[from]
+		cause: anyhow::Error,
+	}
 }
 
 #[derive(Error, Debug)]

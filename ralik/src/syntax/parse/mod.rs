@@ -9,13 +9,17 @@ mod test;
 
 impl parse::Parse for ast::Expression {
 	fn parse(input: parse::ParseStream) -> parse::Result<Self> {
-		let (expression, lookahead) = parse_lazy_or_expression(input)?;
+		let (expression, lookahead) = parse_expression(input)?;
 		if input.is_empty() {
 			Ok(expression)
 		} else {
 			Err(lookahead.error())
 		}
 	}
+}
+
+fn parse_expression(input: parse::ParseStream) -> parse::Result<(ast::Expression, Lookahead1)> {
+	parse_lazy_or_expression(input)
 }
 
 fn parse_lazy_or_expression(input: parse::ParseStream) -> parse::Result<(ast::Expression, Lookahead1)> {
@@ -457,16 +461,24 @@ impl parse::Parse for ast::Prefix {
 fn parse_arguments(input: parse::ParseStream) -> parse::Result<ast::Arguments> {
 	let mut arguments = Vec::new();
 	if !input.is_empty() {
-		arguments.push(input.parse::<ast::Expression>()?);
-		parse_trailing_arguments_impl(&mut arguments, input)?;
+		let (expression, lookahead) = parse_expression(input)?;
+		arguments.push(expression);
+		parse_trailing_arguments_impl(&mut arguments, input, lookahead)?;
 	}
+	
+	debug_assert!(input.is_empty());
 	Ok(ast::Arguments { arguments })
 }
 
-fn parse_trailing_arguments_impl(args: &mut Vec<ast::Expression>, input: parse::ParseStream) -> parse::Result<()> {
+fn parse_trailing_arguments_impl<'a>(arguments: &mut Vec<ast::Expression>, input: parse::ParseStream<'a>, mut lookahead: Lookahead1<'a>) -> parse::Result<()> {
 	while !input.is_empty() {
-		input.parse::<Token![,]>()?;
-		args.push(input.parse::<ast::Expression>()?);
+		if lookahead.peek(Token![,]) {
+			input.parse::<Token![,]>()?;
+			arguments.push(input.parse::<ast::Expression>()?);
+			lookahead = input.lookahead1();
+		} else {
+			return Err(lookahead.error());
+		}
 	}
 	Ok(())
 }
