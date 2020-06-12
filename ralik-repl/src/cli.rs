@@ -45,8 +45,8 @@ pub fn main(_args: Args) -> Result<ReturnCode> {
 	// println!("{:?}", args);
 
 	let mut context = ralik::Context::new();
-	context.insert_variable("$".to_string(), ralik::Value::String("DOLLAR".to_string()));
-	context.insert_function("exit".to_string(), |args| match args.len() {
+	context.insert_variable("$", "DOLLAR");
+	context.insert_function("exit", |args| match args.len() {
 		0 => std::process::exit(0),
 		1 => args[0]
 			.as_i32()

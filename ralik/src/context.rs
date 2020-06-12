@@ -39,8 +39,8 @@ impl Context {
 		self.variables.get_mut(key)
 	}
 
-	pub fn insert_variable(&mut self, key: String, value: Value) -> Option<Value> {
-		self.variables.insert(key, value)
+	pub fn insert_variable<K: Into<String>, V: Into<Value>>(&mut self, key: K, value: V) -> Option<Value> {
+		self.variables.insert(key.into(), value.into())
 	}
 
 	pub fn remove_variable(&mut self, key: &str) -> Option<(String, Value)> {
@@ -58,8 +58,8 @@ impl Context {
 		self.functions.get_mut(key)
 	}
 
-	pub fn insert_function(&mut self, key: String, value: Function) -> Option<Function> {
-		self.functions.insert(key, value)
+	pub fn insert_function<K: Into<String>>(&mut self, key: K, value: Function) -> Option<Function> {
+		self.functions.insert(key.into(), value)
 	}
 
 	pub fn remove_function(&mut self, key: &str) -> Option<(String, Function)> {
@@ -77,8 +77,8 @@ impl Context {
 		self.macros.get_mut(key)
 	}
 
-	pub fn insert_macro(&mut self, key: String, value: Macro) -> Option<Macro> {
-		self.macros.insert(key, value)
+	pub fn insert_macro<K: Into<String>>(&mut self, key: K, value: Macro) -> Option<Macro> {
+		self.macros.insert(key.into(), value)
 	}
 
 	pub fn remove_macro(&mut self, key: &str) -> Option<(String, Macro)> {

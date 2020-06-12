@@ -7,6 +7,9 @@ use super::Type;
 
 mod debug;
 
+#[cfg(feature = "serde")]
+mod serializer;
+
 #[derive(Clone)]
 pub enum Value {
 	Bool(bool),

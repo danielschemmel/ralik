@@ -20,5 +20,11 @@ quote = "1"
 syn = "1"
 thiserror = "1"
 
+my_serde = { package = "serde", version = "1", default_features = false, optional = true }
+
 [dev-dependencies]
 pretty_assertions = "0.6"
+
+[features]
+default = []
+serde = ["my_serde"]

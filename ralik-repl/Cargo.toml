@@ -17,7 +17,7 @@ ctrlc = "3"
 rustyline = "6"
 structopt = "0.3"
 
-ralik = { version = "0.0.0", path = "../ralik" }
+ralik = { version = "0.0.0", path = "../ralik", features = ["serde"] }
 
 [dev-dependencies]
 pretty_assertions = "0.6"
