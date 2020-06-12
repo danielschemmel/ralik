@@ -46,21 +46,13 @@ pub fn main(_args: Args) -> Result<ReturnCode> {
 
 	let mut context = ralik::Context::new();
 	context.insert_variable("$".to_string(), ralik::Value::String("DOLLAR".to_string()));
-	context.insert_function("exit".to_string(), |args| {
-		if args.len() == 0 {
-			std::process::exit(0);
-		} else if args.len() == 1 {
-			match args[0].as_i32() {
-				Some(value) => {
-					std::process::exit(value)
-				},
-				None => {
-					Err(anyhow!("Argument to `exit` must be a valid `i32` if it exists.").into())
-				},
-			}
-		} else {
-			Err(anyhow!("`exit` takes 0 or 1 arguments ({} provided)", args.len()).into())
-		}
+	context.insert_function("exit".to_string(), |args| match args.len() {
+		0 => std::process::exit(0),
+		1 => args[0]
+			.as_i32()
+			.map(std::process::exit)
+			.ok_or_else(|| anyhow!("Argument to `exit` must be a valid `i32` if it exists."))?,
+		n => Err(anyhow!("`exit` takes 0 or 1 arguments ({} provided)", n).into()),
 	});
 
 	let editor_config = EditorBuilder::new()

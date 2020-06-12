@@ -9,6 +9,8 @@ mod context;
 pub use context::Context;
 
 mod eval;
+pub use eval::CallError;
+
 mod ops;
 
 mod syntax;

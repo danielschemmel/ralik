@@ -465,12 +465,16 @@ fn parse_arguments(input: parse::ParseStream) -> parse::Result<ast::Arguments> {
 		arguments.push(expression);
 		parse_trailing_arguments_impl(&mut arguments, input, lookahead)?;
 	}
-	
+
 	debug_assert!(input.is_empty());
 	Ok(ast::Arguments { arguments })
 }
 
-fn parse_trailing_arguments_impl<'a>(arguments: &mut Vec<ast::Expression>, input: parse::ParseStream<'a>, mut lookahead: Lookahead1<'a>) -> parse::Result<()> {
+fn parse_trailing_arguments_impl<'a>(
+	arguments: &mut Vec<ast::Expression>,
+	input: parse::ParseStream<'a>,
+	mut lookahead: Lookahead1<'a>,
+) -> parse::Result<()> {
 	while !input.is_empty() {
 		if lookahead.peek(Token![,]) {
 			input.parse::<Token![,]>()?;

@@ -83,7 +83,7 @@ pub enum CallError {
 	Other {
 		#[from]
 		cause: anyhow::Error,
-	}
+	},
 }
 
 #[derive(Error, Debug)]

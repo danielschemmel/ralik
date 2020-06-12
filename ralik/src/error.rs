@@ -19,5 +19,5 @@ pub enum RunError {
 	Other {
 		#[from]
 		cause: anyhow::Error,
-	}
+	},
 }
