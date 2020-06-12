@@ -38,6 +38,20 @@ impl Value {
 		}
 	}
 
+	pub fn as_char(&self) -> Option<char> {
+		match self {
+			Value::Char(value) => Some(*value),
+			_ => None,
+		}
+	}
+
+	pub fn is_char(&self) -> bool {
+		match self {
+			Value::Char(_value) => true,
+			_ => false,
+		}
+	}
+
 	pub fn as_integer(&self) -> Option<&BigInt> {
 		match self {
 			Value::Integer(value) => Some(value),
@@ -48,6 +62,20 @@ impl Value {
 	pub fn is_integer(&self) -> bool {
 		match self {
 			Value::Integer(_value) => true,
+			_ => false,
+		}
+	}
+
+	pub fn as_string(&self) -> Option<&String> {
+		match self {
+			Value::String(value) => Some(value),
+			_ => None,
+		}
+	}
+
+	pub fn is_string(&self) -> bool {
+		match self {
+			Value::String(_value) => true,
 			_ => false,
 		}
 	}

@@ -43,7 +43,7 @@ pub fn main(_args: Args) -> Result<ReturnCode> {
 	set_ctrlc_handler()?; // only active when not replaced by rustyline
 
 	// println!("{:?}", args);
-	
+
 	let context = ralik::Context::new();
 
 	let editor_config = EditorBuilder::new()

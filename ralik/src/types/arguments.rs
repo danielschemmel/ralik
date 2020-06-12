@@ -7,7 +7,9 @@ use super::CallError;
 pub(crate) trait Arguments {
 	fn check_len(&self, count: usize) -> Result<(), CallError>;
 	fn as_bool(&self, index: usize) -> Result<bool, CallError>;
+	fn as_char(&self, index: usize) -> Result<char, CallError>;
 	fn as_integer(&self, index: usize) -> Result<&BigInt, CallError>;
+	fn as_string(&self, index: usize) -> Result<&String, CallError>;
 }
 
 impl Arguments for [Value] {
@@ -19,11 +21,27 @@ impl Arguments for [Value] {
 		})
 	}
 
+	fn as_char(&self, index: usize) -> Result<char, CallError> {
+		self[index].as_char().ok_or_else(|| CallError::InvalidArgumentType {
+			argument_number: index,
+			actual_type_name: self[index].get_type().name().to_string(),
+			expected_type_name: super::char::NAME.to_string(),
+		})
+	}
+
 	fn as_integer(&self, index: usize) -> Result<&BigInt, CallError> {
 		self[index].as_integer().ok_or_else(|| CallError::InvalidArgumentType {
 			argument_number: index,
 			actual_type_name: self[index].get_type().name().to_string(),
 			expected_type_name: super::integer::NAME.to_string(),
+		})
+	}
+
+	fn as_string(&self, index: usize) -> Result<&String, CallError> {
+		self[index].as_string().ok_or_else(|| CallError::InvalidArgumentType {
+			argument_number: index,
+			actual_type_name: self[index].get_type().name().to_string(),
+			expected_type_name: super::string::NAME.to_string(),
 		})
 	}
 
