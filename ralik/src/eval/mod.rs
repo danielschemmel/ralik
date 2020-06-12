@@ -29,7 +29,7 @@ impl Eval for Expression {
 					Suffix::Field(name, span) => value.field(name).cloned().ok_or_else(|| EvalError::InvalidFieldAccess {
 						member_name: name.clone(),
 						type_name: value.get_type().name().to_string(),
-						span: span.clone(),
+						span: *span,
 					}),
 					Suffix::TupleIndex(index, span) => {
 						let name = index.to_string();
@@ -39,7 +39,7 @@ impl Eval for Expression {
 							.ok_or_else(|| EvalError::InvalidFieldAccess {
 								member_name: name,
 								type_name: value.get_type().name().to_string(),
-								span: span.clone(),
+								span: *span,
 							})
 					}
 					Suffix::ArrayIndex(index, span) => {
@@ -67,12 +67,12 @@ impl Eval for AtomicExpression {
 				.cloned()
 				.ok_or_else(|| EvalError::UnknownVariable {
 					name: "$".to_string(),
-					span: span.clone(),
+					span: *span,
 				}),
 			AtomicExpression::FunctionCall(name, name_span, arguments, _arguments_span) => {
 				let function = context.get_function(name).ok_or_else(|| EvalError::UnknownFunction {
 					name: name.clone(),
-					span: name_span.clone(),
+					span: *name_span,
 				})?;
 				let arguments = arguments
 					.arguments
@@ -81,13 +81,13 @@ impl Eval for AtomicExpression {
 					.collect::<Result<Vec<Value>, EvalError>>()?;
 				function(&arguments).map_err(|source| EvalError::CallError {
 					source,
-					span: name_span.clone(),
+					span: *name_span,
 				})
 			}
 			AtomicExpression::MacroCall(name, name_span, arguments, _arguments_span) => {
 				let macro_function = context.get_macro(name).ok_or_else(|| EvalError::UnknownMacro {
 					name: name.clone(),
-					span: name_span.clone(),
+					span: *name_span,
 				})?;
 				let arguments = arguments
 					.arguments
@@ -96,7 +96,7 @@ impl Eval for AtomicExpression {
 					.collect::<Result<Vec<Value>, EvalError>>()?;
 				macro_function(&arguments).map_err(|source| EvalError::CallError {
 					source,
-					span: name_span.clone(),
+					span: *name_span,
 				})
 			}
 		}
