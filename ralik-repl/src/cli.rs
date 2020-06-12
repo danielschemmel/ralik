@@ -39,10 +39,11 @@ fn set_ctrlc_handler() -> Result<std::sync::mpsc::Receiver<()>> {
 
 const PROMPT: &str = "> ";
 
-pub fn main(args: Args) -> Result<ReturnCode> {
+pub fn main(_args: Args) -> Result<ReturnCode> {
 	set_ctrlc_handler()?; // only active when not replaced by rustyline
 
-	println!("{:?}", args);
+	// println!("{:?}", args);
+	
 	let context = ralik::Context::new();
 
 	let editor_config = EditorBuilder::new()
