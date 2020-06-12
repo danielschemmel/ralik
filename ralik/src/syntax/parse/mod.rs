@@ -175,7 +175,7 @@ fn parse_bit_and_expression(input: parse::ParseStream) -> parse::Result<(ast::Ex
 	let (mut expression, mut lookahead) = parse_shift_expression(input)?;
 
 	loop {
-		if lookahead.peek(Token![&]) && !input.peek(Token![&&]){
+		if lookahead.peek(Token![&]) && !input.peek(Token![&&]) {
 			let token = input.parse::<Token![&]>()?;
 			let (rhs_expression, rhs_lookahead) = parse_shift_expression(input)?;
 			expression = ast::Expression::Binary(

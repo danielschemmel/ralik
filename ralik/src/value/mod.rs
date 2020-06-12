@@ -38,6 +38,20 @@ impl Value {
 		}
 	}
 
+	pub fn as_integer(&self) -> Option<&BigInt> {
+		match self {
+			Value::Integer(value) => Some(value),
+			_ => None,
+		}
+	}
+
+	pub fn is_integer(&self) -> bool {
+		match self {
+			Value::Integer(_value) => true,
+			_ => false,
+		}
+	}
+
 	pub fn field(&self, _name: &str) -> Option<&Value> {
 		match self {
 			Value::Bool(_) => None,

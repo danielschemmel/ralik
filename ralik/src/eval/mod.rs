@@ -2,7 +2,7 @@ use super::ast::{AtomicExpression, BinaryOperator, Expression, Prefix, Suffix};
 use super::{Context, Value};
 
 mod error;
-pub use error::{CallError, EvalError};
+pub use error::{CallError, EvalError, Overflow};
 
 mod member_function;
 use member_function::{call_member_function_0, call_member_function_1, call_member_function_n};

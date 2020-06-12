@@ -45,4 +45,25 @@ pub enum EvalError {
 }
 
 #[derive(Error, Debug)]
-pub enum CallError {}
+pub enum CallError {
+	#[error(
+		"Argument {argument_number} has type {actual_type_name}, but type {expected_type_name} was expected instead"
+	)]
+	InvalidArgumentType {
+		argument_number: usize,
+		actual_type_name: String,
+		expected_type_name: String,
+	},
+	#[error("Invalid number of arguments: {actual} (expected {expected} arguments, including `self`)")]
+	InvalidNumberOfArguments { actual: usize, expected: usize },
+	#[error("An operation overflowed")]
+	Overflow(#[from] Overflow),
+}
+
+#[derive(Error, Debug)]
+pub enum Overflow {
+	#[error("Negative shifts overflow by definition")]
+	NegativeShift,
+	#[error("Attempt to shift by an amount that is to large")]
+	LargeShift,
+}
