@@ -44,7 +44,8 @@ pub fn main(_args: Args) -> Result<ReturnCode> {
 
 	// println!("{:?}", args);
 
-	let context = ralik::Context::new();
+	let mut context = ralik::Context::new();
+	context.insert_variable("$".to_string(), ralik::Value::String("DOLLAR".to_string()));
 
 	let editor_config = EditorBuilder::new()
 		.completion_type(CompletionType::List)

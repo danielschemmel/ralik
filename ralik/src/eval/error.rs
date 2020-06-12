@@ -40,8 +40,28 @@ pub enum EvalError {
 		span: Span,
 		// backtrace: std::backtrace::Backtrace,
 	},
-	#[error("{source} at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
-	CallError { source: CallError, span: Span },
+	#[error("Failed to call free function `{name}` at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
+	FunctionCallError {
+		name: String,
+		#[source]
+		source: CallError,
+		span: Span,
+	},
+	#[error("Failed to call macro `{name}!` at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
+	MacroCallError {
+		name: String,
+		#[source]
+		source: CallError,
+		span: Span,
+	},
+	#[error("Failed to call member function `{name}` on object of type `{type_name}` at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
+	MemberCallError {
+		name: String,
+		type_name: String,
+		#[source]
+		source: CallError,
+		span: Span,
+	},
 }
 
 #[derive(Error, Debug)]

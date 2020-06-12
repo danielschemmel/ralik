@@ -22,7 +22,7 @@ impl Type {
 
 fn make_type() -> Type {
 	let mut functions: HashMap<String, MemberFunction> = HashMap::new();
-	
+
 	functions.insert(crate::ops::EQUAL.to_string(), ops::equal);
 	functions.insert(crate::ops::NOT_EQUAL.to_string(), ops::not_equal);
 	functions.insert(crate::ops::LESS.to_string(), ops::less);

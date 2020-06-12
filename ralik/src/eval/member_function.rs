@@ -9,9 +9,11 @@ pub(crate) fn call_member_function_0(name: &str, value: Value, span: &Span) -> R
 		name: format!("{}::{}", r#type.name(), name),
 		span: span.clone(),
 	})?;
-	function(&[value]).map_err(|source| EvalError::CallError {
+	function(&[value]).map_err(|source| EvalError::MemberCallError {
+		name: name.to_string(),
+		type_name: r#type.name().to_string(),
 		source,
-		span: span.clone(),
+		span: *span,
 	})
 }
 
@@ -28,9 +30,11 @@ pub(crate) fn call_member_function_1<T: Eval>(
 		name: format!("{}::{}", r#type.name(), name),
 		span: span.clone(),
 	})?;
-	function(&[value, argument]).map_err(|source| EvalError::CallError {
+	function(&[value, argument]).map_err(|source| EvalError::MemberCallError {
+		name: name.to_string(),
+		type_name: r#type.name().to_string(),
 		source,
-		span: span.clone(),
+		span: *span,
 	})
 }
 
@@ -49,8 +53,10 @@ pub(crate) fn call_member_function_n<T: Eval>(
 	let arguments = std::iter::once(Ok(value))
 		.chain(arguments.iter().map(|argument| argument.eval(context)))
 		.collect::<Result<Vec<Value>, EvalError>>()?;
-	function(&arguments).map_err(|source| EvalError::CallError {
+	function(&arguments).map_err(|source| EvalError::MemberCallError {
+		name: name.to_string(),
+		type_name: r#type.name().to_string(),
 		source,
-		span: span.clone(),
+		span: *span,
 	})
 }

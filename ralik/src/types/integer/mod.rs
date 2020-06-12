@@ -42,7 +42,7 @@ fn make_type() -> Type {
 	functions.insert(crate::ops::LESS_OR_EQUAL.to_string(), ops::less_or_equal);
 	functions.insert(crate::ops::GREATER.to_string(), ops::greater);
 	functions.insert(crate::ops::GREATER_OR_EQUAL.to_string(), ops::greater_or_equal);
-	
+
 	functions.insert("to_string".to_string(), functions::to_string);
 
 	Type {
