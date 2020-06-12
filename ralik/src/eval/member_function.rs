@@ -1,7 +1,7 @@
 use proc_macro2::Span;
 
-use crate::{Context, Value};
 use super::{Eval, EvalError};
+use crate::{Context, Value};
 
 pub(crate) fn call_member_function_0(name: &str, value: Value, span: &Span) -> Result<Value, EvalError> {
 	let r#type = value.get_type();
@@ -15,7 +15,13 @@ pub(crate) fn call_member_function_0(name: &str, value: Value, span: &Span) -> R
 	})
 }
 
-pub(crate) fn call_member_function_1<T: Eval>(name: &str, value: Value, argument: &T, span: &Span, context: &Context) -> Result<Value, EvalError> {
+pub(crate) fn call_member_function_1<T: Eval>(
+	name: &str,
+	value: Value,
+	argument: &T,
+	span: &Span,
+	context: &Context,
+) -> Result<Value, EvalError> {
 	let argument = argument.eval(context)?;
 	let r#type = value.get_type();
 	let function = r#type.get_function(name).ok_or_else(|| EvalError::UnknownFunction {
@@ -28,7 +34,13 @@ pub(crate) fn call_member_function_1<T: Eval>(name: &str, value: Value, argument
 	})
 }
 
-pub(crate) fn call_member_function_n<T: Eval>(name: &str, value: Value, arguments: &[T], span: &Span, context: &Context) -> Result<Value, EvalError> {
+pub(crate) fn call_member_function_n<T: Eval>(
+	name: &str,
+	value: Value,
+	arguments: &[T],
+	span: &Span,
+	context: &Context,
+) -> Result<Value, EvalError> {
 	let r#type = value.get_type();
 	let function = r#type.get_function(name).ok_or_else(|| EvalError::UnknownFunction {
 		name: format!("{}::{}", r#type.name(), name),
