@@ -28,6 +28,18 @@ pub enum EvalError {
 		span: Span,
 		// backtrace: std::backtrace::Backtrace,
 	},
+	#[error("Operand to `&&` has type `{type_name}` (should be boolean) at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
+	NotBoolInLazyAnd {
+		type_name: String,
+		span: Span,
+		// backtrace: std::backtrace::Backtrace,
+	},
+	#[error("Operand to `||` has type `{type_name}` (should be boolean) at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
+	NotBoolInLazyOr {
+		type_name: String,
+		span: Span,
+		// backtrace: std::backtrace::Backtrace,
+	},
 	#[error("{source} at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
 	CallError { source: CallError, span: Span },
 }

@@ -24,6 +24,20 @@ impl Value {
 		}
 	}
 
+	pub fn as_bool(&self) -> Option<bool> {
+		match self {
+			Value::Bool(value) => Some(*value),
+			_ => None,
+		}
+	}
+
+	pub fn is_bool(&self) -> bool {
+		match self {
+			Value::Bool(_value) => true,
+			_ => false,
+		}
+	}
+
 	pub fn field(&self, _name: &str) -> Option<&Value> {
 		match self {
 			Value::Bool(_) => None,

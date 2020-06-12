@@ -1,4 +1,4 @@
-use super::ast::{AtomicExpression, Expression, Prefix, Suffix};
+use super::ast::{AtomicExpression, BinaryOperator, Expression, Prefix, Suffix};
 use super::{Context, Value};
 
 mod error;
@@ -18,8 +18,8 @@ impl Eval for Expression {
 			Expression::Prefix(expression, prefix) => {
 				let value = expression.eval(context)?;
 				match prefix {
-					Prefix::Not(span) => call_member_function_0(crate::ops::PREFIX_NOT, value, span),
-					Prefix::Minus(span) => call_member_function_0(crate::ops::PREFIX_MINUS, value, span),
+					Prefix::Not(span) => call_member_function_0(crate::ops::NOT, value, span),
+					Prefix::Minus(span) => call_member_function_0(crate::ops::NEGATE, value, span),
 				}
 			}
 			Expression::Suffix(expression, suffix) => {
@@ -42,11 +42,74 @@ impl Eval for Expression {
 								span: *span,
 							})
 					}
-					Suffix::ArrayIndex(index, span) => {
-						call_member_function_1(crate::ops::ARRAY_INDEX, value, index, span, context)
-					}
+					Suffix::ArrayIndex(index, span) => call_member_function_1(crate::ops::INDEX, value, index, span, context),
 					Suffix::FunctionCall(name, name_span, arguments, _arguments_span) => {
 						call_member_function_n(name, value, &arguments.arguments, name_span, context)
+					}
+				}
+			}
+			Expression::Binary(lhs, rhs, op) => {
+				let lhs_value = lhs.eval(context)?;
+				match op {
+					BinaryOperator::Div(span) => call_member_function_1(crate::ops::DIV, lhs_value, rhs, span, context),
+					BinaryOperator::Mul(span) => call_member_function_1(crate::ops::MUL, lhs_value, rhs, span, context),
+					BinaryOperator::Rem(span) => call_member_function_1(crate::ops::REM, lhs_value, rhs, span, context),
+					BinaryOperator::Add(span) => call_member_function_1(crate::ops::ADD, lhs_value, rhs, span, context),
+					BinaryOperator::Sub(span) => call_member_function_1(crate::ops::SUB, lhs_value, rhs, span, context),
+					BinaryOperator::Shl(span) => call_member_function_1(crate::ops::SHL, lhs_value, rhs, span, context),
+					BinaryOperator::Shr(span) => call_member_function_1(crate::ops::SHR, lhs_value, rhs, span, context),
+					BinaryOperator::BitAnd(span) => call_member_function_1(crate::ops::BIT_AND, lhs_value, rhs, span, context),
+					BinaryOperator::BitXor(span) => call_member_function_1(crate::ops::BIT_XOR, lhs_value, rhs, span, context),
+					BinaryOperator::BitOr(span) => call_member_function_1(crate::ops::BIT_OR, lhs_value, rhs, span, context),
+					BinaryOperator::Equal(span) => call_member_function_1(crate::ops::EQUAL, lhs_value, rhs, span, context),
+					BinaryOperator::NotEqual(span) => {
+						call_member_function_1(crate::ops::NOT_EQUAL, lhs_value, rhs, span, context)
+					}
+					BinaryOperator::Less(span) => call_member_function_1(crate::ops::LESS, lhs_value, rhs, span, context),
+					BinaryOperator::LessOrEqual(span) => {
+						call_member_function_1(crate::ops::LESS_OR_EQUAL, lhs_value, rhs, span, context)
+					}
+					BinaryOperator::Greater(span) => call_member_function_1(crate::ops::GREATER, lhs_value, rhs, span, context),
+					BinaryOperator::GreaterOrEqual(span) => {
+						call_member_function_1(crate::ops::GREATER_OR_EQUAL, lhs_value, rhs, span, context)
+					}
+					BinaryOperator::LazyAnd(span) => {
+						let lhs_bool = lhs_value.as_bool().ok_or_else(|| EvalError::NotBoolInLazyAnd {
+							type_name: lhs_value.get_type().name().to_string(),
+							span: *span, // TODO: use the lhs span instead of the operator span here
+						})?;
+						if lhs_bool == false {
+							Ok(lhs_value)
+						} else {
+							let rhs_value = rhs.eval(context)?;
+							if rhs_value.is_bool() {
+								Ok(rhs_value)
+							} else {
+								Err(EvalError::NotBoolInLazyAnd {
+									type_name: rhs_value.get_type().name().to_string(),
+									span: *span, // TODO: use the lhs span instead of the operator span here
+								})
+							}
+						}
+					}
+					BinaryOperator::LazyOr(span) => {
+						let lhs_bool = lhs_value.as_bool().ok_or_else(|| EvalError::NotBoolInLazyAnd {
+							type_name: lhs_value.get_type().name().to_string(),
+							span: *span, // TODO: use the lhs span instead of the operator span here
+						})?;
+						if lhs_bool == true {
+							Ok(lhs_value)
+						} else {
+							let rhs_value = rhs.eval(context)?;
+							if rhs_value.is_bool() {
+								Ok(rhs_value)
+							} else {
+								Err(EvalError::NotBoolInLazyAnd {
+									type_name: rhs_value.get_type().name().to_string(),
+									span: *span, // TODO: use the lhs span instead of the operator span here
+								})
+							}
+						}
 					}
 				}
 			}

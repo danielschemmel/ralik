@@ -9,6 +9,29 @@ pub enum Expression {
 	Atomic(AtomicExpression),
 	Suffix(Box<Expression>, Suffix),
 	Prefix(Box<Expression>, Prefix),
+	Binary(Box<Expression>, Box<Expression>, BinaryOperator),
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum BinaryOperator {
+	Mul(Span),
+	Div(Span),
+	Rem(Span),
+	Add(Span),
+	Sub(Span),
+	Shl(Span),
+	Shr(Span),
+	BitAnd(Span),
+	BitXor(Span),
+	BitOr(Span),
+	Equal(Span),
+	NotEqual(Span),
+	Less(Span),
+	LessOrEqual(Span),
+	Greater(Span),
+	GreaterOrEqual(Span),
+	LazyAnd(Span),
+	LazyOr(Span),
 }
 
 #[derive(Clone)]
@@ -28,7 +51,7 @@ pub struct Arguments {
 	pub arguments: Vec<Expression>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub enum Prefix {
 	Not(Span),
 	Minus(Span),
