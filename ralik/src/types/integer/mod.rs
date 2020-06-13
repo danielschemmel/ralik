@@ -46,7 +46,12 @@ impl BasicTypeBase for IntegerImpl {
 		functions.insert(crate::ops::GREATER.into(), ops::greater);
 		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
 
+		functions.insert("abs".into(), functions::abs);
 		//functions.insert("checked_div".into(), functions::checked_div);
+		functions.insert("is_negative".into(), functions::is_negative);
+		functions.insert("is_positive".into(), functions::is_positive);
+		functions.insert("pow".into(), functions::pow);
+		functions.insert("signum".into(), functions::signum);
 		functions.insert("to_string".into(), functions::to_string);
 	}
 }

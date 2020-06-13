@@ -8,6 +8,7 @@
 		"ralik",
 		"readline",
 		"rustyline",
+		"signum",
 		"structopt",
 		"thiserror"
 	]
