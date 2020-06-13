@@ -13,8 +13,8 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 anyhow = "1"
 lazy_static = "1"
-num-bigint = "0.2"
-num-traits = "0.2"
+num-bigint = "0.3"
+num-traits = { version = "0.2", features = ["i128"] }
 proc-macro2 = { version = "1", features = ["span-locations"] }
 quote = "1"
 syn = "1"
@@ -27,4 +27,4 @@ pretty_assertions = "0.6"
 
 [features]
 default = []
-serde = ["my_serde"]
+serde = ["my_serde", "num-bigint/serde"]
