@@ -1,4 +1,4 @@
-use crate::{Context, Value, CallError};
+use crate::{CallError, Context, Value};
 
 use super::super::arguments::Arguments;
 

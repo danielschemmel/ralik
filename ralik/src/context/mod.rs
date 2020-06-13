@@ -1,16 +1,21 @@
-use std::collections::HashMap;
+use std::collections::hash_map::{Entry, HashMap};
 use std::sync::Arc;
 
-use crate::{Type, CallError, Value, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType};
+use crate::{
+	CallError, GenericCallError, GenericError, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType,
+	Type, Value,
+};
 
 mod debug;
 
+pub type Generic = fn(&mut dyn Type, &[&dyn Type]) -> Result<(), GenericCallError>;
 pub type Function = fn(&[Value]) -> Result<Value, CallError>;
 pub type Macro = fn(&[Value]) -> Result<Value, CallError>;
 
 #[derive(Clone)]
 pub struct Context {
 	types: HashMap<String, Arc<dyn Type>>,
+	generics: HashMap<String, Generic>,
 	variables: HashMap<String, Value>,
 	functions: HashMap<String, Function>,
 	macros: HashMap<String, Macro>,
@@ -32,6 +37,7 @@ impl Context {
 	pub fn new_empty() -> Self {
 		Context {
 			types: HashMap::new(),
+			generics: HashMap::new(),
 			variables: HashMap::new(),
 			functions: HashMap::new(),
 			macros: HashMap::new(),
@@ -60,11 +66,17 @@ impl Context {
 	}
 
 	pub fn get_integer_type(&self) -> Result<&Arc<dyn Type>, MissingIntegerType> {
-		self.types.get(crate::types::IntegerName).ok_or_else(|| MissingIntegerType)
+		self
+			.types
+			.get(crate::types::IntegerName)
+			.ok_or_else(|| MissingIntegerType)
 	}
 
 	pub fn get_string_type(&self) -> Result<&Arc<dyn Type>, MissingStringType> {
-		self.types.get(crate::types::StringName).ok_or_else(|| MissingStringType)
+		self
+			.types
+			.get(crate::types::StringName)
+			.ok_or_else(|| MissingStringType)
 	}
 
 	pub fn get_type_mut(&mut self, key: &str) -> Option<&mut Arc<dyn Type>> {
@@ -85,6 +97,49 @@ impl Context {
 			assert!(self.types.insert(key, value).is_none());
 			None
 		}
+	}
+}
+
+// Generics
+impl Context {
+	pub fn get_generic_type(&mut self, key: &str, arguments: &[&dyn Type]) -> Result<&Arc<dyn Type>, GenericError> {
+		let mut name = format!("{}<", key);
+		for (i, type_name) in arguments.iter().map(|t| t.name()).enumerate() {
+			if i > 0 {
+				name.push_str(", ");
+			}
+			name.push_str(type_name);
+		}
+		name.push_str(">");
+
+		if self.types.contains_key(&name) {
+			Ok(self.types.get(&name).unwrap())
+		} else {
+			{
+				let generic = self
+					.get_generic(key)
+					.ok_or_else(|| GenericError::GenericMissing { name: key.to_string() })?;
+				let new_type = Arc::new(crate::types::GenericType::new(name));
+				assert!(self.insert_type(new_type.clone()).is_none());
+				Ok(self.types.get(new_type.name()).unwrap())
+			}
+		}
+	}
+
+	pub fn get_generic(&self, key: &str) -> Option<&Generic> {
+		self.generics.get(key)
+	}
+
+	pub fn get_generic_mut(&mut self, key: &str) -> Option<&mut Generic> {
+		self.generics.get_mut(key)
+	}
+
+	pub fn insert_generic<K: Into<String>>(&mut self, key: K, value: Generic) -> Option<Generic> {
+		self.generics.insert(key.into(), value)
+	}
+
+	pub fn remove_generic(&mut self, key: &str) -> Option<(String, Generic)> {
+		self.generics.remove_entry(key)
 	}
 }
 

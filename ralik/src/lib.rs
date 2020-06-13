@@ -3,7 +3,10 @@
 use proc_macro2::TokenStream;
 
 mod error;
-pub use error::{RunError, MissingBasicType, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType};
+pub use error::{
+	GenericCallError, GenericError, MissingBasicType, MissingBoolType, MissingCharType, MissingIntegerType,
+	MissingStringType, MissingVecGeneric, RunError,
+};
 
 mod context;
 pub use context::Context;
@@ -16,7 +19,7 @@ mod ops;
 mod syntax;
 use syntax::ast;
 
-pub mod types;
+mod types;
 pub use types::Type;
 
 mod value;

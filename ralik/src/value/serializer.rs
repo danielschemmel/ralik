@@ -1,14 +1,12 @@
 use my_serde::ser;
 use thiserror::Error;
 
-use crate::{Context};
-use super::{Value, Data};
+use super::{Data, Value};
+use crate::Context;
 
 impl Value {
 	pub fn from_serde<T: ser::Serialize>(context: &Context, value: T) -> Self {
-		let serializer = Serializer{
-			context
-		};
+		let serializer = Serializer { context };
 		value.serialize(serializer).unwrap()
 	}
 }

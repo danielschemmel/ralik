@@ -9,14 +9,14 @@ pub enum EvalError {
 		span: Span,
 		// backtrace: std::backtrace::Backtrace,
 	},
-	
+
 	#[error("Function `{name}` does not exist when referenced at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
 	UnknownFunction {
 		name: String,
 		span: Span,
 		// backtrace: std::backtrace::Backtrace,
 	},
-	
+
 	#[error("Member function `{name}` does not exist for type `{type_name}` when referenced at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
 	UnknownMemberFunction {
 		name: String,
@@ -80,27 +80,16 @@ pub enum EvalError {
 	},
 
 	#[error("The given context does not have a type `{}` available to create a new object at {}:{} to {}:{}", crate::types::BoolName, span.start().line, span.start().column, span.end().line, span.end().column)]
-	MissingBoolType{
-		span: Span
-	},
+	MissingBoolType { span: Span },
 
 	#[error("The given context does not have a type `{}` available to create a new object at {}:{} to {}:{}", crate::types::CharName, span.start().line, span.start().column, span.end().line, span.end().column)]
-	MissingCharType{
-		span: Span
-	},
-
+	MissingCharType { span: Span },
 
 	#[error("The given context does not have a type `{}` available to create a new object at {}:{} to {}:{}", crate::types::IntegerName, span.start().line, span.start().column, span.end().line, span.end().column)]
-	MissingIntegerType{
-		span: Span
-	},
-
+	MissingIntegerType { span: Span },
 
 	#[error("The given context does not have a type `{}` available to create a new object at {}:{} to {}:{}", crate::types::StringName, span.start().line, span.start().column, span.end().line, span.end().column)]
-	MissingStringType{
-		span: Span
-	},
-
+	MissingStringType { span: Span },
 }
 
 #[derive(Error, Debug)]
@@ -128,7 +117,7 @@ pub enum CallError {
 
 	#[error(transparent)]
 	MissingIntegerType(#[from] crate::MissingIntegerType),
-	
+
 	#[error(transparent)]
 	MissingStringType(#[from] crate::MissingStringType),
 

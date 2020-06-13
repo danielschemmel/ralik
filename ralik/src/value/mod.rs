@@ -3,7 +3,9 @@ use num_traits::ToPrimitive;
 
 use std::sync::Arc;
 
-use crate::{Type, Context, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType};
+use crate::{
+	Context, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType, MissingVecGeneric, Type,
+};
 
 mod debug;
 
@@ -16,44 +18,49 @@ pub struct Value {
 	data: Data,
 }
 
-
 #[derive(Clone)]
 enum Data {
 	Bool(bool),
 	Char(char),
 	Integer(BigInt),
 	String(String),
-	//Array(Vec<Value>),
-	//Option(Option<Box<Value>>),
+	Vec(Vec<Value>),
 }
 
 impl Value {
 	pub fn new_bool(context: &Context, value: bool) -> Result<Value, MissingBoolType> {
-		Ok(Value{
+		Ok(Value {
 			r#type: context.get_bool_type()?.clone(),
 			data: Data::Bool(value),
 		})
 	}
-	
+
 	pub fn new_char(context: &Context, value: char) -> Result<Value, MissingCharType> {
-		Ok(Value{
+		Ok(Value {
 			r#type: context.get_char_type()?.clone(),
 			data: Data::Char(value),
 		})
 	}
-	
+
 	pub fn new_integer<Integer: Into<BigInt>>(context: &Context, value: Integer) -> Result<Value, MissingIntegerType> {
-		Ok(Value{
+		Ok(Value {
 			r#type: context.get_integer_type()?.clone(),
 			data: Data::Integer(value.into()),
 		})
 	}
-	
-	pub fn new_string<String: Into<std::string::String>>(context: &Context, value: String) -> Result<Value, MissingStringType> {
-		Ok(Value{
+
+	pub fn new_string<String: Into<std::string::String>>(
+		context: &Context,
+		value: String,
+	) -> Result<Value, MissingStringType> {
+		Ok(Value {
 			r#type: context.get_string_type()?.clone(),
 			data: Data::String(value.into()),
 		})
+	}
+
+	pub fn new_vec(context: &mut Context, value: Vec<Value>) -> Result<Value, MissingVecGeneric> {
+		unimplemented!()
 	}
 }
 

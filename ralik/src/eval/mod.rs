@@ -121,10 +121,18 @@ impl Eval for AtomicExpression {
 	fn eval(&self, context: &Context) -> Result<Value, EvalError> {
 		match self {
 			AtomicExpression::Parenthesized(expression, _span) => expression.eval(context),
-			AtomicExpression::LitBool(value, span) => Value::new_bool(context, *value).map_err(|_| EvalError::MissingBoolType{span: *span}),
-			AtomicExpression::LitChar(value, span) => Value::new_char(context, *value).map_err(|_| EvalError::MissingCharType{span: *span}),
-			AtomicExpression::LitInt(value, span) => Value::new_integer(context, value.clone()).map_err(|_| EvalError::MissingIntegerType{span: *span}),
-			AtomicExpression::LitStr(value, span) => Value::new_string(context, value).map_err(|_| EvalError::MissingStringType{span: *span}),
+			AtomicExpression::LitBool(value, span) => {
+				Value::new_bool(context, *value).map_err(|_| EvalError::MissingBoolType { span: *span })
+			}
+			AtomicExpression::LitChar(value, span) => {
+				Value::new_char(context, *value).map_err(|_| EvalError::MissingCharType { span: *span })
+			}
+			AtomicExpression::LitInt(value, span) => {
+				Value::new_integer(context, value.clone()).map_err(|_| EvalError::MissingIntegerType { span: *span })
+			}
+			AtomicExpression::LitStr(value, span) => {
+				Value::new_string(context, value).map_err(|_| EvalError::MissingStringType { span: *span })
+			}
 			AtomicExpression::Dollar(span) => context
 				.get_variable("$")
 				.cloned()

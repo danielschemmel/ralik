@@ -1,20 +1,26 @@
 use std::collections::HashMap;
 
-use super::{Context, Macro, Function};
+use super::{Context, Function, Macro};
 
 impl std::fmt::Debug for Context {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-				f.debug_struct("Context")
-				.field("types", &self.types)
-				.field("variables", &self.variables)
-				.field("functions", &FunctionNameListFormatter {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		f.debug_struct("Context")
+			.field("types", &self.types)
+			.field("variables", &self.variables)
+			.field(
+				"functions",
+				&FunctionNameListFormatter {
 					functions: &self.functions,
-				},)
-				.field("macros", &MacroNameListFormatter {
+				},
+			)
+			.field(
+				"macros",
+				&MacroNameListFormatter {
 					functions: &self.macros,
-				},)
-				.finish()
-    }
+				},
+			)
+			.finish()
+	}
 }
 
 struct FunctionNameListFormatter<'a> {

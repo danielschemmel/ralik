@@ -9,10 +9,17 @@ use rustyline::Editor;
 	version = build_info::format!("{} {}\n\nBuilt from {} at {} with {} for {} on {}.", $.crate_info.version, $.profile, $.version_control, $.timestamp, $.compiler, $.compiler.target_triple, $.compiler.host_triple),
 )]
 pub struct Args {
-	#[structopt(long = "dump-context", help = "Dumps the interpreter context at the beginning of the session.")]
+	#[structopt(
+		long = "dump-context",
+		help = "Dumps the interpreter context at the beginning of the session."
+	)]
 	dump_context: bool,
-	
-	#[structopt(short = "c", long = "command", help = "Evaluate the specified commands instead of reading from stdin.")]
+
+	#[structopt(
+		short = "c",
+		long = "command",
+		help = "Evaluate the specified commands instead of reading from stdin."
+	)]
 	command: Option<String>,
 }
 
@@ -72,7 +79,7 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 				print_error_chain(&err);
 			}
 		}
-			
+
 		Ok(ReturnCode::Success)
 	} else {
 		repl(context)

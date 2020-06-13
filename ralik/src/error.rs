@@ -35,8 +35,10 @@ pub enum MissingBasicType {
 
 	#[error(transparent)]
 	MissingStringType(#[from] MissingStringType),
-}
 
+	#[error(transparent)]
+	MissingVecGeneric(#[from] MissingVecGeneric),
+}
 
 #[derive(Error, Debug)]
 #[error("The given context does not have a type `{}` registered", crate::types::BoolName)]
@@ -53,3 +55,22 @@ pub struct MissingIntegerType;
 #[derive(Error, Debug)]
 #[error("The given context does not have a type `{}` registered", crate::types::StringName)]
 pub struct MissingStringType;
+
+#[derive(Error, Debug)]
+#[error("The given context does not have a Vec generic registered")]
+pub struct MissingVecGeneric;
+
+#[derive(Error, Debug)]
+pub enum GenericError {
+	#[error("Failed to construct generic type from generic `{name}`")]
+	GenericCallError {
+		name: String,
+		#[source]
+		source: GenericCallError,
+	},
+
+	#[error("Generic `{name}` is not registered with the given context")]
+	GenericMissing { name: String },
+}
+#[derive(Error, Debug)]
+pub enum GenericCallError {}

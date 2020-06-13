@@ -10,7 +10,7 @@ impl fmt::Debug for super::Data {
 			Char(value) => f.debug_tuple("Char").field(value).finish(),
 			Integer(value) => f.debug_tuple("Integer").field(&IntegerFormatter(value)).finish(),
 			String(value) => f.debug_tuple("String").field(value).finish(),
-			//Option(value) => f.debug_tuple("Option").field(&self.as_option().unwrap()).finish(),
+			Vec(value) => f.debug_tuple("Vec").field(&value).finish(),
 		}
 	}
 }
