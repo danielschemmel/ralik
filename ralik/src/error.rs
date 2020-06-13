@@ -21,3 +21,35 @@ pub enum RunError {
 		cause: anyhow::Error,
 	},
 }
+
+#[derive(Error, Debug)]
+pub enum MissingBasicType {
+	#[error(transparent)]
+	MissingBoolType(#[from] MissingBoolType),
+
+	#[error(transparent)]
+	MissingCharType(#[from] MissingCharType),
+
+	#[error(transparent)]
+	MissingIntegerType(#[from] MissingIntegerType),
+
+	#[error(transparent)]
+	MissingStringType(#[from] MissingStringType),
+}
+
+
+#[derive(Error, Debug)]
+#[error("The given context does not have a type `{}` registered", crate::types::BoolName)]
+pub struct MissingBoolType;
+
+#[derive(Error, Debug)]
+#[error("The given context does not have a type `{}` registered", crate::types::CharName)]
+pub struct MissingCharType;
+
+#[derive(Error, Debug)]
+#[error("The given context does not have a type `{}` registered", crate::types::IntegerName)]
+pub struct MissingIntegerType;
+
+#[derive(Error, Debug)]
+#[error("The given context does not have a type `{}` registered", crate::types::StringName)]
+pub struct MissingStringType;

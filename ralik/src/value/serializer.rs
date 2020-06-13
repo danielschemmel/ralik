@@ -1,11 +1,15 @@
 use my_serde::ser;
 use thiserror::Error;
 
-use super::Value;
+use crate::{Context};
+use super::{Value, Data};
 
-impl<T: ser::Serialize> From<T> for Value {
-	fn from(value: T) -> Self {
-		value.serialize(Serializer).unwrap()
+impl Value {
+	pub fn from_serde<T: ser::Serialize>(context: &Context, value: T) -> Self {
+		let serializer = Serializer{
+			context
+		};
+		value.serialize(serializer).unwrap()
 	}
 }
 
@@ -16,6 +20,18 @@ enum Error {
 
 	#[error("Floating point numbers are (currently?) not supported by RALIK")]
 	Float,
+
+	#[error(transparent)]
+	MissingBoolType(#[from] crate::MissingBoolType),
+
+	#[error(transparent)]
+	MissingCharType(#[from] crate::MissingCharType),
+
+	#[error(transparent)]
+	MissingIntegerType(#[from] crate::MissingIntegerType),
+
+	#[error(transparent)]
+	MissingStringType(#[from] crate::MissingStringType),
 
 	#[error("Custom Error: {0}")]
 	Custom(String),
@@ -30,9 +46,11 @@ impl ser::Error for Error {
 	}
 }
 
-struct Serializer;
+struct Serializer<'a> {
+	context: &'a Context,
+}
 
-impl ser::Serializer for Serializer {
+impl<'a> ser::Serializer for Serializer<'a> {
 	type Ok = Value;
 	type Error = Error;
 	type SerializeSeq = SerializeSeq;
@@ -44,47 +62,47 @@ impl ser::Serializer for Serializer {
 	type SerializeStructVariant = SerializeStructVariant;
 
 	fn serialize_bool(self, value: bool) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Bool(value))
+		Ok(Value::new_bool(self.context, value)?)
 	}
 
 	fn serialize_i8(self, value: i8) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
-	}
-
-	fn serialize_i16(self, value: i16) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
-	}
-
-	fn serialize_i32(self, value: i32) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
-	}
-
-	fn serialize_i64(self, value: i64) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
-	}
-
-	fn serialize_i128(self, value: i128) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
+		Ok(Value::new_integer(self.context, value)?)
 	}
 
 	fn serialize_u8(self, value: u8) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
+		Ok(Value::new_integer(self.context, value)?)
+	}
+
+	fn serialize_i16(self, value: i16) -> Result<Self::Ok, Self::Error> {
+		Ok(Value::new_integer(self.context, value)?)
 	}
 
 	fn serialize_u16(self, value: u16) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
+		Ok(Value::new_integer(self.context, value)?)
+	}
+
+	fn serialize_i32(self, value: i32) -> Result<Self::Ok, Self::Error> {
+		Ok(Value::new_integer(self.context, value)?)
 	}
 
 	fn serialize_u32(self, value: u32) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
+		Ok(Value::new_integer(self.context, value)?)
+	}
+
+	fn serialize_i64(self, value: i64) -> Result<Self::Ok, Self::Error> {
+		Ok(Value::new_integer(self.context, value)?)
 	}
 
 	fn serialize_u64(self, value: u64) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
+		Ok(Value::new_integer(self.context, value)?)
+	}
+
+	fn serialize_i128(self, value: i128) -> Result<Self::Ok, Self::Error> {
+		Ok(Value::new_integer(self.context, value)?)
 	}
 
 	fn serialize_u128(self, value: u128) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Integer(value.into()))
+		Ok(Value::new_integer(self.context, value)?)
 	}
 
 	fn serialize_f32(self, _value: f32) -> Result<Self::Ok, Self::Error> {
@@ -96,11 +114,11 @@ impl ser::Serializer for Serializer {
 	}
 
 	fn serialize_char(self, value: char) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::Char(value))
+		Ok(Value::new_char(self.context, value)?)
 	}
 
 	fn serialize_str(self, value: &str) -> Result<Self::Ok, Self::Error> {
-		Ok(Value::String(value.to_string()))
+		Ok(Value::new_string(self.context, value)?)
 	}
 
 	fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {

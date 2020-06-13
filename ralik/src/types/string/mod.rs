@@ -1,40 +1,39 @@
-use lazy_static::lazy_static;
-
-use std::collections::HashMap;
-use std::sync::Arc;
-
-use super::{MemberFunction, Type};
+use super::{BasicType, BasicTypeBase, FunctionStore};
 
 mod functions;
 mod ops;
 
-pub(crate) const NAME: &str = "String";
+pub type StringType = BasicType<StringImpl>;
+pub const NAME: &str = "String";
 
-impl Type {
-	pub fn string() -> Arc<Type> {
-		lazy_static! {
-			static ref TYPE: Arc<Type> = Arc::new(make_type());
-		}
+pub struct StringImpl;
 
-		TYPE.clone()
+impl StringType {
+	pub fn new() -> Self {
+		Self::default()
 	}
 }
 
-fn make_type() -> Type {
-	let mut functions: HashMap<String, MemberFunction> = HashMap::new();
+impl Default for StringType {
+	fn default() -> Self {
+		BasicType::from_base(StringImpl)
+	}
+}
 
-	functions.insert(crate::ops::ADD.to_string(), ops::add);
-	functions.insert(crate::ops::EQUAL.to_string(), ops::equal);
-	functions.insert(crate::ops::NOT_EQUAL.to_string(), ops::not_equal);
-	functions.insert(crate::ops::LESS.to_string(), ops::less);
-	functions.insert(crate::ops::LESS_OR_EQUAL.to_string(), ops::less_or_equal);
-	functions.insert(crate::ops::GREATER.to_string(), ops::greater);
-	functions.insert(crate::ops::GREATER_OR_EQUAL.to_string(), ops::greater_or_equal);
+impl BasicTypeBase for StringImpl {
+	fn name(&self) -> &str {
+		NAME
+	}
 
-	functions.insert("to_string".to_string(), functions::to_string);
+	fn register_functions(&self, functions: &mut FunctionStore) {
+		functions.insert(crate::ops::ADD.into(), ops::add);
+		functions.insert(crate::ops::EQUAL.into(), ops::equal);
+		functions.insert(crate::ops::NOT_EQUAL.into(), ops::not_equal);
+		functions.insert(crate::ops::LESS.into(), ops::less);
+		functions.insert(crate::ops::LESS_OR_EQUAL.into(), ops::less_or_equal);
+		functions.insert(crate::ops::GREATER.into(), ops::greater);
+		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
 
-	Type {
-		name: NAME.to_string(),
-		functions,
+		functions.insert("to_string".into(), functions::to_string);
 	}
 }

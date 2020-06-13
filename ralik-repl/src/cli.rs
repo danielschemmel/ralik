@@ -45,7 +45,7 @@ pub fn main(_args: Args) -> Result<ReturnCode> {
 	// println!("{:?}", args);
 
 	let mut context = ralik::Context::new();
-	context.insert_variable("$", "DOLLAR");
+	context.insert_variable("$", ralik::Value::from_serde(&context, "DOLLAR"));
 	context.insert_function("exit", |args| match args.len() {
 		0 => std::process::exit(0),
 		1 => args[0]

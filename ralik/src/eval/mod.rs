@@ -18,14 +18,14 @@ impl Eval for Expression {
 			Expression::Prefix(expression, prefix) => {
 				let value = expression.eval(context)?;
 				match prefix {
-					Prefix::Not(span) => call_member_function_0(crate::ops::NOT, value, span),
-					Prefix::Minus(span) => call_member_function_0(crate::ops::NEGATE, value, span),
+					Prefix::Not(span) => call_member_function_0(context, crate::ops::NOT, value, span),
+					Prefix::Minus(span) => call_member_function_0(context, crate::ops::NEGATE, value, span),
 				}
 			}
 			Expression::Suffix(expression, suffix) => {
 				let value = expression.eval(context)?;
 				match suffix {
-					Suffix::Unwrap(span) => call_member_function_0(crate::ops::UNWRAP, value, span),
+					Suffix::Unwrap(span) => call_member_function_0(context, crate::ops::UNWRAP, value, span),
 					Suffix::Field(name, span) => value.field(name).cloned().ok_or_else(|| EvalError::InvalidFieldAccess {
 						member_name: name.clone(),
 						type_name: value.get_type().name().to_string(),
@@ -42,36 +42,36 @@ impl Eval for Expression {
 								span: *span,
 							})
 					}
-					Suffix::ArrayIndex(index, span) => call_member_function_1(crate::ops::INDEX, value, index, span, context),
+					Suffix::ArrayIndex(index, span) => call_member_function_1(context, crate::ops::INDEX, value, index, span),
 					Suffix::FunctionCall(name, name_span, arguments, _arguments_span) => {
-						call_member_function_n(name, value, &arguments.arguments, name_span, context)
+						call_member_function_n(context, name, value, &arguments.arguments, name_span)
 					}
 				}
 			}
 			Expression::Binary(lhs, rhs, op) => {
 				let lhs_value = lhs.eval(context)?;
 				match op {
-					BinaryOperator::Div(span) => call_member_function_1(crate::ops::DIV, lhs_value, rhs, span, context),
-					BinaryOperator::Mul(span) => call_member_function_1(crate::ops::MUL, lhs_value, rhs, span, context),
-					BinaryOperator::Rem(span) => call_member_function_1(crate::ops::REM, lhs_value, rhs, span, context),
-					BinaryOperator::Add(span) => call_member_function_1(crate::ops::ADD, lhs_value, rhs, span, context),
-					BinaryOperator::Sub(span) => call_member_function_1(crate::ops::SUB, lhs_value, rhs, span, context),
-					BinaryOperator::Shl(span) => call_member_function_1(crate::ops::SHL, lhs_value, rhs, span, context),
-					BinaryOperator::Shr(span) => call_member_function_1(crate::ops::SHR, lhs_value, rhs, span, context),
-					BinaryOperator::BitAnd(span) => call_member_function_1(crate::ops::BIT_AND, lhs_value, rhs, span, context),
-					BinaryOperator::BitXor(span) => call_member_function_1(crate::ops::BIT_XOR, lhs_value, rhs, span, context),
-					BinaryOperator::BitOr(span) => call_member_function_1(crate::ops::BIT_OR, lhs_value, rhs, span, context),
-					BinaryOperator::Equal(span) => call_member_function_1(crate::ops::EQUAL, lhs_value, rhs, span, context),
+					BinaryOperator::Div(span) => call_member_function_1(context, crate::ops::DIV, lhs_value, rhs, span),
+					BinaryOperator::Mul(span) => call_member_function_1(context, crate::ops::MUL, lhs_value, rhs, span),
+					BinaryOperator::Rem(span) => call_member_function_1(context, crate::ops::REM, lhs_value, rhs, span),
+					BinaryOperator::Add(span) => call_member_function_1(context, crate::ops::ADD, lhs_value, rhs, span),
+					BinaryOperator::Sub(span) => call_member_function_1(context, crate::ops::SUB, lhs_value, rhs, span),
+					BinaryOperator::Shl(span) => call_member_function_1(context, crate::ops::SHL, lhs_value, rhs, span),
+					BinaryOperator::Shr(span) => call_member_function_1(context, crate::ops::SHR, lhs_value, rhs, span),
+					BinaryOperator::BitAnd(span) => call_member_function_1(context, crate::ops::BIT_AND, lhs_value, rhs, span),
+					BinaryOperator::BitXor(span) => call_member_function_1(context, crate::ops::BIT_XOR, lhs_value, rhs, span),
+					BinaryOperator::BitOr(span) => call_member_function_1(context, crate::ops::BIT_OR, lhs_value, rhs, span),
+					BinaryOperator::Equal(span) => call_member_function_1(context, crate::ops::EQUAL, lhs_value, rhs, span),
 					BinaryOperator::NotEqual(span) => {
-						call_member_function_1(crate::ops::NOT_EQUAL, lhs_value, rhs, span, context)
+						call_member_function_1(context, crate::ops::NOT_EQUAL, lhs_value, rhs, span)
 					}
-					BinaryOperator::Less(span) => call_member_function_1(crate::ops::LESS, lhs_value, rhs, span, context),
+					BinaryOperator::Less(span) => call_member_function_1(context, crate::ops::LESS, lhs_value, rhs, span),
 					BinaryOperator::LessOrEqual(span) => {
-						call_member_function_1(crate::ops::LESS_OR_EQUAL, lhs_value, rhs, span, context)
+						call_member_function_1(context, crate::ops::LESS_OR_EQUAL, lhs_value, rhs, span)
 					}
-					BinaryOperator::Greater(span) => call_member_function_1(crate::ops::GREATER, lhs_value, rhs, span, context),
+					BinaryOperator::Greater(span) => call_member_function_1(context, crate::ops::GREATER, lhs_value, rhs, span),
 					BinaryOperator::GreaterOrEqual(span) => {
-						call_member_function_1(crate::ops::GREATER_OR_EQUAL, lhs_value, rhs, span, context)
+						call_member_function_1(context, crate::ops::GREATER_OR_EQUAL, lhs_value, rhs, span)
 					}
 					BinaryOperator::LazyAnd(span) => {
 						let lhs_bool = lhs_value.as_bool().ok_or_else(|| EvalError::NotBoolInLazyAnd {
@@ -121,10 +121,10 @@ impl Eval for AtomicExpression {
 	fn eval(&self, context: &Context) -> Result<Value, EvalError> {
 		match self {
 			AtomicExpression::Parenthesized(expression, _span) => expression.eval(context),
-			AtomicExpression::LitBool(value, _span) => Ok(Value::Bool(*value)),
-			AtomicExpression::LitChar(value, _span) => Ok(Value::Char(*value)),
-			AtomicExpression::LitInt(value, _span) => Ok(Value::Integer(value.clone())),
-			AtomicExpression::LitStr(value, _span) => Ok(Value::String(value.clone())),
+			AtomicExpression::LitBool(value, span) => Value::new_bool(context, *value).map_err(|_| EvalError::MissingBoolType{span: *span}),
+			AtomicExpression::LitChar(value, span) => Value::new_char(context, *value).map_err(|_| EvalError::MissingCharType{span: *span}),
+			AtomicExpression::LitInt(value, span) => Value::new_integer(context, value.clone()).map_err(|_| EvalError::MissingIntegerType{span: *span}),
+			AtomicExpression::LitStr(value, span) => Value::new_string(context, value).map_err(|_| EvalError::MissingStringType{span: *span}),
 			AtomicExpression::Dollar(span) => context
 				.get_variable("$")
 				.cloned()

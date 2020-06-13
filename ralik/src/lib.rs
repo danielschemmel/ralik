@@ -3,7 +3,7 @@
 use proc_macro2::TokenStream;
 
 mod error;
-pub use error::RunError;
+pub use error::{RunError, MissingBasicType, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType};
 
 mod context;
 pub use context::Context;

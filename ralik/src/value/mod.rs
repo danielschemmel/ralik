@@ -3,62 +3,103 @@ use num_traits::ToPrimitive;
 
 use std::sync::Arc;
 
-use super::Type;
+use crate::{Type, Context, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType};
 
 mod debug;
 
 #[cfg(feature = "serde")]
 mod serializer;
 
+#[derive(Debug, Clone)]
+pub struct Value {
+	r#type: Arc<dyn Type>,
+	data: Data,
+}
+
+
 #[derive(Clone)]
-pub enum Value {
+enum Data {
 	Bool(bool),
 	Char(char),
 	Integer(BigInt),
 	String(String),
+	//Array(Vec<Value>),
+	//Option(Option<Box<Value>>),
 }
 
 impl Value {
-	pub fn get_type(&self) -> Arc<Type> {
-		match self {
-			Value::Bool(_) => Type::bool(),
-			Value::Char(_) => Type::char(),
-			Value::Integer(_) => Type::integer(),
-			Value::String(_) => Type::string(),
-		}
+	pub fn new_bool(context: &Context, value: bool) -> Result<Value, MissingBoolType> {
+		Ok(Value{
+			r#type: context.get_bool_type()?.clone(),
+			data: Data::Bool(value),
+		})
 	}
+	
+	pub fn new_char(context: &Context, value: char) -> Result<Value, MissingCharType> {
+		Ok(Value{
+			r#type: context.get_char_type()?.clone(),
+			data: Data::Char(value),
+		})
+	}
+	
+	pub fn new_integer<Integer: Into<BigInt>>(context: &Context, value: Integer) -> Result<Value, MissingIntegerType> {
+		Ok(Value{
+			r#type: context.get_integer_type()?.clone(),
+			data: Data::Integer(value.into()),
+		})
+	}
+	
+	pub fn new_string<String: Into<std::string::String>>(context: &Context, value: String) -> Result<Value, MissingStringType> {
+		Ok(Value{
+			r#type: context.get_string_type()?.clone(),
+			data: Data::String(value.into()),
+		})
+	}
+}
 
-	pub fn as_bool(&self) -> Option<bool> {
-		match self {
-			Value::Bool(value) => Some(*value),
-			_ => None,
-		}
+impl Value {
+	pub fn get_type(&self) -> &Arc<dyn Type> {
+		&self.r#type
 	}
 
 	pub fn is_bool(&self) -> bool {
-		match self {
-			Value::Bool(_value) => true,
+		match &self.data {
+			Data::Bool(_value) => true,
 			_ => false,
 		}
 	}
 
-	pub fn as_char(&self) -> Option<char> {
-		match self {
-			Value::Char(value) => Some(*value),
+	pub fn as_bool(&self) -> Option<bool> {
+		match &self.data {
+			Data::Bool(value) => Some(*value),
 			_ => None,
 		}
 	}
 
 	pub fn is_char(&self) -> bool {
-		match self {
-			Value::Char(_value) => true,
+		match &self.data {
+			Data::Char(_value) => true,
+			_ => false,
+		}
+	}
+
+	pub fn as_char(&self) -> Option<char> {
+		match &self.data {
+			Data::Char(value) => Some(*value),
+			_ => None,
+		}
+	}
+
+	pub fn is_integer(&self) -> bool {
+		match &self.data {
+			Data::Integer(_value) => true,
 			_ => false,
 		}
 	}
 
 	pub fn as_integer(&self) -> Option<&BigInt> {
-		match self {
-			Value::Integer(value) => Some(value),
+		match &self.data {
+			Data::Integer(value) => Some(value),
 			_ => None,
 		}
 	}
@@ -111,42 +152,53 @@ impl Value {
 		self.as_integer().and_then(|value| value.to_usize())
 	}
 
-	pub fn is_integer(&self) -> bool {
-		match self {
-			Value::Integer(_value) => true,
+	pub fn is_string(&self) -> bool {
+		match &self.data {
+			Data::String(_value) => true,
 			_ => false,
 		}
 	}
 
 	pub fn as_string(&self) -> Option<&String> {
-		match self {
-			Value::String(value) => Some(value),
+		match &self.data {
+			Data::String(value) => Some(value),
 			_ => None,
 		}
 	}
-
-	pub fn is_string(&self) -> bool {
+	/*
+	pub fn is_array(&self) -> bool {
 		match self {
-			Value::String(_value) => true,
+			Value::Array(_value) => true,
 			_ => false,
 		}
 	}
 
-	pub fn field(&self, _name: &str) -> Option<&Value> {
+	pub fn as_array(&self) -> Option<&Vec<Value>> {
 		match self {
-			Value::Bool(_) => None,
-			Value::Char(_) => None,
-			Value::Integer(_) => None,
-			Value::String(_) => None,
+			Value::Array(value) => Some(value),
+			_ => None,
 		}
 	}
 
-	pub fn field_mut(&self, _name: &str) -> Option<&mut Value> {
+	pub fn is_option(&self) -> bool {
 		match self {
-			Value::Bool(_) => None,
-			Value::Char(_) => None,
-			Value::Integer(_) => None,
-			Value::String(_) => None,
+			Value::Option(_value) => true,
+			_ => false,
 		}
+	}
+
+	pub fn as_option(&self) -> Option<Option<&Value>> {
+		match self {
+			Value::Option(value) => Some(value.as_ref().map(|boxed| boxed.as_ref())),
+			_ => None,
+		}
+	}*/
+
+	pub fn field(&self, _name: &str) -> Option<&Value> {
+		None
+	}
+
+	pub fn field_mut(&self, _name: &str) -> Option<&mut Value> {
+		None
 	}
 }

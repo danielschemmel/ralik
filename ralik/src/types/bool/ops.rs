@@ -1,54 +1,72 @@
-use crate::Value;
+use crate::{Context, Value, CallError};
 
 use super::super::arguments::Arguments;
-use super::super::CallError;
 
-pub(crate) fn not(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn not(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(1)?;
-	Ok(Value::Bool(!arguments.as_bool(0)?))
+	let value = arguments.as_bool(0)?;
+	Ok(Value::new_bool(context, !value)?)
 }
 
-pub(crate) fn bit_and(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn bit_and(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(2)?;
-	Ok(Value::Bool(arguments.as_bool(0)? & arguments.as_bool(1)?))
+	let lhs = arguments.as_bool(0)?;
+	let rhs = arguments.as_bool(1)?;
+	Ok(Value::new_bool(context, lhs & rhs)?)
 }
 
-pub(crate) fn bit_or(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn bit_or(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(2)?;
-	Ok(Value::Bool(arguments.as_bool(0)? | arguments.as_bool(1)?))
+	let lhs = arguments.as_bool(0)?;
+	let rhs = arguments.as_bool(1)?;
+	Ok(Value::new_bool(context, lhs | rhs)?)
 }
 
-pub(crate) fn bit_xor(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn bit_xor(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(2)?;
-	Ok(Value::Bool(arguments.as_bool(0)? ^ arguments.as_bool(1)?))
+	let lhs = arguments.as_bool(0)?;
+	let rhs = arguments.as_bool(1)?;
+	Ok(Value::new_bool(context, lhs ^ rhs)?)
 }
 
-pub(crate) fn equal(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn equal(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(2)?;
-	Ok(Value::Bool(arguments.as_bool(0)? == arguments.as_bool(1)?))
+	let lhs = arguments.as_bool(0)?;
+	let rhs = arguments.as_bool(1)?;
+	Ok(Value::new_bool(context, lhs == rhs)?)
 }
 
-pub(crate) fn not_equal(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn not_equal(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(2)?;
-	Ok(Value::Bool(arguments.as_bool(0)? != arguments.as_bool(1)?))
+	let lhs = arguments.as_bool(0)?;
+	let rhs = arguments.as_bool(1)?;
+	Ok(Value::new_bool(context, lhs != rhs)?)
 }
 
-pub(crate) fn less(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn less(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(2)?;
-	Ok(Value::Bool(arguments.as_bool(0)? < arguments.as_bool(1)?))
+	let lhs = arguments.as_bool(0)?;
+	let rhs = arguments.as_bool(1)?;
+	Ok(Value::new_bool(context, lhs < rhs)?)
 }
 
-pub(crate) fn less_or_equal(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn less_or_equal(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(2)?;
-	Ok(Value::Bool(arguments.as_bool(0)? <= arguments.as_bool(1)?))
+	let lhs = arguments.as_bool(0)?;
+	let rhs = arguments.as_bool(1)?;
+	Ok(Value::new_bool(context, lhs <= rhs)?)
 }
 
-pub(crate) fn greater(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn greater(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(2)?;
-	Ok(Value::Bool(arguments.as_bool(0)? > arguments.as_bool(1)?))
+	let lhs = arguments.as_bool(0)?;
+	let rhs = arguments.as_bool(1)?;
+	Ok(Value::new_bool(context, lhs > rhs)?)
 }
 
-pub(crate) fn greater_or_equal(arguments: &[Value]) -> Result<Value, CallError> {
+pub(crate) fn greater_or_equal(context: &Context, arguments: &[Value]) -> Result<Value, CallError> {
 	arguments.check_len(2)?;
-	Ok(Value::Bool(arguments.as_bool(0)? >= arguments.as_bool(1)?))
+	let lhs = arguments.as_bool(0)?;
+	let rhs = arguments.as_bool(1)?;
+	Ok(Value::new_bool(context, lhs >= rhs)?)
 }

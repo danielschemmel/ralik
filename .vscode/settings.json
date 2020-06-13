@@ -3,6 +3,7 @@
 		"backtrace",
 		"concat",
 		"eval",
+		"newtype",
 		"paren",
 		"ralik",
 		"readline",
