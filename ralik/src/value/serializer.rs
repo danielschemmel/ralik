@@ -1,7 +1,7 @@
 use my_serde::ser;
 use thiserror::Error;
 
-use super::{Data, Value};
+use super::Value;
 use crate::Context;
 
 impl Value {
@@ -17,13 +17,13 @@ enum Error {
 	Float,
 
 	#[error(transparent)]
-	InvalidBasicType(crate::InvalidCoreType),
+	InvalidBasicType(crate::error::InvalidCoreType),
 
 	#[error("Custom Error: {0}")]
 	Custom(String),
 }
 
-impl<T: Into<crate::InvalidCoreType>> From<T> for Error {
+impl<T: Into<crate::error::InvalidCoreType>> From<T> for Error {
 	fn from(value: T) -> Self {
 		Error::InvalidBasicType(value.into())
 	}

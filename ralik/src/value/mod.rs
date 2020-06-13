@@ -3,9 +3,8 @@ use num_traits::ToPrimitive;
 
 use std::sync::Arc;
 
-use crate::{
-	Context, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, Type,
-};
+use crate::error::{InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType};
+use crate::{Context, Type};
 
 mod debug;
 

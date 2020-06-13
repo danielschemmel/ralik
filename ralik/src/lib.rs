@@ -2,11 +2,7 @@
 
 use proc_macro2::TokenStream;
 
-mod error;
-pub use error::{
-	InvalidCoreType, InvalidBoolType, InvalidCharType, InvalidIntegerType,
-	InvalidStringType, RunError,
-};
+pub mod error;
 
 mod context;
 pub use context::Context;
@@ -25,16 +21,16 @@ pub use types::Type;
 mod value;
 pub use value::Value;
 
-pub fn eval_str(source: &str, context: &Context) -> Result<Value, RunError> {
+pub fn eval_str(source: &str, context: &Context) -> Result<Value, error::RunError> {
 	let expression = syn::parse_str::<syntax::ast::Expression>(source)?;
 	eval_expression(expression, context)
 }
 
-pub fn eval_tokens(source: TokenStream, context: &Context) -> Result<Value, RunError> {
+pub fn eval_tokens(source: TokenStream, context: &Context) -> Result<Value, error::RunError> {
 	let expression = syn::parse2::<syntax::ast::Expression>(source)?;
 	eval_expression(expression, context)
 }
 
-fn eval_expression(expression: syntax::ast::Expression, context: &Context) -> Result<Value, RunError> {
+fn eval_expression(expression: syntax::ast::Expression, context: &Context) -> Result<Value, error::RunError> {
 	Ok(eval::Eval::eval(&expression, context)?)
 }

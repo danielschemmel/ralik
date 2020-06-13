@@ -133,13 +133,10 @@ impl Eval for AtomicExpression {
 			AtomicExpression::LitStr(value, span) => {
 				Value::new_string(context, value).map_err(|_| EvalError::MissingStringType { span: *span })
 			}
-			AtomicExpression::Dollar(span) => context
-				.get_variable("$")
-				.cloned()
-				.ok_or_else(|| EvalError::UnknownVariable {
-					name: "$".to_string(),
-					span: *span,
-				}),
+			AtomicExpression::Dollar(span) => context.get_variable("$").ok_or_else(|| EvalError::UnknownVariable {
+				name: "$".to_string(),
+				span: *span,
+			}),
 			AtomicExpression::FunctionCall(name, name_span, arguments, _arguments_span) => {
 				let function = context.get_function(name).ok_or_else(|| EvalError::UnknownFunction {
 					name: name.clone(),

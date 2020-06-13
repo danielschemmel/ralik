@@ -29,6 +29,7 @@ pub enum InvalidCoreType {
 	InvalidCharType(#[from] InvalidCharType),
 	InvalidIntegerType(#[from] InvalidIntegerType),
 	InvalidStringType(#[from] InvalidStringType),
+	InvalidTupleType(#[from] InvalidTupleType),
 }
 
 #[derive(Error, Debug)]
@@ -52,5 +53,23 @@ pub enum InvalidIntegerType {
 #[derive(Error, Debug)]
 pub enum InvalidStringType {
 	#[error("The given context does not have a type `{}` registered", crate::types::StringName)]
+	Missing,
+}
+
+#[derive(Error, Debug)]
+pub enum InvalidTupleType {
+	#[error("The given context does not have the type `{missing_subtype_name}` registered that is required to create the tuple `{tuple_name}`")]
+	MissingSubtype {
+		tuple_name: String,
+		missing_subtype_name: String,
+	},
+
+	#[error("Tuple factory is invalid")]
+	InvalidFactory(#[from] InvalidTupleFactory),
+}
+
+#[derive(Error, Debug)]
+pub enum InvalidTupleFactory {
+	#[error("The given context does not have a tuple factory")]
 	Missing,
 }

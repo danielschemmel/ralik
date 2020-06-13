@@ -78,7 +78,7 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 }
 
 fn create_context() -> Result<ralik::Context> {
-	let mut context = ralik::Context::new();
+	let context = ralik::Context::new();
 
 	context.insert_variable("$", ralik::Value::from_serde(&context, "DOLLAR"));
 	context.insert_function("exit", |args| match args.len() {

@@ -5,18 +5,18 @@ use super::{Context, Function, Macro};
 impl std::fmt::Debug for Context {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("Context")
-			.field("types", &self.types)
-			.field("variables", &self.variables)
+			.field("types", &*self.0.types.read().unwrap())
+			.field("variables", &*self.0.variables.read().unwrap())
 			.field(
 				"functions",
 				&FunctionNameListFormatter {
-					functions: &self.functions,
+					functions: &*self.0.functions.read().unwrap(),
 				},
 			)
 			.field(
 				"macros",
 				&MacroNameListFormatter {
-					functions: &self.macros,
+					macros: &*self.0.macros.read().unwrap(),
 				},
 			)
 			.finish()
@@ -33,10 +33,10 @@ impl<'a> std::fmt::Debug for FunctionNameListFormatter<'a> {
 }
 
 struct MacroNameListFormatter<'a> {
-	functions: &'a HashMap<String, Macro>,
+	macros: &'a HashMap<String, Macro>,
 }
 impl<'a> std::fmt::Debug for MacroNameListFormatter<'a> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_list().entries(self.functions.keys()).finish()
+		f.debug_list().entries(self.macros.keys()).finish()
 	}
 }
