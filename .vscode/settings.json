@@ -1,8 +1,12 @@
 {
 	"cSpell.words": [
+		"ascii",
 		"backtrace",
 		"concat",
 		"eval",
+		"hexdigit",
+		"is",
+		"is ascii hexdigit",
 		"newtype",
 		"paren",
 		"ralik",
