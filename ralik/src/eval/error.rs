@@ -16,6 +16,14 @@ pub enum EvalError {
 		span: Span,
 		// backtrace: std::backtrace::Backtrace,
 	},
+	
+	#[error("Member function `{name}` does not exist for type `{type_name}` when referenced at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
+	UnknownMemberFunction {
+		name: String,
+		type_name: String,
+		span: Span,
+		// backtrace: std::backtrace::Backtrace,
+	},
 
 	#[error("Macro `{name}!` does not exist when referenced at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
 	UnknownMacro {

@@ -5,8 +5,9 @@ use crate::{Context, Value};
 
 pub(crate) fn call_member_function_0(context: &Context, name: &str, value: Value, span: &Span) -> Result<Value, EvalError> {
 	let r#type = value.get_type().clone();
-	let function = r#type.get_function(name).ok_or_else(|| EvalError::UnknownFunction {
-		name: format!("{}::{}", r#type.name(), name),
+	let function = r#type.get_function(name).ok_or_else(|| EvalError::UnknownMemberFunction {
+		name: name.to_string(),
+		type_name: r#type.name().to_string(),
 		span: span.clone(),
 	})?;
 	function(context, &[value]).map_err(|source| EvalError::MemberCallError {
@@ -26,8 +27,9 @@ pub(crate) fn call_member_function_1<T: Eval>(
 ) -> Result<Value, EvalError> {
 	let argument = argument.eval(context)?;
 	let r#type = value.get_type().clone();
-	let function = r#type.get_function(name).ok_or_else(|| EvalError::UnknownFunction {
-		name: format!("{}::{}", r#type.name(), name),
+	let function = r#type.get_function(name).ok_or_else(|| EvalError::UnknownMemberFunction {
+		name: name.to_string(),
+		type_name: r#type.name().to_string(),
 		span: span.clone(),
 	})?;
 	function(context, &[value, argument]).map_err(|source| EvalError::MemberCallError {
@@ -46,8 +48,9 @@ pub(crate) fn call_member_function_n<T: Eval>(
 	span: &Span,
 ) -> Result<Value, EvalError> {
 	let r#type = value.get_type().clone();
-	let function = r#type.get_function(name).ok_or_else(|| EvalError::UnknownFunction {
-		name: format!("{}::{}", r#type.name(), name),
+	let function = r#type.get_function(name).ok_or_else(|| EvalError::UnknownMemberFunction {
+		name: name.to_string(),
+		type_name: r#type.name().to_string(),
 		span: span.clone(),
 	})?;
 	let arguments = std::iter::once(Ok(value))

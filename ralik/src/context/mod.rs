@@ -3,9 +3,12 @@ use std::sync::Arc;
 
 use crate::{Type, CallError, Value, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType};
 
+mod debug;
+
 pub type Function = fn(&[Value]) -> Result<Value, CallError>;
 pub type Macro = fn(&[Value]) -> Result<Value, CallError>;
 
+#[derive(Clone)]
 pub struct Context {
 	types: HashMap<String, Arc<dyn Type>>,
 	variables: HashMap<String, Value>,

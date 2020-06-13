@@ -8,7 +8,13 @@ use rustyline::Editor;
 	setting = structopt::clap::AppSettings::ColoredHelp,
 	version = build_info::format!("{} {}\n\nBuilt from {} at {} with {} for {} on {}.", $.crate_info.version, $.profile, $.version_control, $.timestamp, $.compiler, $.compiler.target_triple, $.compiler.host_triple),
 )]
-pub struct Args {}
+pub struct Args {
+	#[structopt(long = "dump-context", help = "Dumps the interpreter context at the beginning of the session.")]
+	dump_context: bool,
+	
+	#[structopt(short = "c", long = "command", help = "Evaluate the specified commands instead of reading from stdin.")]
+	command: Option<String>,
+}
 
 #[derive(Copy, Clone)]
 pub enum ReturnCode {
@@ -39,10 +45,8 @@ fn set_ctrlc_handler() -> Result<std::sync::mpsc::Receiver<()>> {
 
 const PROMPT: &str = "> ";
 
-pub fn main(_args: Args) -> Result<ReturnCode> {
+pub fn main(args: Args) -> Result<ReturnCode> {
 	set_ctrlc_handler()?; // only active when not replaced by rustyline
-
-	// println!("{:?}", args);
 
 	let mut context = ralik::Context::new();
 	context.insert_variable("$", ralik::Value::from_serde(&context, "DOLLAR"));
@@ -55,6 +59,27 @@ pub fn main(_args: Args) -> Result<ReturnCode> {
 		n => Err(anyhow!("`exit` takes 0 or 1 arguments ({} provided)", n).into()),
 	});
 
+	if args.dump_context {
+		println!("{:#?}", context);
+	}
+
+	if let Some(command) = &args.command {
+		match ralik::eval_str(&command, &context) {
+			Ok(expr) => {
+				println!("{:+#?}", expr);
+			}
+			Err(err) => {
+				print_error_chain(&err);
+			}
+		}
+			
+		Ok(ReturnCode::Success)
+	} else {
+		repl(context)
+	}
+}
+
+fn repl(context: ralik::Context) -> Result<ReturnCode> {
 	let editor_config = EditorBuilder::new()
 		.completion_type(CompletionType::List)
 		.tab_stop(2)

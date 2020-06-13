@@ -11,15 +11,15 @@ pub use self::bool::NAME as BoolName;
 
 mod char;
 pub use self::char::CharType;
-pub use self::bool::NAME as CharName;
+pub use self::char::NAME as CharName;
 
 mod integer;
 pub use self::integer::IntegerType;
-pub use self::bool::NAME as IntegerName;
+pub use self::integer::NAME as IntegerName;
 
 mod string;
 pub use self::string::StringType;
-pub use self::bool::NAME as StringName;
+pub use self::string::NAME as StringName;
 
 //mod array;
 //mod option;
