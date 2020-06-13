@@ -12,7 +12,7 @@ mod debug;
 #[cfg(feature = "serde")]
 mod serializer;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Value {
 	r#type: Arc<dyn Type>,
 	data: Data,

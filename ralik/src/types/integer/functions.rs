@@ -1,4 +1,4 @@
-use num_traits::{ToPrimitive, Signed};
+use num_traits::{Signed, ToPrimitive};
 
 use crate::{CallError, Context, Value};
 

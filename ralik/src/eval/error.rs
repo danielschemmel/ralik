@@ -135,10 +135,10 @@ pub enum Overflow {
 
 	#[error("Attempt to shift by an amount that is to large")]
 	LargeShift,
-	
+
 	#[error("Value does not fit into a u32")]
 	U32,
-	
+
 	#[error("Value does not fit into a usize")]
 	USize,
 }

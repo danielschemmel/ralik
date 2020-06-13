@@ -105,7 +105,7 @@ fn repl(context: ralik::Context) -> Result<ReturnCode> {
 				editor.add_history_entry(line.as_str());
 				match ralik::eval_str(&line, &context) {
 					Ok(expr) => {
-						println!("{:+#?}", expr);
+						println!("{:#?}", expr);
 					}
 					Err(err) => {
 						print_error_chain(&err);
