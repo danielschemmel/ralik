@@ -20,19 +20,16 @@ enum Error {
 	Float,
 
 	#[error(transparent)]
-	MissingBoolType(#[from] crate::MissingBoolType),
-
-	#[error(transparent)]
-	MissingCharType(#[from] crate::MissingCharType),
-
-	#[error(transparent)]
-	MissingIntegerType(#[from] crate::MissingIntegerType),
-
-	#[error(transparent)]
-	MissingStringType(#[from] crate::MissingStringType),
+	InvalidBasicType(crate::InvalidBasicType),
 
 	#[error("Custom Error: {0}")]
 	Custom(String),
+}
+
+impl<T: Into<crate::InvalidBasicType>> From<T> for Error {
+	fn from(value: T) -> Self {
+		Error::InvalidBasicType(value.into())
+	}
 }
 
 impl ser::Error for Error {

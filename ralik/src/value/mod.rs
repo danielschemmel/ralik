@@ -4,7 +4,7 @@ use num_traits::ToPrimitive;
 use std::sync::Arc;
 
 use crate::{
-	Context, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType, MissingVecGeneric, Type,
+	Context, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidVecGeneric, Type,
 };
 
 mod debug;
@@ -28,35 +28,35 @@ enum Data {
 }
 
 impl Value {
-	pub fn new_bool(context: &Context, value: bool) -> Result<Value, MissingBoolType> {
+	pub fn new_bool(context: &Context, value: bool) -> Result<Value, InvalidBoolType> {
 		Ok(Value {
 			r#type: context.get_bool_type()?.clone(),
 			data: Data::Bool(value),
 		})
 	}
 
-	pub fn new_char(context: &Context, value: char) -> Result<Value, MissingCharType> {
+	pub fn new_char(context: &Context, value: char) -> Result<Value, InvalidCharType> {
 		Ok(Value {
 			r#type: context.get_char_type()?.clone(),
 			data: Data::Char(value),
 		})
 	}
 
-	pub fn new_integer(context: &Context, value: impl Into<BigInt>) -> Result<Value, MissingIntegerType> {
+	pub fn new_integer(context: &Context, value: impl Into<BigInt>) -> Result<Value, InvalidIntegerType> {
 		Ok(Value {
 			r#type: context.get_integer_type()?.clone(),
 			data: Data::Integer(value.into()),
 		})
 	}
 
-	pub fn new_string(context: &Context, value: impl Into<String>) -> Result<Value, MissingStringType> {
+	pub fn new_string(context: &Context, value: impl Into<String>) -> Result<Value, InvalidStringType> {
 		Ok(Value {
 			r#type: context.get_string_type()?.clone(),
 			data: Data::String(value.into()),
 		})
 	}
 
-	pub fn new_vec(context: &mut Context, value: Vec<Value>) -> Result<Value, MissingVecGeneric> {
+	pub fn new_vec(context: &mut Context, value: Vec<Value>) -> Result<Value, InvalidVecGeneric> {
 		unimplemented!()
 	}
 }

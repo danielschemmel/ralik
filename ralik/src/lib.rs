@@ -4,8 +4,8 @@ use proc_macro2::TokenStream;
 
 mod error;
 pub use error::{
-	GenericCallError, GenericError, MissingBasicType, MissingBoolType, MissingCharType, MissingIntegerType,
-	MissingStringType, MissingVecGeneric, RunError,
+	GenericCallError, GenericError, InvalidBasicType, InvalidBoolType, InvalidCharType, InvalidIntegerType,
+	InvalidStringType, InvalidVecGeneric, RunError,
 };
 
 mod context;

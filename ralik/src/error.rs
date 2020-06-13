@@ -23,42 +23,52 @@ pub enum RunError {
 }
 
 #[derive(Error, Debug)]
-pub enum MissingBasicType {
+pub enum InvalidBasicType {
 	#[error(transparent)]
-	MissingBoolType(#[from] MissingBoolType),
+	MissingBoolType(#[from] InvalidBoolType),
 
 	#[error(transparent)]
-	MissingCharType(#[from] MissingCharType),
+	MissingCharType(#[from] InvalidCharType),
 
 	#[error(transparent)]
-	MissingIntegerType(#[from] MissingIntegerType),
+	MissingIntegerType(#[from] InvalidIntegerType),
 
 	#[error(transparent)]
-	MissingStringType(#[from] MissingStringType),
+	MissingStringType(#[from] InvalidStringType),
 
 	#[error(transparent)]
-	MissingVecGeneric(#[from] MissingVecGeneric),
+	MissingVecGeneric(#[from] InvalidVecGeneric),
 }
 
 #[derive(Error, Debug)]
-#[error("The given context does not have a type `{}` registered", crate::types::BoolName)]
-pub struct MissingBoolType;
+pub enum InvalidBoolType {
+	#[error("The given context does not have a type `{}` registered", crate::types::BoolName)]
+	Missing,
+}
 
 #[derive(Error, Debug)]
-#[error("The given context does not have a type `{}` registered", crate::types::CharName)]
-pub struct MissingCharType;
+pub enum InvalidCharType {
+	#[error("The given context does not have a type `{}` registered", crate::types::CharName)]
+	Missing,
+}
 
 #[derive(Error, Debug)]
-#[error("The given context does not have a type `{}` registered", crate::types::IntegerName)]
-pub struct MissingIntegerType;
+pub enum InvalidIntegerType {
+	#[error("The given context does not have a type `{}` registered", crate::types::IntegerName)]
+	Missing,
+}
 
 #[derive(Error, Debug)]
-#[error("The given context does not have a type `{}` registered", crate::types::StringName)]
-pub struct MissingStringType;
+pub enum InvalidStringType {
+	#[error("The given context does not have a type `{}` registered", crate::types::StringName)]
+	Missing,
+}
 
 #[derive(Error, Debug)]
-#[error("The given context does not have a Vec generic registered")]
-pub struct MissingVecGeneric;
+pub enum InvalidVecGeneric {
+	#[error("The given context does not have a type `{}` registered", crate::types::VecName)]
+	Missing,
+}
 
 #[derive(Error, Debug)]
 pub enum GenericError {

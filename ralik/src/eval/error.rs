@@ -110,16 +110,16 @@ pub enum CallError {
 	Overflow(#[from] Overflow),
 
 	#[error(transparent)]
-	MissingBoolType(#[from] crate::MissingBoolType),
+	MissingBoolType(#[from] crate::InvalidBoolType),
 
 	#[error(transparent)]
-	MissingCharType(#[from] crate::MissingCharType),
+	MissingCharType(#[from] crate::InvalidCharType),
 
 	#[error(transparent)]
-	MissingIntegerType(#[from] crate::MissingIntegerType),
+	MissingIntegerType(#[from] crate::InvalidIntegerType),
 
 	#[error(transparent)]
-	MissingStringType(#[from] crate::MissingStringType),
+	MissingStringType(#[from] crate::InvalidStringType),
 
 	#[error(transparent)]
 	Other {

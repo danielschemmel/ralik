@@ -21,7 +21,7 @@ mod string;
 pub use self::string::StringType;
 pub use self::string::NAME as StringName;
 
-pub const VecGeneric: &str = "Vec";
+pub const VecName: &str = "Vec";
 
 pub type MemberFunction = fn(&Context, &[Value]) -> Result<Value, CallError>;
 

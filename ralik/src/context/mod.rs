@@ -2,7 +2,7 @@ use std::collections::hash_map::{Entry, HashMap};
 use std::sync::Arc;
 
 use crate::{
-	CallError, GenericCallError, GenericError, MissingBoolType, MissingCharType, MissingIntegerType, MissingStringType,
+	CallError, GenericCallError, GenericError, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType,
 	Type, Value,
 };
 
@@ -57,26 +57,32 @@ impl Context {
 		self.types.get(key)
 	}
 
-	pub fn get_bool_type(&self) -> Result<&Arc<dyn Type>, MissingBoolType> {
-		self.types.get(crate::types::BoolName).ok_or_else(|| MissingBoolType)
+	pub fn get_bool_type(&self) -> Result<&Arc<dyn Type>, InvalidBoolType> {
+		self
+			.types
+			.get(crate::types::BoolName)
+			.ok_or_else(|| InvalidBoolType::Missing)
 	}
 
-	pub fn get_char_type(&self) -> Result<&Arc<dyn Type>, MissingCharType> {
-		self.types.get(crate::types::CharName).ok_or_else(|| MissingCharType)
+	pub fn get_char_type(&self) -> Result<&Arc<dyn Type>, InvalidCharType> {
+		self
+			.types
+			.get(crate::types::CharName)
+			.ok_or_else(|| InvalidCharType::Missing)
 	}
 
-	pub fn get_integer_type(&self) -> Result<&Arc<dyn Type>, MissingIntegerType> {
+	pub fn get_integer_type(&self) -> Result<&Arc<dyn Type>, InvalidIntegerType> {
 		self
 			.types
 			.get(crate::types::IntegerName)
-			.ok_or_else(|| MissingIntegerType)
+			.ok_or_else(|| InvalidIntegerType::Missing)
 	}
 
-	pub fn get_string_type(&self) -> Result<&Arc<dyn Type>, MissingStringType> {
+	pub fn get_string_type(&self) -> Result<&Arc<dyn Type>, InvalidStringType> {
 		self
 			.types
 			.get(crate::types::StringName)
-			.ok_or_else(|| MissingStringType)
+			.ok_or_else(|| InvalidStringType::Missing)
 	}
 
 	pub fn get_type_mut(&mut self, key: &str) -> Option<&mut Arc<dyn Type>> {
