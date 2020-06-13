@@ -55,16 +55,7 @@ const PROMPT: &str = "> ";
 pub fn main(args: Args) -> Result<ReturnCode> {
 	set_ctrlc_handler()?; // only active when not replaced by rustyline
 
-	let mut context = ralik::Context::new();
-	context.insert_variable("$", ralik::Value::from_serde(&context, "DOLLAR"));
-	context.insert_function("exit", |args| match args.len() {
-		0 => std::process::exit(0),
-		1 => args[0]
-			.as_i32()
-			.map(std::process::exit)
-			.ok_or_else(|| anyhow!("Argument to `exit` must be a valid `i32` if it exists."))?,
-		n => Err(anyhow!("`exit` takes 0 or 1 arguments ({} provided)", n).into()),
-	});
+	let context = create_context()?;
 
 	if args.dump_context {
 		println!("{:#?}", context);
@@ -84,6 +75,22 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 	} else {
 		repl(context)
 	}
+}
+
+fn create_context() -> Result<ralik::Context> {
+	let mut context = ralik::Context::new();
+
+	context.insert_variable("$", ralik::Value::from_serde(&context, "DOLLAR"));
+	context.insert_function("exit", |args| match args.len() {
+		0 => std::process::exit(0),
+		1 => args[0]
+			.as_i32()
+			.map(std::process::exit)
+			.ok_or_else(|| anyhow!("Argument to `exit` must be a valid `i32` if it exists."))?,
+		n => Err(anyhow!("`exit` takes 0 or 1 arguments ({} provided)", n).into()),
+	});
+
+	Ok(context)
 }
 
 fn repl(context: ralik::Context) -> Result<ReturnCode> {
