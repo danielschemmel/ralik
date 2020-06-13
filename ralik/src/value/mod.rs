@@ -42,17 +42,14 @@ impl Value {
 		})
 	}
 
-	pub fn new_integer<Integer: Into<BigInt>>(context: &Context, value: Integer) -> Result<Value, MissingIntegerType> {
+	pub fn new_integer(context: &Context, value: impl Into<BigInt>) -> Result<Value, MissingIntegerType> {
 		Ok(Value {
 			r#type: context.get_integer_type()?.clone(),
 			data: Data::Integer(value.into()),
 		})
 	}
 
-	pub fn new_string<String: Into<std::string::String>>(
-		context: &Context,
-		value: String,
-	) -> Result<Value, MissingStringType> {
+	pub fn new_string(context: &Context, value: impl Into<String>) -> Result<Value, MissingStringType> {
 		Ok(Value {
 			r#type: context.get_string_type()?.clone(),
 			data: Data::String(value.into()),

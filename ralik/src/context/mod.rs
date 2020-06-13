@@ -134,7 +134,7 @@ impl Context {
 		self.generics.get_mut(key)
 	}
 
-	pub fn insert_generic<K: Into<String>>(&mut self, key: K, value: Generic) -> Option<Generic> {
+	pub fn insert_generic(&mut self, key: impl Into<String>, value: Generic) -> Option<Generic> {
 		self.generics.insert(key.into(), value)
 	}
 
@@ -153,7 +153,7 @@ impl Context {
 		self.variables.get_mut(key)
 	}
 
-	pub fn insert_variable<K: Into<String>, V: Into<Value>>(&mut self, key: K, value: V) -> Option<Value> {
+	pub fn insert_variable(&mut self, key: impl Into<String>, value: impl Into<Value>) -> Option<Value> {
 		self.variables.insert(key.into(), value.into())
 	}
 
@@ -172,7 +172,7 @@ impl Context {
 		self.functions.get_mut(key)
 	}
 
-	pub fn insert_function<K: Into<String>>(&mut self, key: K, value: Function) -> Option<Function> {
+	pub fn insert_function(&mut self, key: impl Into<String>, value: Function) -> Option<Function> {
 		self.functions.insert(key.into(), value)
 	}
 
@@ -191,7 +191,7 @@ impl Context {
 		self.macros.get_mut(key)
 	}
 
-	pub fn insert_macro<K: Into<String>>(&mut self, key: K, value: Macro) -> Option<Macro> {
+	pub fn insert_macro(&mut self, key: impl Into<String>, value: Macro) -> Option<Macro> {
 		self.macros.insert(key.into(), value)
 	}
 
