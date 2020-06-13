@@ -34,6 +34,7 @@ impl BasicTypeBase for StringImpl {
 		functions.insert(crate::ops::GREATER.into(), ops::greater);
 		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
 
+		functions.insert("len".into(), functions::len);
 		functions.insert("to_string".into(), functions::to_string);
 	}
 }
