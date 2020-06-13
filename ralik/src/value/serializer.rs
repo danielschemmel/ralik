@@ -13,20 +13,17 @@ impl Value {
 
 #[derive(Error, Debug)]
 enum Error {
-	#[error(transparent)]
-	Anyhow(anyhow::Error),
-
 	#[error("Floating point numbers are (currently?) not supported by RALIK")]
 	Float,
 
 	#[error(transparent)]
-	InvalidBasicType(crate::InvalidBasicType),
+	InvalidBasicType(crate::InvalidCoreType),
 
 	#[error("Custom Error: {0}")]
 	Custom(String),
 }
 
-impl<T: Into<crate::InvalidBasicType>> From<T> for Error {
+impl<T: Into<crate::InvalidCoreType>> From<T> for Error {
 	fn from(value: T) -> Self {
 		Error::InvalidBasicType(value.into())
 	}
@@ -116,7 +113,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		Ok(Value::new_string(self.context, value)?)
 	}
 
-	fn serialize_bytes(self, v: &[u8]) -> Result<Self::Ok, Self::Error> {
+	fn serialize_bytes(self, _value: &[u8]) -> Result<Self::Ok, Self::Error> {
 		unimplemented!()
 	}
 
@@ -124,7 +121,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		unimplemented!()
 	}
 
-	fn serialize_some<T: ?Sized>(self, value: &T) -> Result<Self::Ok, Self::Error> {
+	fn serialize_some<T: ?Sized>(self, _value: &T) -> Result<Self::Ok, Self::Error> {
 		unimplemented!()
 	}
 
@@ -132,69 +129,69 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		unimplemented!()
 	}
 
-	fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
+	fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok, Self::Error> {
 		unimplemented!()
 	}
 
 	fn serialize_unit_variant(
 		self,
-		name: &'static str,
-		variant_index: u32,
-		variant: &'static str,
+		_name: &'static str,
+		_variant_index: u32,
+		_variant: &'static str,
 	) -> Result<Self::Ok, Self::Error> {
 		unimplemented!()
 	}
 
-	fn serialize_newtype_struct<T: ?Sized>(self, name: &'static str, value: &T) -> Result<Self::Ok, Self::Error> {
+	fn serialize_newtype_struct<T: ?Sized>(self, _name: &'static str, _value: &T) -> Result<Self::Ok, Self::Error> {
 		unimplemented!()
 	}
 
 	fn serialize_newtype_variant<T: ?Sized>(
 		self,
-		name: &'static str,
-		variant_index: u32,
-		variant: &'static str,
-		value: &T,
+		_name: &'static str,
+		_variant_index: u32,
+		_variant: &'static str,
+		_value: &T,
 	) -> Result<Self::Ok, Self::Error> {
 		unimplemented!()
 	}
 
-	fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
+	fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
 		unimplemented!()
 	}
 
-	fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
+	fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Self::Error> {
 		unimplemented!()
 	}
 
-	fn serialize_tuple_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
+	fn serialize_tuple_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
 		unimplemented!()
 	}
 
 	fn serialize_tuple_variant(
 		self,
-		name: &'static str,
-		variant_index: u32,
-		variant: &'static str,
-		len: usize,
+		_name: &'static str,
+		_variant_index: u32,
+		_variant: &'static str,
+		_len: usize,
 	) -> Result<Self::SerializeTupleVariant, Self::Error> {
 		unimplemented!()
 	}
 
-	fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
+	fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
 		unimplemented!()
 	}
 
-	fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct, Self::Error> {
+	fn serialize_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeStruct, Self::Error> {
 		unimplemented!()
 	}
 
 	fn serialize_struct_variant(
 		self,
-		name: &'static str,
-		variant_index: u32,
-		variant: &'static str,
-		len: usize,
+		_name: &'static str,
+		_variant_index: u32,
+		_variant: &'static str,
+		_len: usize,
 	) -> Result<Self::SerializeStructVariant, Self::Error> {
 		unimplemented!()
 	}
@@ -206,7 +203,7 @@ impl ser::SerializeSeq for SerializeSeq {
 	type Ok = Value;
 	type Error = Error;
 
-	fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error> {
+	fn serialize_element<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 
@@ -221,7 +218,7 @@ impl ser::SerializeTuple for SerializeTuple {
 	type Ok = Value;
 	type Error = Error;
 
-	fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error> {
+	fn serialize_element<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 
@@ -236,7 +233,7 @@ impl ser::SerializeTupleStruct for SerializeTupleStruct {
 	type Ok = Value;
 	type Error = Error;
 
-	fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error> {
+	fn serialize_field<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 
@@ -251,7 +248,7 @@ impl ser::SerializeTupleVariant for SerializeTupleVariant {
 	type Ok = Value;
 	type Error = Error;
 
-	fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error> {
+	fn serialize_field<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 
@@ -266,11 +263,11 @@ impl ser::SerializeMap for SerializeMap {
 	type Ok = Value;
 	type Error = Error;
 
-	fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<(), Self::Error> {
+	fn serialize_key<T: ?Sized>(&mut self, _key: &T) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 
-	fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error> {
+	fn serialize_value<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 
@@ -285,11 +282,11 @@ impl ser::SerializeStruct for SerializeStruct {
 	type Ok = Value;
 	type Error = Error;
 
-	fn serialize_field<T: ?Sized>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error> {
+	fn serialize_field<T: ?Sized>(&mut self, _key: &'static str, _value: &T) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 
-	fn skip_field(&mut self, key: &'static str) -> Result<(), Self::Error> {
+	fn skip_field(&mut self, _key: &'static str) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 
@@ -304,11 +301,11 @@ impl ser::SerializeStructVariant for SerializeStructVariant {
 	type Ok = Value;
 	type Error = Error;
 
-	fn serialize_field<T: ?Sized>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error> {
+	fn serialize_field<T: ?Sized>(&mut self, _key: &'static str, _value: &T) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 
-	fn skip_field(&mut self, key: &'static str) -> Result<(), Self::Error> {
+	fn skip_field(&mut self, _key: &'static str) -> Result<(), Self::Error> {
 		unimplemented!()
 	}
 

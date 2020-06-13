@@ -4,7 +4,7 @@ use num_traits::ToPrimitive;
 use std::sync::Arc;
 
 use crate::{
-	Context, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidVecGeneric, Type,
+	Context, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, Type,
 };
 
 mod debug;
@@ -24,7 +24,6 @@ enum Data {
 	Char(char),
 	Integer(BigInt),
 	String(String),
-	Vec(Vec<Value>),
 }
 
 impl Value {
@@ -54,10 +53,6 @@ impl Value {
 			r#type: context.get_string_type()?.clone(),
 			data: Data::String(value.into()),
 		})
-	}
-
-	pub fn new_vec(context: &mut Context, value: Vec<Value>) -> Result<Value, InvalidVecGeneric> {
-		unimplemented!()
 	}
 }
 

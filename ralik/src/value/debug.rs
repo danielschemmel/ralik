@@ -30,7 +30,6 @@ impl fmt::Debug for Data {
 				Char(value) => f.debug_tuple("Char").field(value).finish(),
 				Integer(value) => f.debug_tuple("Integer").field(&IntegerFormatter(value)).finish(),
 				String(value) => f.debug_tuple("String").field(value).finish(),
-				Vec(value) => f.debug_tuple("Vec").field(&value).finish(),
 			}
 		} else {
 			match self {
@@ -38,7 +37,6 @@ impl fmt::Debug for Data {
 				Char(value) => value.fmt(f),
 				Integer(value) => IntegerFormatter(value).fmt(f),
 				String(value) => value.fmt(f),
-				Vec(value) => value.fmt(f),
 			}
 		}
 	}
