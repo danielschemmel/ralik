@@ -6,7 +6,9 @@ impl fmt::Debug for super::AtomicExpression {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		use super::AtomicExpression::*;
 		match self {
+			Unit(span) => f.debug_tuple("Unit").field(span).finish(),
 			Parenthesized(expression, span) => f.debug_tuple("Parenthesized").field(expression).field(span).finish(),
+			Tuple(expressions, span) => f.debug_tuple("Tuple").field(expressions).field(span).finish(),
 			LitBool(value, span) => f.debug_tuple("LitBool").field(&value).field(span).finish(),
 			LitInt(value, span) => f
 				.debug_tuple("LitInt")

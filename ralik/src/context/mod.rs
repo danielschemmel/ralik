@@ -26,6 +26,7 @@ impl Context {
 	pub fn new() -> Self {
 		let context = Self::new_empty();
 
+		context.insert_type(Arc::new(crate::types::UnitType::new()));
 		context.insert_type(Arc::new(crate::types::BoolType::new()));
 		context.insert_type(Arc::new(crate::types::CharType::new()));
 		context.insert_type(Arc::new(crate::types::IntegerType::new()));

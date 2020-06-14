@@ -79,23 +79,18 @@ pub enum EvalError {
 		span: Span,
 	},
 
-	#[error("The given context does not have a type `{}` available to create a new object at {}:{} to {}:{}", crate::types::BoolName, span.start().line, span.start().column, span.end().line, span.end().column)]
-	MissingBoolType { span: Span },
-
-	#[error("The given context does not have a type `{}` available to create a new object at {}:{} to {}:{}", crate::types::CharName, span.start().line, span.start().column, span.end().line, span.end().column)]
-	MissingCharType { span: Span },
-
-	#[error("The given context does not have a type `{}` available to create a new object at {}:{} to {}:{}", crate::types::IntegerName, span.start().line, span.start().column, span.end().line, span.end().column)]
-	MissingIntegerType { span: Span },
-
-	#[error("The given context does not have a type `{}` available to create a new object at {}:{} to {}:{}", crate::types::StringName, span.start().line, span.start().column, span.end().line, span.end().column)]
-	MissingStringType { span: Span },
+	#[error("Could not create object of core type at {}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)]
+	InvalidCoreType {
+		#[source]
+		source: crate::error::InvalidCoreType,
+		span: Span,
+	},
 }
 
 #[derive(Error, Debug)]
 pub enum CallError {
 	#[error(
-		"Argument {argument_number} has type {actual_type_name}, but type {expected_type_name} was expected instead"
+		"Argument {argument_number} has type `{actual_type_name}`, but type `{expected_type_name}` was expected instead"
 	)]
 	InvalidArgumentType {
 		argument_number: usize,

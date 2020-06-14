@@ -1,42 +1,35 @@
 use super::{BasicFunctionStore, BasicType, BasicTypeBase};
 
-mod functions;
 mod ops;
 
-pub type BoolType = BasicType<BoolImpl>;
-pub const NAME: &str = "bool";
+pub type UnitType = BasicType<UnitImpl>;
+pub const NAME: &str = "()";
 
-pub struct BoolImpl;
+pub struct UnitImpl;
 
-impl BoolType {
+impl UnitType {
 	pub fn new() -> Self {
 		Self::default()
 	}
 }
 
-impl Default for BoolType {
+impl Default for UnitType {
 	fn default() -> Self {
-		BasicType::from_base(BoolImpl)
+		BasicType::from_base(UnitImpl)
 	}
 }
 
-impl BasicTypeBase for BoolImpl {
+impl BasicTypeBase for UnitImpl {
 	fn name(&self) -> &str {
 		NAME
 	}
 
 	fn register_functions(&self, functions: &mut BasicFunctionStore) {
-		functions.insert(crate::ops::NOT.into(), ops::not);
-		functions.insert(crate::ops::BIT_AND.into(), ops::bit_and);
-		functions.insert(crate::ops::BIT_OR.into(), ops::bit_or);
-		functions.insert(crate::ops::BIT_XOR.into(), ops::bit_xor);
 		functions.insert(crate::ops::EQUAL.into(), ops::equal);
 		functions.insert(crate::ops::NOT_EQUAL.into(), ops::not_equal);
 		functions.insert(crate::ops::LESS.into(), ops::less);
 		functions.insert(crate::ops::LESS_OR_EQUAL.into(), ops::less_or_equal);
 		functions.insert(crate::ops::GREATER.into(), ops::greater);
 		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
-
-		functions.insert("to_string".into(), functions::to_string);
 	}
 }

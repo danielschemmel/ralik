@@ -1,7 +1,9 @@
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
-use crate::error::{InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType};
+use crate::error::{
+	InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType, InvalidUnitType,
+};
 use crate::Type;
 
 use super::Context;
@@ -9,6 +11,10 @@ use super::Context;
 impl Context {
 	pub fn get_type(&self, key: &str) -> Option<Arc<dyn Type>> {
 		self.0.types.read().unwrap().get(key).cloned()
+	}
+
+	pub fn get_unit_type(&self) -> Result<Arc<dyn Type>, InvalidUnitType> {
+		self.get_type("()").ok_or_else(|| InvalidUnitType::Missing)
 	}
 
 	pub fn get_bool_type(&self) -> Result<Arc<dyn Type>, InvalidBoolType> {
@@ -36,40 +42,53 @@ impl Context {
 	}
 
 	pub fn get_tuple_type(&self, element_types: &[&str]) -> Result<Arc<dyn Type>, InvalidTupleType> {
+		if element_types.len() == 0 {
+			return Err(InvalidTupleType::ZeroElements);
+		}
+
 		let name = to_tuple_name(element_types);
 		if let Some(tuple_type) = self.get_type(&name) {
 			return Ok(tuple_type);
 		}
 
-		let mut resolved_element_types = Vec::with_capacity(element_types.len());
-		for &element_type_name in element_types {
-			let type_ref = self.get_type(element_type_name);
-			if type_ref.is_none() {
-				return Err(InvalidTupleType::MissingSubtype {
-					tuple_name: name,
-					missing_subtype_name: element_type_name.to_string(),
-				});
-			}
-			let type_ref = type_ref.unwrap();
-			resolved_element_types.push(type_ref.clone());
+		// The fast path failed, we have to construct this tuple type. To ensure internal consistency, we have to claim a
+		// write lock at this point, and can only release it once the newly created type is inserted.
+		let mut types = self.0.types.write().unwrap();
+
+		// Some other thread may have concurrently created this type in between our previous check and the acquisition of
+		// the write lock, so we need to check again.
+		if let Some(tuple_type) = types.get(&name) {
+			return Ok(tuple_type.clone());
 		}
 
-		unimplemented!()
+		let element_types: Result<Vec<Arc<dyn Type>>, &str> = element_types
+			.iter()
+			.map(|&name| types.get(name).cloned().ok_or(name))
+			.collect();
+		if let Err(element_type_name) = element_types {
+			return Err(InvalidTupleType::MissingSubtype {
+				tuple_name: name,
+				missing_subtype_name: element_type_name.to_string(),
+			});
+		}
+		let element_types = element_types.unwrap();
+
+		let tuple_type = Arc::new(crate::types::TupleType::new(name, element_types));
+		assert!(types
+			.insert(tuple_type.name().to_string(), tuple_type.clone())
+			.is_none());
+
+		Ok(tuple_type)
 	}
 
-	pub fn insert_type(&self, value: Arc<dyn Type>) -> bool {
+	pub fn insert_type(&self, value: Arc<dyn Type>) {
 		let name = value.name().to_string();
 		let mut types = self.0.types.write().unwrap();
 		match types.entry(name) {
-			Entry::Occupied(entry) => {
-				if Arc::strong_count(entry.get()) == 1 {
-					entry.remove_entry();
-					true
-				} else {
-					false
-				}
+			Entry::Occupied(_entry) => unimplemented!("Overwriting existing types is not supported (yet?)"),
+			Entry::Vacant(entry) => {
+				entry.insert(value);
 			}
-			Entry::Vacant(_) => false,
 		}
 	}
 
@@ -79,7 +98,7 @@ impl Context {
 		if Arc::strong_count(&value) == 1 {
 			Some((key, value))
 		} else {
-			// There are still values using this type, it cannot be removed now
+			// There are still values or subtypes using this type, it cannot be removed now
 			assert!(types.insert(key, value).is_none());
 			None
 		}

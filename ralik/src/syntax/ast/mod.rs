@@ -2,7 +2,6 @@ use num_bigint::BigInt;
 use proc_macro2::Span;
 
 mod debug;
-mod eq;
 
 #[derive(Clone, Debug)]
 pub enum Expression {
@@ -36,7 +35,9 @@ pub enum BinaryOperator {
 
 #[derive(Clone)]
 pub enum AtomicExpression {
+	Unit(Span),
 	Parenthesized(Box<Expression>, Span),
+	Tuple(Vec<Expression>, Span),
 	LitBool(bool, Span),
 	LitInt(BigInt, Span),
 	LitChar(char, Span),

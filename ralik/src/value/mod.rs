@@ -3,7 +3,9 @@ use num_traits::ToPrimitive;
 
 use std::sync::Arc;
 
-use crate::error::{InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType};
+use crate::error::{
+	InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType, InvalidUnitType,
+};
 use crate::{Context, Type};
 
 mod debug;
@@ -19,13 +21,22 @@ pub struct Value {
 
 #[derive(Clone)]
 enum Data {
+	Unit,
 	Bool(bool),
 	Char(char),
 	Integer(BigInt),
 	String(String),
+	Tuple(Vec<Value>),
 }
 
 impl Value {
+	pub fn new_unit(context: &Context) -> Result<Value, InvalidUnitType> {
+		Ok(Value {
+			r#type: context.get_unit_type()?.clone(),
+			data: Data::Unit,
+		})
+	}
+
 	pub fn new_bool(context: &Context, value: bool) -> Result<Value, InvalidBoolType> {
 		Ok(Value {
 			r#type: context.get_bool_type()?.clone(),
@@ -53,11 +64,38 @@ impl Value {
 			data: Data::String(value.into()),
 		})
 	}
+
+	pub fn new_tuple(context: &Context, values: impl Into<Vec<Value>>) -> Result<Value, InvalidTupleType> {
+		let values: Vec<Value> = values.into();
+		let element_types = values
+			.iter()
+			.map(|value| value.get_type().name())
+			.collect::<Vec<&str>>();
+		let tuple_type = context.get_tuple_type(&element_types)?.clone();
+		Ok(Value {
+			r#type: tuple_type,
+			data: Data::Tuple(values),
+		})
+	}
 }
 
 impl Value {
 	pub fn get_type(&self) -> &Arc<dyn Type> {
 		&self.r#type
+	}
+
+	pub fn is_unit(&self) -> bool {
+		match &self.data {
+			Data::Unit => true,
+			_ => false,
+		}
+	}
+
+	pub fn as_unit(&self) -> Option<()> {
+		match &self.data {
+			Data::Unit => Some(()),
+			_ => None,
+		}
 	}
 
 	pub fn is_bool(&self) -> bool {

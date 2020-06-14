@@ -1,4 +1,4 @@
-use super::{BasicType, BasicTypeBase, FunctionStore};
+use super::{BasicFunctionStore, BasicType, BasicTypeBase};
 
 mod functions;
 mod ops;
@@ -25,7 +25,7 @@ impl BasicTypeBase for IntegerImpl {
 		NAME
 	}
 
-	fn register_functions(&self, functions: &mut FunctionStore) {
+	fn register_functions(&self, functions: &mut BasicFunctionStore) {
 		functions.insert(crate::ops::NOT.into(), ops::not);
 		functions.insert(crate::ops::NEGATE.into(), ops::negate);
 		functions.insert(crate::ops::NOT.into(), ops::not);

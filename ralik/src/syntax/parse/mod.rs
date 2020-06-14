@@ -368,11 +368,38 @@ fn parse_atomic_expression(input: parse::ParseStream, lookahead: Lookahead1) -> 
 	if lookahead.peek(syn::token::Paren) {
 		let parenthesized;
 		parenthesized!(parenthesized in input);
-		let expression = parenthesized.parse::<ast::Expression>()?;
-		Ok(ast::AtomicExpression::Parenthesized(
-			Box::new(expression),
-			parenthesized.span(),
-		))
+		if parenthesized.is_empty() {
+			return Ok(ast::AtomicExpression::Unit(parenthesized.span()));
+		}
+
+		let (expression, lookahead) = parse_expression(&parenthesized)?;
+
+		if parenthesized.is_empty() {
+			Ok(ast::AtomicExpression::Parenthesized(
+				Box::new(expression),
+				parenthesized.span(),
+			))
+		} else if lookahead.peek(Token![,]) {
+			parenthesized.parse::<Token![,]>()?;
+			let mut tuple = Vec::new();
+			tuple.push(expression);
+
+			while !parenthesized.is_empty() {
+				let (expression, lookahead) = parse_expression(&parenthesized)?;
+				tuple.push(expression);
+				if parenthesized.is_empty() {
+					break;
+				}
+				if lookahead.peek(Token![,]) {
+					parenthesized.parse::<Token![,]>()?;
+				} else {
+					return Err(lookahead.error());
+				}
+			}
+			Ok(ast::AtomicExpression::Tuple(tuple, parenthesized.span()))
+		} else {
+			Err(lookahead.error())
+		}
 	} else if lookahead.peek(LitBool) {
 		let lit_bool = input.parse::<LitBool>()?;
 		Ok(ast::AtomicExpression::LitBool(lit_bool.value, lit_bool.span))

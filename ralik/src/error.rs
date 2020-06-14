@@ -25,11 +25,18 @@ pub enum RunError {
 #[derive(Error, Debug)]
 #[error("Invalid core type")]
 pub enum InvalidCoreType {
+	InvalidUnitType(#[from] InvalidUnitType),
 	InvalidBoolType(#[from] InvalidBoolType),
 	InvalidCharType(#[from] InvalidCharType),
 	InvalidIntegerType(#[from] InvalidIntegerType),
 	InvalidStringType(#[from] InvalidStringType),
 	InvalidTupleType(#[from] InvalidTupleType),
+}
+
+#[derive(Error, Debug)]
+pub enum InvalidUnitType {
+	#[error("The given context does not have a type `()` registered")]
+	Missing,
 }
 
 #[derive(Error, Debug)]
@@ -64,12 +71,6 @@ pub enum InvalidTupleType {
 		missing_subtype_name: String,
 	},
 
-	#[error("Tuple factory is invalid")]
-	InvalidFactory(#[from] InvalidTupleFactory),
-}
-
-#[derive(Error, Debug)]
-pub enum InvalidTupleFactory {
-	#[error("The given context does not have a tuple factory")]
-	Missing,
+	#[error("Cannot create a tuple without any elements (note: the unit type `{}` is not a tuple)", crate::types::UnitName)]
+	ZeroElements,
 }
