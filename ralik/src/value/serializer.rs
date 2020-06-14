@@ -116,8 +116,13 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		Ok(Value::new_string(self.context, value)?)
 	}
 
-	fn serialize_bytes(self, _value: &[u8]) -> Result<Self::Ok, Self::Error> {
-		unimplemented!()
+	fn serialize_bytes(self, value: &[u8]) -> Result<Self::Ok, Self::Error> {
+		let integer_type = self.context.get_integer_type()?;
+		let values = value
+			.iter()
+			.map(|byte| Value::new_integer(self.context, *byte))
+			.collect::<Result<Vec<Value>, crate::error::InvalidIntegerType>>()?;
+		Ok(Value::new_array(self.context, &integer_type, values)?)
 	}
 
 	fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
