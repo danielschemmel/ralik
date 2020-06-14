@@ -4,7 +4,7 @@ mod functions;
 mod ops;
 
 pub type CharType = BasicType<CharImpl>;
-pub const NAME: &str = "char";
+pub const fn name() -> &'static str { "char" }
 
 pub struct CharImpl;
 
@@ -22,7 +22,7 @@ impl Default for CharType {
 
 impl BasicTypeBase for CharImpl {
 	fn name(&self) -> &str {
-		NAME
+		self::name()
 	}
 
 	fn register_functions(&self, functions: &mut BasicFunctionStore) {

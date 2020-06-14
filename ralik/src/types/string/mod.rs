@@ -4,7 +4,7 @@ mod functions;
 mod ops;
 
 pub type StringType = BasicType<StringImpl>;
-pub const NAME: &str = "String";
+pub const fn name() -> &'static str { "String" }
 
 pub struct StringImpl;
 
@@ -22,7 +22,7 @@ impl Default for StringType {
 
 impl BasicTypeBase for StringImpl {
 	fn name(&self) -> &str {
-		NAME
+		self::name()
 	}
 
 	fn register_functions(&self, functions: &mut BasicFunctionStore) {

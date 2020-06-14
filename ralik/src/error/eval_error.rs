@@ -33,6 +33,15 @@ pub enum EvalError {
 		at: Location,
 	},
 
+	#[error("Array literal has mixed types: Element {index_1} has type `{type_1}` and element {index_2} has type `{type_2}` (at {at})")]
+	MixedArray {
+		index_1: usize,
+		type_1: String,
+		index_2: usize,
+		type_2: String,
+		at: Location,
+	},
+
 	#[error("Operand to `&&` has type `{type_name}` (should be boolean) at {at}")]
 	NotBoolInLazyAnd { type_name: String, at: Location },
 
@@ -70,4 +79,9 @@ pub enum EvalError {
 		source: crate::error::InvalidCoreType,
 		at: Location,
 	},
+
+	#[error("Expressions creating empty arrays are not currently supported.")]
+	EmptyArray {
+		at: Location,
+	}
 }

@@ -2,7 +2,7 @@ use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
 use crate::error::{
-	InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType, InvalidUnitType,
+	InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType, InvalidUnitType, InvalidArrayType,
 };
 use crate::Type;
 
@@ -19,34 +19,34 @@ impl Context {
 
 	pub fn get_bool_type(&self) -> Result<Arc<dyn Type>, InvalidBoolType> {
 		self
-			.get_type(crate::types::BoolName)
+			.get_type(crate::types::bool_name())
 			.ok_or_else(|| InvalidBoolType::Missing)
 	}
 
 	pub fn get_char_type(&self) -> Result<Arc<dyn Type>, InvalidCharType> {
 		self
-			.get_type(crate::types::CharName)
+			.get_type(crate::types::char_name())
 			.ok_or_else(|| InvalidCharType::Missing)
 	}
 
 	pub fn get_integer_type(&self) -> Result<Arc<dyn Type>, InvalidIntegerType> {
 		self
-			.get_type(crate::types::IntegerName)
+			.get_type(crate::types::integer_name())
 			.ok_or_else(|| InvalidIntegerType::Missing)
 	}
 
 	pub fn get_string_type(&self) -> Result<Arc<dyn Type>, InvalidStringType> {
 		self
-			.get_type(crate::types::StringName)
+			.get_type(crate::types::string_name())
 			.ok_or_else(|| InvalidStringType::Missing)
 	}
 
-	pub fn get_tuple_type(&self, element_types: &[&str]) -> Result<Arc<dyn Type>, InvalidTupleType> {
-		if element_types.len() == 0 {
+	pub fn get_tuple_type(&self, element_type_names: &[&str]) -> Result<Arc<dyn Type>, InvalidTupleType> {
+		if element_type_names.len() == 0 {
 			return Err(InvalidTupleType::ZeroElements);
 		}
 
-		let name = to_tuple_name(element_types);
+		let name = crate::types::tuple_name(element_type_names);
 		if let Some(tuple_type) = self.get_type(&name) {
 			return Ok(tuple_type);
 		}
@@ -61,14 +61,14 @@ impl Context {
 			return Ok(tuple_type.clone());
 		}
 
-		let element_types: Result<Vec<Arc<dyn Type>>, &str> = element_types
+		let element_types: Result<Vec<Arc<dyn Type>>, &str> = element_type_names
 			.iter()
 			.map(|&name| types.get(name).cloned().ok_or(name))
 			.collect();
 		if let Err(element_type_name) = element_types {
 			return Err(InvalidTupleType::MissingSubtype {
 				tuple_name: name,
-				missing_subtype_name: element_type_name.to_string(),
+				missing_element_type_name: element_type_name.to_string(),
 			});
 		}
 		let element_types = element_types.unwrap();
@@ -79,6 +79,34 @@ impl Context {
 			.is_none());
 
 		Ok(tuple_type)
+	}
+
+	pub fn get_array_type(&self, element_type_name: &str) -> Result<Arc<dyn Type>, InvalidArrayType> {
+		let name = crate::types::array_name(element_type_name);
+		if let Some(array_type) = self.get_type(&name) {
+			return Ok(array_type);
+		}
+
+		// The fast path failed, we have to construct this tuple type. To ensure internal consistency, we have to claim a
+		// write lock at this point, and can only release it once the newly created type is inserted.
+		let mut types = self.0.types.write().unwrap();
+
+		// Some other thread may have concurrently created this type in between our previous check and the acquisition of
+		// the write lock, so we need to check again.
+		if let Some(array_type) = types.get(&name) {
+			return Ok(array_type.clone());
+		}
+
+		let element_type = types.get(element_type_name).ok_or_else(|| InvalidArrayType::MissingSubtype {
+			element_type_name: element_type_name.to_string(),
+		})?;
+
+		let array_type = crate::types::ArrayType::new(name, element_type.clone());
+		assert!(types
+			.insert(array_type.name().to_string(), array_type.clone())
+			.is_none());
+
+		Ok(array_type)
 	}
 
 	pub fn insert_type(&self, value: Arc<dyn Type>) {
@@ -103,17 +131,4 @@ impl Context {
 			None
 		}
 	}
-}
-
-fn to_tuple_name(element_types: &[&str]) -> String {
-	let mut name = "(".to_string();
-	for (i, &element_type_name) in element_types.iter().enumerate() {
-		if i > 0 {
-			name.push_str(", ");
-		}
-		name.push_str(element_type_name);
-	}
-	name.push_str(")");
-
-	name
 }

@@ -32,6 +32,7 @@ impl fmt::Debug for Data {
 				Integer(value) => f.debug_tuple("Integer").field(&IntegerFormatter(value)).finish(),
 				String(value) => f.debug_tuple("String").field(value).finish(),
 				Tuple(value) => f.debug_tuple("Tuple").field(value).finish(),
+				Array(value) => f.debug_tuple("Array").field(value).finish(),
 			}
 		} else {
 			match self {
@@ -41,6 +42,7 @@ impl fmt::Debug for Data {
 				Integer(value) => IntegerFormatter(value).fmt(f),
 				String(value) => value.fmt(f),
 				Tuple(value) => f.debug_list().entries(value).finish(),
+				Array(value) => f.debug_list().entries(value).finish(),
 			}
 		}
 	}

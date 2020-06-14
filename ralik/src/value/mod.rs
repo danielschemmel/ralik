@@ -4,7 +4,7 @@ use num_traits::ToPrimitive;
 use std::sync::Arc;
 
 use crate::error::{
-	InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType, InvalidUnitType,
+	InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType, InvalidUnitType, InvalidArrayType,
 };
 use crate::{Context, Type};
 
@@ -27,6 +27,7 @@ enum Data {
 	Integer(BigInt),
 	String(String),
 	Tuple(Vec<Value>),
+	Array(Vec<Value>),
 }
 
 impl Value {
@@ -77,11 +78,32 @@ impl Value {
 			data: Data::Tuple(values),
 		})
 	}
+
+	pub fn new_array(context: &Context, element_type: &Arc<dyn Type>, values: impl Into<Vec<Value>>) -> Result<Value, InvalidArrayType> {
+		let values: Vec<Value> = values.into();
+		if let Some((index, value)) = values.iter().enumerate().find(|(_index, value)| !value.has_type(element_type)) {
+			return Err(InvalidArrayType::InvalidElement{
+				value: value.clone(),
+				index,
+				type_name: crate::types::array_name(element_type.name()),
+			})
+		}
+
+		let array_type = context.get_array_type(element_type.name())?.clone();
+		Ok(Value {
+			r#type: array_type,
+			data: Data::Array(values),
+		})
+	}
 }
 
 impl Value {
 	pub fn get_type(&self) -> &Arc<dyn Type> {
 		&self.r#type
+	}
+
+	pub fn has_type(&self, expected_type: &Arc<dyn Type>) -> bool {
+		Arc::ptr_eq(&self.r#type, expected_type)
 	}
 
 	pub fn is_unit(&self) -> bool {
@@ -212,6 +234,20 @@ impl Value {
 	pub fn as_tuple(&self) -> Option<&[Value]> {
 		match &self.data {
 			Data::Tuple(value) => Some(value),
+			_ => None,
+		}
+	}
+
+	pub fn is_array(&self) -> bool {
+		match &self.data {
+			Data::Array(_value) => true,
+			_ => false,
+		}
+	}
+
+	pub fn as_array(&self) -> Option<&[Value]> {
+		match &self.data {
+			Data::Array(value) => Some(value),
 			_ => None,
 		}
 	}

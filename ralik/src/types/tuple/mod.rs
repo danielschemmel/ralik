@@ -11,6 +11,21 @@ pub(crate) struct TupleType {
 	functions: TupleFunctionStore,
 }
 
+pub fn name(element_types: &[&str]) -> String {
+	assert!(element_types.len() > 0, "Empty tuples do not exist (see also \"Unit Type\")");
+
+	let mut name = "(".to_string();
+	for (i, &element_type_name) in element_types.iter().enumerate() {
+		if i > 0 {
+			name.push_str(", ");
+		}
+		name.push_str(element_type_name);
+	}
+	name.push_str(")");
+
+	name
+}
+
 impl TupleType {
 	pub fn new(name: impl Into<String>, element_types: impl Into<Vec<Arc<dyn Type>>>) -> Self {
 		Self {
@@ -43,7 +58,7 @@ impl std::fmt::Debug for TupleType {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("Type")
 			.field("name", &self.name())
-			.field("sub_types", &self.element_types)
+			.field("element_types", &self.element_types)
 			.field("functions", &super::debug::FunctionNameListFormatter(&self.functions))
 			.finish()
 	}

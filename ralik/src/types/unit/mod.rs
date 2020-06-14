@@ -3,7 +3,7 @@ use super::{BasicFunctionStore, BasicType, BasicTypeBase};
 mod ops;
 
 pub type UnitType = BasicType<UnitImpl>;
-pub const NAME: &str = "()";
+pub const fn name() -> &'static str { "()" }
 
 pub struct UnitImpl;
 
@@ -21,7 +21,7 @@ impl Default for UnitType {
 
 impl BasicTypeBase for UnitImpl {
 	fn name(&self) -> &str {
-		NAME
+		self::name()
 	}
 
 	fn register_functions(&self, functions: &mut BasicFunctionStore) {

@@ -38,6 +38,7 @@ pub enum AtomicExpression {
 	Unit(Span),
 	Parenthesized(Box<Expression>, Span),
 	Tuple(Vec<Expression>, Span),
+	Array(Vec<Expression>, Span),
 	LitBool(bool, Span),
 	LitInt(BigInt, Span),
 	LitChar(char, Span),

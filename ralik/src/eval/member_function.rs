@@ -17,7 +17,7 @@ pub(crate) fn call_member_function_0(
 			type_name: r#type.name().to_string(),
 			at: span.into(),
 		})?;
-	function(context, &[value]).map_err(|source| EvalError::MemberRuntimeError {
+	function(context, &r#type, &[value]).map_err(|source| EvalError::MemberRuntimeError {
 		name: name.to_string(),
 		type_name: r#type.name().to_string(),
 		source,
@@ -41,7 +41,7 @@ pub(crate) fn call_member_function_1<T: Eval>(
 			type_name: r#type.name().to_string(),
 			at: span.into(),
 		})?;
-	function(context, &[value, argument]).map_err(|source| EvalError::MemberRuntimeError {
+	function(context, &r#type, &[value, argument]).map_err(|source| EvalError::MemberRuntimeError {
 		name: name.to_string(),
 		type_name: r#type.name().to_string(),
 		source,
@@ -67,7 +67,7 @@ pub(crate) fn call_member_function_n<T: Eval>(
 	let arguments = std::iter::once(Ok(value))
 		.chain(arguments.iter().map(|argument| argument.eval(context)))
 		.collect::<Result<Vec<Value>, EvalError>>()?;
-	function(context, &arguments).map_err(|source| EvalError::MemberRuntimeError {
+	function(context, &r#type, &arguments).map_err(|source| EvalError::MemberRuntimeError {
 		name: name.to_string(),
 		type_name: r#type.name().to_string(),
 		source,

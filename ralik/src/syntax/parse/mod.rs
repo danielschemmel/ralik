@@ -400,6 +400,23 @@ fn parse_atomic_expression(input: parse::ParseStream, lookahead: Lookahead1) -> 
 		} else {
 			Err(lookahead.error())
 		}
+	} else if lookahead.peek(syn::token::Bracket) {
+		let bracketed;
+		bracketed!(bracketed in input);
+		let mut array = Vec::new();
+		while !bracketed.is_empty() {
+			let (expression, lookahead) = parse_expression(&bracketed)?;
+			array.push(expression);
+			if bracketed.is_empty() {
+				break;
+			}
+			if lookahead.peek(Token![,]) {
+				bracketed.parse::<Token![,]>()?;
+			} else {
+				return Err(lookahead.error());
+			}
+		}
+		Ok(ast::AtomicExpression::Array(array, bracketed.span()))
 	} else if lookahead.peek(LitBool) {
 		let lit_bool = input.parse::<LitBool>()?;
 		Ok(ast::AtomicExpression::LitBool(lit_bool.value, lit_bool.span))

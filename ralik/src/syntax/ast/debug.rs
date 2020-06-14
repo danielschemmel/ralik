@@ -9,6 +9,7 @@ impl fmt::Debug for super::AtomicExpression {
 			Unit(span) => f.debug_tuple("Unit").field(span).finish(),
 			Parenthesized(expression, span) => f.debug_tuple("Parenthesized").field(expression).field(span).finish(),
 			Tuple(expressions, span) => f.debug_tuple("Tuple").field(expressions).field(span).finish(),
+			Array(expressions, span) => f.debug_tuple("Array").field(expressions).field(span).finish(),
 			LitBool(value, span) => f.debug_tuple("LitBool").field(&value).field(span).finish(),
 			LitInt(value, span) => f
 				.debug_tuple("LitInt")

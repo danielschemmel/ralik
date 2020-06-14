@@ -4,7 +4,7 @@ mod functions;
 mod ops;
 
 pub type IntegerType = BasicType<IntegerImpl>;
-pub const NAME: &str = "Integer";
+pub const fn name() -> &'static str { "Integer" }
 
 pub struct IntegerImpl;
 
@@ -22,7 +22,7 @@ impl Default for IntegerType {
 
 impl BasicTypeBase for IntegerImpl {
 	fn name(&self) -> &str {
-		NAME
+		self::name()
 	}
 
 	fn register_functions(&self, functions: &mut BasicFunctionStore) {

@@ -4,7 +4,7 @@ mod functions;
 mod ops;
 
 pub type BoolType = BasicType<BoolImpl>;
-pub const NAME: &str = "bool";
+pub const fn name() -> &'static str { "bool" }
 
 pub struct BoolImpl;
 
@@ -22,7 +22,7 @@ impl Default for BoolType {
 
 impl BasicTypeBase for BoolImpl {
 	fn name(&self) -> &str {
-		NAME
+		self::name()
 	}
 
 	fn register_functions(&self, functions: &mut BasicFunctionStore) {

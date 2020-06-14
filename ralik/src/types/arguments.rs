@@ -1,8 +1,9 @@
 use num_bigint::BigInt;
 
-use crate::Value;
+use std::sync::Arc;
 
-use super::RuntimeError;
+use crate::{Value, Type};
+use crate::error::RuntimeError;
 
 pub(crate) trait Arguments {
 	fn check_len(&self, count: usize) -> Result<(), RuntimeError>;
@@ -12,6 +13,8 @@ pub(crate) trait Arguments {
 	fn as_char(&self, index: usize) -> Result<char, RuntimeError>;
 	fn as_integer(&self, index: usize) -> Result<&BigInt, RuntimeError>;
 	fn as_string(&self, index: usize) -> Result<&String, RuntimeError>;
+
+	fn check_type(&self, index: usize, expected_type: &Arc<dyn Type>) -> Result<&Value, RuntimeError>;
 }
 
 impl Arguments for [Value] {
@@ -30,7 +33,7 @@ impl Arguments for [Value] {
 		self[index].as_unit().ok_or_else(|| RuntimeError::InvalidArgumentType {
 			argument_number: index,
 			actual_type_name: self[index].get_type().name().to_string(),
-			expected_type_name: super::UnitName.to_string(),
+			expected_type_name: super::unit_name().to_owned(),
 		})
 	}
 
@@ -38,7 +41,7 @@ impl Arguments for [Value] {
 		self[index].as_bool().ok_or_else(|| RuntimeError::InvalidArgumentType {
 			argument_number: index,
 			actual_type_name: self[index].get_type().name().to_string(),
-			expected_type_name: super::BoolName.to_string(),
+			expected_type_name: super::bool_name().to_owned(),
 		})
 	}
 
@@ -46,7 +49,7 @@ impl Arguments for [Value] {
 		self[index].as_char().ok_or_else(|| RuntimeError::InvalidArgumentType {
 			argument_number: index,
 			actual_type_name: self[index].get_type().name().to_string(),
-			expected_type_name: super::CharName.to_string(),
+			expected_type_name: super::char_name().to_owned(),
 		})
 	}
 
@@ -56,7 +59,7 @@ impl Arguments for [Value] {
 			.ok_or_else(|| RuntimeError::InvalidArgumentType {
 				argument_number: index,
 				actual_type_name: self[index].get_type().name().to_string(),
-				expected_type_name: super::IntegerName.to_string(),
+				expected_type_name: super::integer_name().to_owned(),
 			})
 	}
 
@@ -66,7 +69,20 @@ impl Arguments for [Value] {
 			.ok_or_else(|| RuntimeError::InvalidArgumentType {
 				argument_number: index,
 				actual_type_name: self[index].get_type().name().to_string(),
-				expected_type_name: super::StringName.to_string(),
+				expected_type_name: super::string_name().to_owned(),
 			})
+	}
+
+	fn check_type(&self, index: usize, expected_type: &Arc<dyn Type>) -> Result<&Value, RuntimeError> {
+		let value = &self[index];
+		if value.has_type(expected_type) {
+			Ok(value)
+		} else {
+			Err(RuntimeError::InvalidArgumentType {
+				argument_number: index,
+				actual_type_name: self[index].get_type().name().to_string(),
+				expected_type_name: expected_type.name().to_owned(),
+			})
+		}
 	}
 }
