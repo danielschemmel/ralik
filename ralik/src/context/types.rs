@@ -2,7 +2,8 @@ use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
 use crate::error::{
-	InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType, InvalidUnitType, InvalidArrayType,
+	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType,
+	InvalidUnitType,
 };
 use crate::Type;
 
@@ -97,9 +98,11 @@ impl Context {
 			return Ok(array_type.clone());
 		}
 
-		let element_type = types.get(element_type_name).ok_or_else(|| InvalidArrayType::MissingSubtype {
-			element_type_name: element_type_name.to_string(),
-		})?;
+		let element_type = types
+			.get(element_type_name)
+			.ok_or_else(|| InvalidArrayType::MissingSubtype {
+				element_type_name: element_type_name.to_string(),
+			})?;
 
 		let array_type = crate::types::ArrayType::new(name, element_type.clone());
 		assert!(types

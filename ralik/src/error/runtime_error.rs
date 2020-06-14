@@ -80,13 +80,19 @@ pub enum InvalidCharType {
 
 #[derive(Error, Debug)]
 pub enum InvalidIntegerType {
-	#[error("The given context does not have a type `{}` registered", crate::types::integer_name())]
+	#[error(
+		"The given context does not have a type `{}` registered",
+		crate::types::integer_name()
+	)]
 	Missing,
 }
 
 #[derive(Error, Debug)]
 pub enum InvalidStringType {
-	#[error("The given context does not have a type `{}` registered", crate::types::string_name())]
+	#[error(
+		"The given context does not have a type `{}` registered",
+		crate::types::string_name()
+	)]
 	Missing,
 }
 
@@ -108,14 +114,12 @@ pub enum InvalidTupleType {
 #[derive(Error, Debug)]
 pub enum InvalidArrayType {
 	#[error("The given context does not have the type `{element_type_name}` registered to make an array out of")]
-	MissingSubtype {
-		element_type_name: String
-	},
+	MissingSubtype { element_type_name: String },
 
 	#[error("The value `{value:?}` does not have the right type to be used in an array of type `{type_name}` (error occurred at index {index})")]
 	InvalidElement {
 		value: crate::Value,
 		index: usize,
 		type_name: String,
-	}
+	},
 }

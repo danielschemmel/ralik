@@ -4,7 +4,9 @@ mod functions;
 mod ops;
 
 pub type IntegerType = BasicType<IntegerImpl>;
-pub const fn name() -> &'static str { "Integer" }
+pub const fn name() -> &'static str {
+	"Integer"
+}
 
 pub struct IntegerImpl;
 

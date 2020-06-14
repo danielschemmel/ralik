@@ -12,7 +12,10 @@ pub(crate) struct TupleType {
 }
 
 pub fn name(element_types: &[&str]) -> String {
-	assert!(element_types.len() > 0, "Empty tuples do not exist (see also \"Unit Type\")");
+	assert!(
+		element_types.len() > 0,
+		"Empty tuples do not exist (see also \"Unit Type\")"
+	);
 
 	let mut name = "(".to_string();
 	for (i, &element_type_name) in element_types.iter().enumerate() {

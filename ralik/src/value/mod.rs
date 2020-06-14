@@ -4,7 +4,8 @@ use num_traits::ToPrimitive;
 use std::sync::Arc;
 
 use crate::error::{
-	InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType, InvalidUnitType, InvalidArrayType,
+	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType,
+	InvalidUnitType,
 };
 use crate::{Context, Type};
 
@@ -79,14 +80,22 @@ impl Value {
 		})
 	}
 
-	pub fn new_array(context: &Context, element_type: &Arc<dyn Type>, values: impl Into<Vec<Value>>) -> Result<Value, InvalidArrayType> {
+	pub fn new_array(
+		context: &Context,
+		element_type: &Arc<dyn Type>,
+		values: impl Into<Vec<Value>>,
+	) -> Result<Value, InvalidArrayType> {
 		let values: Vec<Value> = values.into();
-		if let Some((index, value)) = values.iter().enumerate().find(|(_index, value)| !value.has_type(element_type)) {
-			return Err(InvalidArrayType::InvalidElement{
+		if let Some((index, value)) = values
+			.iter()
+			.enumerate()
+			.find(|(_index, value)| !value.has_type(element_type))
+		{
+			return Err(InvalidArrayType::InvalidElement {
 				value: value.clone(),
 				index,
 				type_name: crate::types::array_name(element_type.name()),
-			})
+			});
 		}
 
 		let array_type = context.get_array_type(element_type.name())?.clone();

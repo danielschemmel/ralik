@@ -12,7 +12,11 @@ pub(crate) fn equal(context: &Context, _this_type: &Arc<dyn Type>, arguments: &[
 	Ok(Value::new_bool(context, lhs == rhs)?)
 }
 
-pub(crate) fn not_equal(context: &Context, _this_type: &Arc<dyn Type>, arguments: &[Value]) -> Result<Value, RuntimeError> {
+pub(crate) fn not_equal(
+	context: &Context,
+	_this_type: &Arc<dyn Type>,
+	arguments: &[Value],
+) -> Result<Value, RuntimeError> {
 	arguments.check_len(2)?;
 	let lhs = arguments.as_char(0)?;
 	let rhs = arguments.as_char(1)?;
@@ -26,21 +30,33 @@ pub(crate) fn less(context: &Context, _this_type: &Arc<dyn Type>, arguments: &[V
 	Ok(Value::new_bool(context, lhs < rhs)?)
 }
 
-pub(crate) fn less_or_equal(context: &Context, _this_type: &Arc<dyn Type>, arguments: &[Value]) -> Result<Value, RuntimeError> {
+pub(crate) fn less_or_equal(
+	context: &Context,
+	_this_type: &Arc<dyn Type>,
+	arguments: &[Value],
+) -> Result<Value, RuntimeError> {
 	arguments.check_len(2)?;
 	let lhs = arguments.as_char(0)?;
 	let rhs = arguments.as_char(1)?;
 	Ok(Value::new_bool(context, lhs <= rhs)?)
 }
 
-pub(crate) fn greater(context: &Context, _this_type: &Arc<dyn Type>, arguments: &[Value]) -> Result<Value, RuntimeError> {
+pub(crate) fn greater(
+	context: &Context,
+	_this_type: &Arc<dyn Type>,
+	arguments: &[Value],
+) -> Result<Value, RuntimeError> {
 	arguments.check_len(2)?;
 	let lhs = arguments.as_char(0)?;
 	let rhs = arguments.as_char(1)?;
 	Ok(Value::new_bool(context, lhs > rhs)?)
 }
 
-pub(crate) fn greater_or_equal(context: &Context, _this_type: &Arc<dyn Type>, arguments: &[Value]) -> Result<Value, RuntimeError> {
+pub(crate) fn greater_or_equal(
+	context: &Context,
+	_this_type: &Arc<dyn Type>,
+	arguments: &[Value],
+) -> Result<Value, RuntimeError> {
 	arguments.check_len(2)?;
 	let lhs = arguments.as_char(0)?;
 	let rhs = arguments.as_char(1)?;

@@ -20,7 +20,7 @@ pub fn name(element_type: &str) -> String {
 
 impl ArrayType {
 	pub fn new(name: impl Into<String>, element_type: Arc<dyn Type>) -> Arc<Self> {
-		let mut 		functions= ArrayFunctionStore::new();
+		let mut functions = ArrayFunctionStore::new();
 
 		functions.insert(crate::ops::INDEX.into(), ops::index);
 

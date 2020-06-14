@@ -81,7 +81,5 @@ pub enum EvalError {
 	},
 
 	#[error("Expressions creating empty arrays are not currently supported.")]
-	EmptyArray {
-		at: Location,
-	}
+	EmptyArray { at: Location },
 }

@@ -2,8 +2,8 @@ use num_bigint::BigInt;
 
 use std::sync::Arc;
 
-use crate::{Value, Type};
 use crate::error::RuntimeError;
+use crate::{Type, Value};
 
 pub(crate) trait Arguments {
 	fn check_len(&self, count: usize) -> Result<(), RuntimeError>;

@@ -4,7 +4,9 @@ mod functions;
 mod ops;
 
 pub type CharType = BasicType<CharImpl>;
-pub const fn name() -> &'static str { "char" }
+pub const fn name() -> &'static str {
+	"char"
+}
 
 pub struct CharImpl;
 

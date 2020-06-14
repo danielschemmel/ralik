@@ -16,6 +16,9 @@ enum Error {
 	#[error("Floating point numbers are (currently?) not supported by RALIK")]
 	Float,
 
+	#[error("Empty arrays are (currently?) not supported by RALIK")]
+	EmptyArray,
+
 	#[error(transparent)]
 	InvalidBasicType(crate::error::InvalidCoreType),
 
@@ -45,7 +48,7 @@ struct Serializer<'a> {
 impl<'a> ser::Serializer for Serializer<'a> {
 	type Ok = Value;
 	type Error = Error;
-	type SerializeSeq = SerializeSeq;
+	type SerializeSeq = SerializeSeq<'a>;
 	type SerializeTuple = SerializeTuple<'a>;
 	type SerializeTupleStruct = SerializeTupleStruct;
 	type SerializeTupleVariant = SerializeTupleVariant;
@@ -156,12 +159,19 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		unimplemented!()
 	}
 
-	fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-		unimplemented!()
+	fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
+		Ok(SerializeSeq(
+			self.context,
+			if let Some(len) = len {
+				Vec::with_capacity(len)
+			} else {
+				Vec::new()
+			},
+		))
 	}
 
-	fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Self::Error> {
-		Ok(SerializeTuple(self.context, Vec::new()))
+	fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
+		Ok(SerializeTuple(self.context, Vec::with_capacity(len)))
 	}
 
 	fn serialize_tuple_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
@@ -197,18 +207,23 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 }
 
-struct SerializeSeq;
+struct SerializeSeq<'a>(&'a Context, Vec<Value>);
 
-impl ser::SerializeSeq for SerializeSeq {
+impl<'a> ser::SerializeSeq for SerializeSeq<'a> {
 	type Ok = Value;
 	type Error = Error;
 
-	fn serialize_element<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error> {
-		unimplemented!()
+	fn serialize_element<T: ?Sized + ser::Serialize>(&mut self, value: &T) -> Result<(), Self::Error> {
+		self.1.push(Value::from_serde(self.0, value));
+		Ok(())
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		unimplemented!()
+		if self.1.is_empty() {
+			Err(Error::EmptyArray)
+		} else {
+			Ok(Value::new_array(self.0, &self.1[0].get_type().clone(), self.1)?)
+		}
 	}
 }
 

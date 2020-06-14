@@ -4,7 +4,9 @@ mod functions;
 mod ops;
 
 pub type StringType = BasicType<StringImpl>;
-pub const fn name() -> &'static str { "String" }
+pub const fn name() -> &'static str {
+	"String"
+}
 
 pub struct StringImpl;
 

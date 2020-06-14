@@ -3,7 +3,9 @@ use super::{BasicFunctionStore, BasicType, BasicTypeBase};
 mod ops;
 
 pub type UnitType = BasicType<UnitImpl>;
-pub const fn name() -> &'static str { "()" }
+pub const fn name() -> &'static str {
+	"()"
+}
 
 pub struct UnitImpl;
 

@@ -4,7 +4,9 @@ mod functions;
 mod ops;
 
 pub type BoolType = BasicType<BoolImpl>;
-pub const fn name() -> &'static str { "bool" }
+pub const fn name() -> &'static str {
+	"bool"
+}
 
 pub struct BoolImpl;
 

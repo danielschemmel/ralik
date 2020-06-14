@@ -145,20 +145,24 @@ impl Eval for AtomicExpression {
 					.iter()
 					.map(|expression| expression.eval(context))
 					.collect::<Result<Vec<Value>, EvalError>>()?;
-				
+
 				if values.is_empty() {
-					return Err(EvalError::EmptyArray{at: span.into()});
+					return Err(EvalError::EmptyArray { at: span.into() });
 				}
 
 				let type_0 = values[0].get_type();
-				if let Some((index, value)) = values[1..].iter().enumerate().find(|(_index, value)| !value.has_type(type_0)) {
-					return Err(EvalError::MixedArray{
+				if let Some((index, value)) = values[1..]
+					.iter()
+					.enumerate()
+					.find(|(_index, value)| !value.has_type(type_0))
+				{
+					return Err(EvalError::MixedArray {
 						index_1: 0,
 						type_1: type_0.name().to_owned(),
 						index_2: index + 1,
 						type_2: value.get_type().name().to_owned(),
 						at: span.into(),
-					})
+					});
 				}
 
 				Value::new_array(context, &type_0.clone(), values).map_err(|err| EvalError::InvalidCoreType {
