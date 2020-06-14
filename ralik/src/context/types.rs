@@ -116,22 +116,27 @@ impl Context {
 		let name = value.name().to_string();
 		let mut types = self.0.types.write().unwrap();
 		match types.entry(name) {
-			Entry::Occupied(_entry) => unimplemented!("Overwriting existing types is not supported (yet?)"),
+			Entry::Occupied(_entry) => panic!("Overwriting existing types is not supported (yet?)"),
 			Entry::Vacant(entry) => {
 				entry.insert(value);
 			}
 		}
 	}
 
-	pub fn remove_type(&self, key: &str) -> Option<(String, Arc<dyn Type>)> {
+	pub fn remove_type(&self, key: &str) {
 		let mut types = self.0.types.write().unwrap();
-		let (key, value) = types.remove_entry(key)?;
-		if Arc::strong_count(&value) == 1 {
-			Some((key, value))
-		} else {
-			// There are still values or subtypes using this type, it cannot be removed now
-			assert!(types.insert(key, value).is_none());
-			None
+		let (owned_key, weak_ref) = {
+			if let Some((key, value)) = types.remove_entry(key) {
+				(key, Arc::downgrade(&value))
+			} else {
+				// type does not exist?
+				panic!("Type {} does not exist in context", key);
+			}
+		};
+		if let Some(value) = weak_ref.upgrade() {
+			// type is still in use somewhere else, or it would not have been possible to upgrade it again
+			types.insert(owned_key, value);
+			panic!("Type {} is still in use", key);
 		}
 	}
 }
