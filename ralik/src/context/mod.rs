@@ -1,6 +1,23 @@
-/*!
-The `Context` stores all types, free functions and global variables. While it can be customized to a large extent,
-it is suggested to start with the default context, which contains working types for the core types:
+use std::collections::hash_map::HashMap;
+use std::sync::{Arc, RwLock};
+
+use crate::error::RuntimeError;
+use crate::{Type, Value};
+
+mod debug;
+mod functions;
+mod macros;
+mod types;
+mod variables;
+
+pub type Function = fn(&[Value]) -> Result<Value, RuntimeError>;
+pub type Macro = fn(&[Value]) -> Result<Value, RuntimeError>;
+
+/**
+The `Context` stores all types, free functions and global variables.
+
+While it can be customized to a large extent, it is suggested to start with the default context, which contains working
+types for the core types:
 ```rust
 # use ralik::Context;
 let context = Context::new();
@@ -21,22 +38,6 @@ let context = Context::new_empty();
 Value::new_unit(&context).unwrap_err();
 ```
 */
-
-use std::collections::hash_map::HashMap;
-use std::sync::{Arc, RwLock};
-
-use crate::error::RuntimeError;
-use crate::{Type, Value};
-
-mod debug;
-mod functions;
-mod macros;
-mod types;
-mod variables;
-
-pub type Function = fn(&[Value]) -> Result<Value, RuntimeError>;
-pub type Macro = fn(&[Value]) -> Result<Value, RuntimeError>;
-
 #[derive(Clone)]
 pub struct Context(Arc<ContextImpl>);
 
