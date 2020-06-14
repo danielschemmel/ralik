@@ -1,6 +1,8 @@
 use num_bigint::BigInt;
 use syn::parse::Lookahead1;
-use syn::{braced, bracketed, parenthesized, parse, Ident, LitBool, LitChar, LitInt, LitStr, Token};
+use syn::{
+	braced, bracketed, parenthesized, parse, Ident, LitBool, LitByte, LitByteStr, LitChar, LitInt, LitStr, Token,
+};
 
 use super::ast;
 
@@ -420,9 +422,6 @@ fn parse_atomic_expression(input: parse::ParseStream, lookahead: Lookahead1) -> 
 	} else if lookahead.peek(LitBool) {
 		let lit_bool = input.parse::<LitBool>()?;
 		Ok(ast::AtomicExpression::LitBool(lit_bool.value, lit_bool.span))
-	} else if lookahead.peek(LitChar) {
-		let lit_char = input.parse::<LitChar>()?;
-		Ok(ast::AtomicExpression::LitChar(lit_char.value(), lit_char.span()))
 	} else if lookahead.peek(LitInt) {
 		let lit_int = input.parse::<LitInt>()?;
 		if lit_int.suffix() != "" {
@@ -435,6 +434,18 @@ fn parse_atomic_expression(input: parse::ParseStream, lookahead: Lookahead1) -> 
 			lit_int.base10_parse::<BigInt>()?,
 			lit_int.span(),
 		))
+	} else if lookahead.peek(LitByte) {
+		let lit_byte = input.parse::<LitByte>()?;
+		Ok(ast::AtomicExpression::LitByte(lit_byte.value(), lit_byte.span()))
+	} else if lookahead.peek(LitByteStr) {
+		let lit_byte_str = input.parse::<LitByteStr>()?;
+		Ok(ast::AtomicExpression::LitByteStr(
+			lit_byte_str.value(),
+			lit_byte_str.span(),
+		))
+	} else if lookahead.peek(LitChar) {
+		let lit_char = input.parse::<LitChar>()?;
+		Ok(ast::AtomicExpression::LitChar(lit_char.value(), lit_char.span()))
 	} else if lookahead.peek(LitStr) {
 		let lit_str = input.parse::<LitStr>()?;
 		Ok(ast::AtomicExpression::LitStr(lit_str.value(), lit_str.span()))

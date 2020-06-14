@@ -16,6 +16,8 @@ impl fmt::Debug for super::AtomicExpression {
 				.field(&IntegerFormatter(value))
 				.field(span)
 				.finish(),
+			LitByte(value, span) => f.debug_tuple("LitByte").field(&value).field(span).finish(),
+			LitByteStr(value, span) => f.debug_tuple("LitByteStr").field(&value).field(span).finish(),
 			LitChar(value, span) => f.debug_tuple("LitChar").field(&value).field(span).finish(),
 			LitStr(value, span) => f.debug_tuple("LitStr").field(&value).field(span).finish(),
 			Dollar(span) => f.debug_tuple("Dollar").field(span).finish(),

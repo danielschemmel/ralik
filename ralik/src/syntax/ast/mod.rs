@@ -41,6 +41,8 @@ pub enum AtomicExpression {
 	Array(Vec<Expression>, Span),
 	LitBool(bool, Span),
 	LitInt(BigInt, Span),
+	LitByte(u8, Span),
+	LitByteStr(Vec<u8>, Span),
 	LitChar(char, Span),
 	LitStr(String, Span),
 	Dollar(Span),

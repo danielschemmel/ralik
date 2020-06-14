@@ -176,14 +176,40 @@ impl Eval for AtomicExpression {
 					at: span.into(),
 				})
 			}
-			AtomicExpression::LitChar(value, span) => {
-				Value::new_char(context, *value).map_err(|err| EvalError::ObjectCreationError {
+			AtomicExpression::LitInt(value, span) => {
+				Value::new_integer(context, value.clone()).map_err(|err| EvalError::ObjectCreationError {
 					source: err.into(),
 					at: span.into(),
 				})
 			}
-			AtomicExpression::LitInt(value, span) => {
-				Value::new_integer(context, value.clone()).map_err(|err| EvalError::ObjectCreationError {
+			AtomicExpression::LitByte(value, span) => {
+				Value::new_integer(context, *value).map_err(|err| EvalError::ObjectCreationError {
+					source: err.into(),
+					at: span.into(),
+				})
+			}
+			AtomicExpression::LitByteStr(value, span) => {
+				let integer_type = context
+					.get_integer_type()
+					.map_err(|err| EvalError::ObjectCreationError {
+						source: crate::error::IntegerCreationError::from(err).into(),
+						at: span.into(),
+					})?;
+				let values = value
+					.iter()
+					.map(|byte| Value::new_integer(context, *byte))
+					.collect::<Result<Vec<Value>, crate::error::IntegerCreationError>>()
+					.map_err(|err| EvalError::ObjectCreationError {
+						source: err.into(),
+						at: span.into(),
+					})?;
+				Value::new_array(context, &integer_type, values).map_err(|err| EvalError::ObjectCreationError {
+					source: err.into(),
+					at: span.into(),
+				})
+			}
+			AtomicExpression::LitChar(value, span) => {
+				Value::new_char(context, *value).map_err(|err| EvalError::ObjectCreationError {
 					source: err.into(),
 					at: span.into(),
 				})
