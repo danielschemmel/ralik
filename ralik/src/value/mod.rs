@@ -201,40 +201,26 @@ impl Value {
 			_ => None,
 		}
 	}
-	/*
-	pub fn is_array(&self) -> bool {
-		match self {
-			Value::Array(_value) => true,
+
+	pub fn is_tuple(&self) -> bool {
+		match &self.data {
+			Data::Tuple(_value) => true,
 			_ => false,
 		}
 	}
 
-	pub fn as_array(&self) -> Option<&Vec<Value>> {
-		match self {
-			Value::Array(value) => Some(value),
+	pub fn as_tuple(&self) -> Option<&[Value]> {
+		match &self.data {
+			Data::Tuple(value) => Some(value),
 			_ => None,
 		}
 	}
-
-	pub fn is_option(&self) -> bool {
-		match self {
-			Value::Option(_value) => true,
-			_ => false,
-		}
-	}
-
-	pub fn as_option(&self) -> Option<Option<&Value>> {
-		match self {
-			Value::Option(value) => Some(value.as_ref().map(|boxed| boxed.as_ref())),
-			_ => None,
-		}
-	}*/
 
 	pub fn field(&self, _name: &str) -> Option<&Value> {
 		None
 	}
 
-	pub fn field_mut(&self, _name: &str) -> Option<&mut Value> {
-		None
+	pub fn tuple_field(&self, index: usize) -> Option<&Value> {
+		self.as_tuple().and_then(|slice| slice.get(index))
 	}
 }

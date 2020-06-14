@@ -15,13 +15,13 @@ pub(crate) fn call_member_function_0(
 		.ok_or_else(|| EvalError::UnknownMemberFunction {
 			name: name.to_string(),
 			type_name: r#type.name().to_string(),
-			span: span.clone(),
+			at: span.into(),
 		})?;
-	function(context, &[value]).map_err(|source| EvalError::MemberCallError {
+	function(context, &[value]).map_err(|source| EvalError::MemberRuntimeError {
 		name: name.to_string(),
 		type_name: r#type.name().to_string(),
 		source,
-		span: *span,
+		at: span.into(),
 	})
 }
 
@@ -39,13 +39,13 @@ pub(crate) fn call_member_function_1<T: Eval>(
 		.ok_or_else(|| EvalError::UnknownMemberFunction {
 			name: name.to_string(),
 			type_name: r#type.name().to_string(),
-			span: span.clone(),
+			at: span.into(),
 		})?;
-	function(context, &[value, argument]).map_err(|source| EvalError::MemberCallError {
+	function(context, &[value, argument]).map_err(|source| EvalError::MemberRuntimeError {
 		name: name.to_string(),
 		type_name: r#type.name().to_string(),
 		source,
-		span: *span,
+		at: span.into(),
 	})
 }
 
@@ -62,15 +62,15 @@ pub(crate) fn call_member_function_n<T: Eval>(
 		.ok_or_else(|| EvalError::UnknownMemberFunction {
 			name: name.to_string(),
 			type_name: r#type.name().to_string(),
-			span: span.clone(),
+			at: span.into(),
 		})?;
 	let arguments = std::iter::once(Ok(value))
 		.chain(arguments.iter().map(|argument| argument.eval(context)))
 		.collect::<Result<Vec<Value>, EvalError>>()?;
-	function(context, &arguments).map_err(|source| EvalError::MemberCallError {
+	function(context, &arguments).map_err(|source| EvalError::MemberRuntimeError {
 		name: name.to_string(),
 		type_name: r#type.name().to_string(),
 		source,
-		span: *span,
+		at: span.into(),
 	})
 }

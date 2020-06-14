@@ -8,7 +8,6 @@ mod context;
 pub use context::Context;
 
 mod eval;
-pub use eval::CallError;
 
 mod ops;
 
@@ -21,16 +20,16 @@ pub use types::Type;
 mod value;
 pub use value::Value;
 
-pub fn eval_str(source: &str, context: &Context) -> Result<Value, error::RunError> {
+pub fn eval_str(source: &str, context: &Context) -> Result<Value, error::EvalError> {
 	let expression = syn::parse_str::<syntax::ast::Expression>(source)?;
 	eval_expression(expression, context)
 }
 
-pub fn eval_tokens(source: TokenStream, context: &Context) -> Result<Value, error::RunError> {
+pub fn eval_tokens(source: TokenStream, context: &Context) -> Result<Value, error::EvalError> {
 	let expression = syn::parse2::<syntax::ast::Expression>(source)?;
 	eval_expression(expression, context)
 }
 
-fn eval_expression(expression: syntax::ast::Expression, context: &Context) -> Result<Value, error::RunError> {
+fn eval_expression(expression: syntax::ast::Expression, context: &Context) -> Result<Value, error::EvalError> {
 	Ok(eval::Eval::eval(&expression, context)?)
 }

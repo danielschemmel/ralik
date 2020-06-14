@@ -1,7 +1,8 @@
 use std::collections::hash_map::HashMap;
 use std::sync::{Arc, RwLock};
 
-use crate::{CallError, Type, Value};
+use crate::{Type, Value};
+use crate::error::RuntimeError;
 
 mod debug;
 mod functions;
@@ -9,8 +10,8 @@ mod macros;
 mod types;
 mod variables;
 
-pub type Function = fn(&[Value]) -> Result<Value, CallError>;
-pub type Macro = fn(&[Value]) -> Result<Value, CallError>;
+pub type Function = fn(&[Value]) -> Result<Value, RuntimeError>;
+pub type Macro = fn(&[Value]) -> Result<Value, RuntimeError>;
 
 #[derive(Clone)]
 pub struct Context(Arc<ContextImpl>);

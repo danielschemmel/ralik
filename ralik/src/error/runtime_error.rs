@@ -1,25 +1,48 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum RunError {
-	#[error("Could not parse input")]
-	ParseError {
-		#[from]
-		cause: syn::Error,
-		// backtrace: std::backtrace::Backtrace,
-	},
-	#[error("Could not evaluate input")]
-	EvalError {
-		#[from]
-		cause: super::eval::EvalError,
-		// backtrace: std::backtrace::Backtrace,
+pub enum RuntimeError {
+	#[error(
+		"Argument {argument_number} has type `{actual_type_name}`, but type `{expected_type_name}` was expected instead"
+	)]
+	InvalidArgumentType {
+		argument_number: usize,
+		actual_type_name: String,
+		expected_type_name: String,
 	},
 
+	#[error("Invalid number of arguments: {actual} (expected {expected} arguments, including `self`)")]
+	InvalidNumberOfArguments { actual: usize, expected: usize },
+
+	#[error("An operation overflowed")]
+	Overflow(#[from] Overflow),
+
 	#[error(transparent)]
-	Other {
-		#[from]
-		cause: anyhow::Error,
-	},
+	InvalidCoreType(InvalidCoreType),
+
+	#[error("Code panicked")]
+	Panic(#[from] anyhow::Error),
+}
+
+impl<T:Into<InvalidCoreType>> From<T> for RuntimeError {
+    fn from(value: T) -> Self {
+      value.into().into()
+    }
+}
+
+#[derive(Error, Debug)]
+pub enum Overflow {
+	#[error("Negative shifts overflow by definition")]
+	NegativeShift,
+
+	#[error("Attempt to shift by an amount that is to large")]
+	LargeShift,
+
+	#[error("Value does not fit into a u32")]
+	U32,
+
+	#[error("Value does not fit into a usize")]
+	USize,
 }
 
 #[derive(Error, Debug)]

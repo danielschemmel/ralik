@@ -1,5 +1,5 @@
-use super::eval::Overflow;
-use crate::{CallError, Context, Value};
+use crate::{Context, Value};
+use crate::error::{RuntimeError, Overflow};
 
 mod arguments;
 
@@ -31,7 +31,7 @@ mod unit;
 pub use self::unit::UnitType;
 pub use self::unit::NAME as UnitName;
 
-pub type MemberFunction = fn(&Context, &[Value]) -> Result<Value, CallError>;
+pub type MemberFunction = fn(&Context, &[Value]) -> Result<Value, RuntimeError>;
 
 pub trait Type: std::fmt::Debug {
 	fn name(&self) -> &str;
