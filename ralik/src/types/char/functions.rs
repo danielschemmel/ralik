@@ -1,7 +1,7 @@
 use num_traits::ToPrimitive;
 
-use crate::{Context, Value};
 use crate::error::RuntimeError;
+use crate::{Context, Value};
 
 use super::super::arguments::Arguments;
 use super::super::Overflow;

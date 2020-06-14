@@ -195,7 +195,7 @@ impl Eval for AtomicExpression {
 					.map(|argument| argument.eval(context))
 					.collect::<Result<Vec<Value>, EvalError>>()?;
 				macro_function(&arguments).map_err(|source| EvalError::MacroRuntimeError {
-					name: format!("{}!", name),
+					name: name.to_string(),
 					source,
 					at: name_span.into(),
 				})

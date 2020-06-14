@@ -1,8 +1,8 @@
 use std::collections::hash_map::HashMap;
 use std::sync::{Arc, RwLock};
 
-use crate::{Type, Value};
 use crate::error::RuntimeError;
+use crate::{Type, Value};
 
 mod debug;
 mod functions;
@@ -32,6 +32,19 @@ impl Context {
 		context.insert_type(Arc::new(crate::types::CharType::new()));
 		context.insert_type(Arc::new(crate::types::IntegerType::new()));
 		context.insert_type(Arc::new(crate::types::StringType::new()));
+
+		context.insert_macro("panic", |arguments| {
+			use std::fmt::Write;
+			let mut message = "Call to `panic!(".to_string();
+			if !arguments.is_empty() {
+				write!(message, "\n").unwrap();
+			}
+			for argument in arguments {
+				write!(message, "  {:?},\n", argument).unwrap();
+			}
+			write!(message, ")").unwrap();
+			Err(anyhow::anyhow!(message).into())
+		});
 
 		context
 	}

@@ -24,10 +24,10 @@ pub enum RuntimeError {
 	Panic(#[from] anyhow::Error),
 }
 
-impl<T:Into<InvalidCoreType>> From<T> for RuntimeError {
-    fn from(value: T) -> Self {
-      value.into().into()
-    }
+impl<T: Into<InvalidCoreType>> From<T> for RuntimeError {
+	fn from(value: T) -> Self {
+		value.into().into()
+	}
 }
 
 #[derive(Error, Debug)]
@@ -94,6 +94,9 @@ pub enum InvalidTupleType {
 		missing_subtype_name: String,
 	},
 
-	#[error("Cannot create a tuple without any elements (note: the unit type `{}` is not a tuple)", crate::types::UnitName)]
+	#[error(
+		"Cannot create a tuple without any elements (note: the unit type `{}` is not a tuple)",
+		crate::types::UnitName
+	)]
 	ZeroElements,
 }

@@ -20,9 +20,16 @@ impl From<&Span> for Location {
 }
 
 impl std::fmt::Display for Location {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-      match self {
-				Location::Spanned(span) => write!(f, "{}:{} to {}:{}", span.start().line, span.start().column, span.end().line, span.end().column)
-			}
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		match self {
+			Location::Spanned(span) => write!(
+				f,
+				"{}:{} to {}:{}",
+				span.start().line,
+				span.start().column,
+				span.end().line,
+				span.end().column
+			),
+		}
+	}
 }

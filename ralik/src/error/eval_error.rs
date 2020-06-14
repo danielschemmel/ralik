@@ -9,18 +9,12 @@ pub enum EvalError {
 		#[from]
 		cause: syn::Error,
 	},
-	
+
 	#[error("Variable `{name}` does not exist when referenced at {at}")]
-	UnknownVariable {
-		name: String,
-		at: Location,
-	},
+	UnknownVariable { name: String, at: Location },
 
 	#[error("Function `{name}` does not exist when referenced at {at}")]
-	UnknownFunction {
-		name: String,
-		at: Location,
-	},
+	UnknownFunction { name: String, at: Location },
 
 	#[error("Member function `{name}` does not exist for type `{type_name}` when referenced at {at}")]
 	UnknownMemberFunction {
@@ -30,10 +24,7 @@ pub enum EvalError {
 	},
 
 	#[error("Macro `{name}!` does not exist when referenced at {at}")]
-	UnknownMacro {
-		name: String,
-		at: Location,
-	},
+	UnknownMacro { name: String, at: Location },
 
 	#[error("Member field `{member_name}` does not exist for objects of type `{type_name}` at {at}")]
 	InvalidFieldAccess {
@@ -43,16 +34,10 @@ pub enum EvalError {
 	},
 
 	#[error("Operand to `&&` has type `{type_name}` (should be boolean) at {at}")]
-	NotBoolInLazyAnd {
-		type_name: String,
-		at: Location,
-	},
+	NotBoolInLazyAnd { type_name: String, at: Location },
 
 	#[error("Operand to `||` has type `{type_name}` (should be boolean) at {at}")]
-	NotBoolInLazyOr {
-		type_name: String,
-		at: Location,
-	},
+	NotBoolInLazyOr { type_name: String, at: Location },
 
 	#[error("Failed to call free function `{name}` at {at}")]
 	FunctionRuntimeError {

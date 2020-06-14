@@ -6,7 +6,7 @@ use super::RuntimeError;
 
 pub(crate) trait Arguments {
 	fn check_len(&self, count: usize) -> Result<(), RuntimeError>;
-	
+
 	fn as_unit(&self, index: usize) -> Result<(), RuntimeError>;
 	fn as_bool(&self, index: usize) -> Result<bool, RuntimeError>;
 	fn as_char(&self, index: usize) -> Result<char, RuntimeError>;
@@ -51,18 +51,22 @@ impl Arguments for [Value] {
 	}
 
 	fn as_integer(&self, index: usize) -> Result<&BigInt, RuntimeError> {
-		self[index].as_integer().ok_or_else(|| RuntimeError::InvalidArgumentType {
-			argument_number: index,
-			actual_type_name: self[index].get_type().name().to_string(),
-			expected_type_name: super::IntegerName.to_string(),
-		})
+		self[index]
+			.as_integer()
+			.ok_or_else(|| RuntimeError::InvalidArgumentType {
+				argument_number: index,
+				actual_type_name: self[index].get_type().name().to_string(),
+				expected_type_name: super::IntegerName.to_string(),
+			})
 	}
 
 	fn as_string(&self, index: usize) -> Result<&String, RuntimeError> {
-		self[index].as_string().ok_or_else(|| RuntimeError::InvalidArgumentType {
-			argument_number: index,
-			actual_type_name: self[index].get_type().name().to_string(),
-			expected_type_name: super::StringName.to_string(),
-		})
+		self[index]
+			.as_string()
+			.ok_or_else(|| RuntimeError::InvalidArgumentType {
+				argument_number: index,
+				actual_type_name: self[index].get_type().name().to_string(),
+				expected_type_name: super::StringName.to_string(),
+			})
 	}
 }
