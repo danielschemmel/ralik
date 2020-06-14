@@ -2,8 +2,8 @@ use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 
 use crate::error::{
-	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType,
-	InvalidUnitType,
+	ArrayCreationError, BoolCreationError, CharCreationError, IntegerCreationError, InvalidArrayType,
+	StringCreationError, TupleCreationError, UnitCreationError,
 };
 use crate::{Context, TypeHandle};
 
@@ -30,42 +30,42 @@ enum Data {
 }
 
 impl Value {
-	pub fn new_unit(context: &Context) -> Result<Value, InvalidUnitType> {
+	pub fn new_unit(context: &Context) -> Result<Value, UnitCreationError> {
 		Ok(Value {
 			r#type: context.get_unit_type()?.clone(),
 			data: Data::Unit,
 		})
 	}
 
-	pub fn new_bool(context: &Context, value: bool) -> Result<Value, InvalidBoolType> {
+	pub fn new_bool(context: &Context, value: bool) -> Result<Value, BoolCreationError> {
 		Ok(Value {
 			r#type: context.get_bool_type()?.clone(),
 			data: Data::Bool(value),
 		})
 	}
 
-	pub fn new_char(context: &Context, value: char) -> Result<Value, InvalidCharType> {
+	pub fn new_char(context: &Context, value: char) -> Result<Value, CharCreationError> {
 		Ok(Value {
 			r#type: context.get_char_type()?.clone(),
 			data: Data::Char(value),
 		})
 	}
 
-	pub fn new_integer(context: &Context, value: impl Into<BigInt>) -> Result<Value, InvalidIntegerType> {
+	pub fn new_integer(context: &Context, value: impl Into<BigInt>) -> Result<Value, IntegerCreationError> {
 		Ok(Value {
 			r#type: context.get_integer_type()?.clone(),
 			data: Data::Integer(value.into()),
 		})
 	}
 
-	pub fn new_string(context: &Context, value: impl Into<String>) -> Result<Value, InvalidStringType> {
+	pub fn new_string(context: &Context, value: impl Into<String>) -> Result<Value, StringCreationError> {
 		Ok(Value {
 			r#type: context.get_string_type()?.clone(),
 			data: Data::String(value.into()),
 		})
 	}
 
-	pub fn new_tuple(context: &Context, values: impl Into<Vec<Value>>) -> Result<Value, InvalidTupleType> {
+	pub fn new_tuple(context: &Context, values: impl Into<Vec<Value>>) -> Result<Value, TupleCreationError> {
 		let values: Vec<Value> = values.into();
 		let element_types = values
 			.iter()
@@ -82,18 +82,21 @@ impl Value {
 		context: &Context,
 		element_type: &TypeHandle,
 		values: impl Into<Vec<Value>>,
-	) -> Result<Value, InvalidArrayType> {
+	) -> Result<Value, ArrayCreationError> {
 		let values: Vec<Value> = values.into();
 		if let Some((index, value)) = values
 			.iter()
 			.enumerate()
 			.find(|(_index, value)| !value.has_type(element_type))
 		{
-			return Err(InvalidArrayType::InvalidElement {
-				value: value.clone(),
-				index,
-				type_name: crate::types::array_name(element_type.name()),
-			});
+			return Err(
+				InvalidArrayType::InvalidElement {
+					value: value.clone(),
+					index,
+					type_name: crate::types::array_name(element_type.name()),
+				}
+				.into(),
+			);
 		}
 
 		let array_type = context.get_array_type(element_type.name())?.clone();

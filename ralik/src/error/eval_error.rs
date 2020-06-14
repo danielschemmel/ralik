@@ -73,6 +73,13 @@ pub enum EvalError {
 		at: Location,
 	},
 
+	#[error("Could not create object at {at}")]
+	ObjectCreationError {
+		#[source]
+		source: crate::error::ValueCreationError,
+		at: Location,
+	},
+
 	#[error("Could not create object of core type at {at}")]
 	InvalidCoreType {
 		#[source]

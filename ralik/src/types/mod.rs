@@ -1,8 +1,4 @@
-use pretty_assertions::assert_ne;
-
-use crate::error::{
-	InvalidStructType, InvalidTupleType, Overflow, RuntimeError, StructCreationError, TupleCreationError,
-};
+use crate::error::{Overflow, RuntimeError};
 use crate::{Context, Value};
 
 mod arguments;
@@ -63,31 +59,6 @@ pub enum TypeKind {
 pub trait Type: std::fmt::Debug {
 	fn name(&self) -> &str;
 	fn kind(&self) -> TypeKind;
-
-	fn construct_struct(
-		&self,
-		#[allow(unused_variables)] fields: &[(String, Value)],
-	) -> Result<Value, StructCreationError> {
-		assert_ne!(self.kind(), TypeKind::Struct);
-
-		Err(
-			InvalidStructType::NotStructType {
-				type_name: self.name().to_string(),
-			}
-			.into(),
-		)
-	}
-
-	fn construct_tuple(&self, #[allow(unused_variables)] fields: &[Value]) -> Result<Value, TupleCreationError> {
-		assert_ne!(self.kind(), TypeKind::Tuple);
-
-		Err(
-			InvalidTupleType::NotTupleType {
-				type_name: self.name().to_string(),
-			}
-			.into(),
-		)
-	}
 
 	fn get_function(&self, key: &str) -> Option<&MemberFunction>;
 	fn insert_function(&mut self, key: String, value: MemberFunction) -> Option<MemberFunction>;

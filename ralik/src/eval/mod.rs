@@ -125,7 +125,7 @@ impl Eval for Expression {
 impl Eval for AtomicExpression {
 	fn eval(&self, context: &Context) -> Result<Value, EvalError> {
 		match self {
-			AtomicExpression::Unit(span) => Value::new_unit(context).map_err(|err| EvalError::InvalidCoreType {
+			AtomicExpression::Unit(span) => Value::new_unit(context).map_err(|err| EvalError::ObjectCreationError {
 				source: err.into(),
 				at: span.into(),
 			}),
@@ -135,7 +135,7 @@ impl Eval for AtomicExpression {
 					.iter()
 					.map(|expression| expression.eval(context))
 					.collect::<Result<Vec<Value>, EvalError>>()?;
-				Value::new_tuple(context, values).map_err(|err| EvalError::InvalidCoreType {
+				Value::new_tuple(context, values).map_err(|err| EvalError::ObjectCreationError {
 					source: err.into(),
 					at: span.into(),
 				})
@@ -165,31 +165,31 @@ impl Eval for AtomicExpression {
 					});
 				}
 
-				Value::new_array(context, &type_0.clone(), values).map_err(|err| EvalError::InvalidCoreType {
+				Value::new_array(context, &type_0.clone(), values).map_err(|err| EvalError::ObjectCreationError {
 					source: err.into(),
 					at: span.into(),
 				})
 			}
 			AtomicExpression::LitBool(value, span) => {
-				Value::new_bool(context, *value).map_err(|err| EvalError::InvalidCoreType {
+				Value::new_bool(context, *value).map_err(|err| EvalError::ObjectCreationError {
 					source: err.into(),
 					at: span.into(),
 				})
 			}
 			AtomicExpression::LitChar(value, span) => {
-				Value::new_char(context, *value).map_err(|err| EvalError::InvalidCoreType {
+				Value::new_char(context, *value).map_err(|err| EvalError::ObjectCreationError {
 					source: err.into(),
 					at: span.into(),
 				})
 			}
 			AtomicExpression::LitInt(value, span) => {
-				Value::new_integer(context, value.clone()).map_err(|err| EvalError::InvalidCoreType {
+				Value::new_integer(context, value.clone()).map_err(|err| EvalError::ObjectCreationError {
 					source: err.into(),
 					at: span.into(),
 				})
 			}
 			AtomicExpression::LitStr(value, span) => {
-				Value::new_string(context, value).map_err(|err| EvalError::InvalidCoreType {
+				Value::new_string(context, value).map_err(|err| EvalError::ObjectCreationError {
 					source: err.into(),
 					at: span.into(),
 				})

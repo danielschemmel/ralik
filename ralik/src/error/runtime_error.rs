@@ -20,9 +20,6 @@ pub enum RuntimeError {
 	#[error("An operation overflowed")]
 	Overflow(#[from] Overflow),
 
-	#[error("A core type did not meet expectations")]
-	InvalidCoreType(InvalidCoreType),
-
 	#[error("Could not create object")]
 	ValueCreationError(#[from] ValueCreationError),
 
@@ -30,9 +27,51 @@ pub enum RuntimeError {
 	Panic(#[from] anyhow::Error),
 }
 
-impl<T: Into<InvalidCoreType>> From<T> for RuntimeError {
-	fn from(value: T) -> Self {
-		RuntimeError::InvalidCoreType(value.into())
+impl From<UnitCreationError> for RuntimeError {
+	fn from(value: UnitCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<BoolCreationError> for RuntimeError {
+	fn from(value: BoolCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<IntegerCreationError> for RuntimeError {
+	fn from(value: IntegerCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<CharCreationError> for RuntimeError {
+	fn from(value: CharCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<StringCreationError> for RuntimeError {
+	fn from(value: StringCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<TupleCreationError> for RuntimeError {
+	fn from(value: TupleCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<StructCreationError> for RuntimeError {
+	fn from(value: StructCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<ArrayCreationError> for RuntimeError {
+	fn from(value: ArrayCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
 	}
 }
 
@@ -56,29 +95,74 @@ pub enum ValueCreationError {
 	#[error("Could not create object of type `{}`", crate::types::unit_name())]
 	UnitCreationError(#[from] UnitCreationError),
 
+	#[error("Could not create object of type `{}`", crate::types::bool_name())]
+	BoolCreationError(#[from] BoolCreationError),
+
+	#[error("Could not create object of type `{}`", crate::types::integer_name())]
+	IntegerCreationError(#[from] IntegerCreationError),
+
+	#[error("Could not create object of type `{}`", crate::types::char_name())]
+	CharCreationError(#[from] CharCreationError),
+
+	#[error("Could not create object of type `{}`", crate::types::string_name())]
+	StringCreationError(#[from] StringCreationError),
+
 	#[error("Could not create object of tuple type")]
 	TupleCreationError(#[from] TupleCreationError),
 
 	#[error("Could not create object of struct type")]
 	StructCreationError(#[from] StructCreationError),
+
+	#[error("Could not create object of array type")]
+	ArrayCreationError(#[from] ArrayCreationError),
 }
 
 #[derive(Error, Debug)]
 pub enum UnitCreationError {
-	#[error("Unit type `{}` is invalid", crate::types::unit_name())]
-	InvalidUnitType(#[from] InvalidUnitType),
+	#[error("Core type `{}` (Unit) is invalid", crate::types::unit_name())]
+	InvalidType(#[from] InvalidUnitType),
+}
+
+#[derive(Error, Debug)]
+pub enum BoolCreationError {
+	#[error("Core type `{}` is invalid", crate::types::bool_name())]
+	InvalidType(#[from] InvalidBoolType),
+}
+
+#[derive(Error, Debug)]
+pub enum IntegerCreationError {
+	#[error("Core type `{}` is invalid", crate::types::integer_name())]
+	InvalidType(#[from] InvalidIntegerType),
+}
+
+#[derive(Error, Debug)]
+pub enum CharCreationError {
+	#[error("Core type `{}` is invalid", crate::types::char_name())]
+	InvalidType(#[from] InvalidCharType),
+}
+
+#[derive(Error, Debug)]
+pub enum StringCreationError {
+	#[error("Core type `{}` is invalid", crate::types::string_name())]
+	InvalidType(#[from] InvalidStringType),
 }
 
 #[derive(Error, Debug)]
 pub enum TupleCreationError {
 	#[error("Type is not a valid tuple type")]
-	InvalidTupleType(#[from] InvalidTupleType),
+	InvalidType(#[from] InvalidTupleType),
 }
 
 #[derive(Error, Debug)]
 pub enum StructCreationError {
 	#[error("Type is not a valid struct type")]
-	InvalidStructType(#[from] InvalidStructType),
+	InvalidType(#[from] InvalidStructType),
+}
+
+#[derive(Error, Debug)]
+pub enum ArrayCreationError {
+	#[error("Type is not a valid array type")]
+	InvalidType(#[from] InvalidArrayType),
 }
 
 #[derive(Error, Debug)]
@@ -86,8 +170,8 @@ pub enum StructCreationError {
 pub enum InvalidCoreType {
 	InvalidUnitType(#[from] InvalidUnitType),
 	InvalidBoolType(#[from] InvalidBoolType),
-	InvalidCharType(#[from] InvalidCharType),
 	InvalidIntegerType(#[from] InvalidIntegerType),
+	InvalidCharType(#[from] InvalidCharType),
 	InvalidStringType(#[from] InvalidStringType),
 	InvalidTupleType(#[from] InvalidTupleType),
 	InvalidArrayType(#[from] InvalidArrayType),

@@ -20,15 +20,15 @@ enum Error {
 	EmptyArray,
 
 	#[error(transparent)]
-	InvalidBasicType(crate::error::InvalidCoreType),
+	ValueCreationError(crate::error::ValueCreationError),
 
 	#[error("Custom Error: {0}")]
 	Custom(String),
 }
 
-impl<T: Into<crate::error::InvalidCoreType>> From<T> for Error {
+impl<T: Into<crate::error::ValueCreationError>> From<T> for Error {
 	fn from(value: T) -> Self {
-		Error::InvalidBasicType(value.into())
+		Error::ValueCreationError(value.into())
 	}
 }
 
@@ -117,11 +117,14 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_bytes(self, value: &[u8]) -> Result<Self::Ok, Self::Error> {
-		let integer_type = self.context.get_integer_type()?;
+		let integer_type = self
+			.context
+			.get_integer_type()
+			.map_err(crate::error::IntegerCreationError::InvalidType)?;
 		let values = value
 			.iter()
 			.map(|byte| Value::new_integer(self.context, *byte))
-			.collect::<Result<Vec<Value>, crate::error::InvalidIntegerType>>()?;
+			.collect::<Result<Vec<Value>, crate::error::IntegerCreationError>>()?;
 		Ok(Value::new_array(self.context, &integer_type, values)?)
 	}
 
