@@ -1,3 +1,27 @@
+/*!
+The `Context` stores all types, free functions and global variables. While it can be customized to a large extent,
+it is suggested to start with the default context, which contains working types for the core types:
+```rust
+# use ralik::Context;
+let context = Context::new();
+```
+
+The default context can then be extended for the specific use case:
+```rust
+# use ralik::{Context, Value};
+# let context = Context::new();
+// Define a global variable `$` of the Unit type `()`
+context.insert_variable("$", Value::new_unit(&context).unwrap());
+```
+
+When starting with an empty context, the core types are not available by default:
+```rust
+# use ralik::{Context, Value};
+let context = Context::new_empty();
+Value::new_unit(&context).unwrap_err();
+```
+*/
+
 use std::collections::hash_map::HashMap;
 use std::sync::{Arc, RwLock};
 
