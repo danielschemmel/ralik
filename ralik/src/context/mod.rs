@@ -52,11 +52,11 @@ impl Context {
 	pub fn new() -> Self {
 		let context = Self::new_empty();
 
-		context.insert_type(TypeHandle::new(crate::types::UnitType::new()));
-		context.insert_type(TypeHandle::new(crate::types::BoolType::new()));
-		context.insert_type(TypeHandle::new(crate::types::CharType::new()));
-		context.insert_type(TypeHandle::new(crate::types::IntegerType::new()));
-		context.insert_type(TypeHandle::new(crate::types::StringType::new()));
+		context.insert_type(crate::types::UnitType::new());
+		context.insert_type(crate::types::BoolType::new());
+		context.insert_type(crate::types::CharType::new());
+		context.insert_type(crate::types::IntegerType::new());
+		context.insert_type(crate::types::StringType::new());
 
 		context.insert_macro("panic", |arguments| {
 			use std::fmt::Write;

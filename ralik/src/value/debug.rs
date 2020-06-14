@@ -28,10 +28,11 @@ impl fmt::Debug for Data {
 			match self {
 				Unit => f.debug_tuple("Unit").finish(),
 				Bool(value) => f.debug_tuple("Bool").field(value).finish(),
-				Char(value) => f.debug_tuple("Char").field(value).finish(),
 				Integer(value) => f.debug_tuple("Integer").field(&IntegerFormatter(value)).finish(),
+				Char(value) => f.debug_tuple("Char").field(value).finish(),
 				String(value) => f.debug_tuple("String").field(value).finish(),
 				Tuple(value) => f.debug_tuple("Tuple").field(value).finish(),
+				Struct(value) => f.debug_tuple("Struct").field(value).finish(),
 				Array(value) => f.debug_tuple("Array").field(value).finish(),
 			}
 		} else {
@@ -42,6 +43,7 @@ impl fmt::Debug for Data {
 				Integer(value) => IntegerFormatter(value).fmt(f),
 				String(value) => value.fmt(f),
 				Tuple(value) => f.debug_list().entries(value).finish(),
+				Struct(value) => f.debug_list().entries(value.values()).finish(),
 				Array(value) => f.debug_list().entries(value).finish(),
 			}
 		}

@@ -3,6 +3,9 @@ use rustyline::config::{Builder as EditorBuilder, CompletionType};
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
+mod interpreter;
+use interpreter::Interpreter;
+
 #[derive(structopt::StructOpt, Debug)]
 #[structopt(
 	setting = structopt::clap::AppSettings::ColoredHelp,
@@ -80,8 +83,13 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 fn create_context() -> Result<ralik::Context> {
 	let context = ralik::Context::new();
 
-	//let interpreter_type = ralik::types::StructType::new("$Interpreter", [].iter());
-	context.insert_variable("$", ralik::Value::from_serde(&context, ()));
+	Interpreter::register_type(&context);
+
+	context.insert_variable(
+		"$",
+		ralik::Value::from_serde(&context, &Interpreter::new(), "$Interpreter").unwrap(),
+	);
+
 	context.insert_function("exit", |args| match args.len() {
 		0 => std::process::exit(0),
 		1 => args[0]

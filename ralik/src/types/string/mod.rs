@@ -5,7 +5,7 @@ mod ops;
 
 pub type StringType = BasicType<StringImpl>;
 pub const fn name() -> &'static str {
-	"String"
+	"std::string::String"
 }
 
 pub struct StringImpl;

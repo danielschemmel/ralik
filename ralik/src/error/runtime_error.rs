@@ -157,6 +157,20 @@ pub enum TupleCreationError {
 pub enum StructCreationError {
 	#[error("Type is not a valid struct type")]
 	InvalidType(#[from] InvalidStructType),
+
+	#[error("Missing field `{field_name}` while creating object of type `{type_name}`")]
+	MissingField { type_name: String, field_name: String },
+
+	#[error("Superfluous field `{field_name}` while creating object of type `{type_name}`")]
+	SuperfluousField { type_name: String, field_name: String },
+
+	#[error("Cannot initialize field `{field_name}` with type `{field_type_name}` for an object of type `{type_name}` with a value of type `{value_type_name}`")]
+	FieldTypeMismatch {
+		type_name: String,
+		field_name: String,
+		field_type_name: String,
+		value_type_name: String,
+	},
 }
 
 #[derive(Error, Debug)]

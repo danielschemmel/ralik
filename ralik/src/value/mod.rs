@@ -1,10 +1,13 @@
 use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 
+use std::collections::hash_map::HashMap;
+
 use crate::error::{
 	ArrayCreationError, BoolCreationError, CharCreationError, IntegerCreationError, InvalidArrayType,
-	StringCreationError, TupleCreationError, UnitCreationError,
+	StringCreationError, StructCreationError, TupleCreationError, UnitCreationError,
 };
+use crate::types::TypeKind;
 use crate::{Context, TypeHandle};
 
 mod debug;
@@ -22,10 +25,11 @@ pub struct Value {
 enum Data {
 	Unit,
 	Bool(bool),
-	Char(char),
 	Integer(BigInt),
+	Char(char),
 	String(String),
 	Tuple(Vec<Value>),
+	Struct(HashMap<String, Value>),
 	Array(Vec<Value>),
 }
 
@@ -76,6 +80,95 @@ impl Value {
 			r#type: tuple_type,
 			data: Data::Tuple(values),
 		})
+	}
+
+	pub fn new_struct(
+		context: &Context,
+		name: &str,
+		fields: impl Iterator<Item = (impl Into<String>, Value)>,
+	) -> Result<Value, StructCreationError> {
+		let struct_type = context
+			.get_type(name)
+			.ok_or_else(|| crate::error::InvalidStructType::Missing {
+				type_name: name.to_string(),
+			})?
+			.clone();
+		if struct_type.kind() != TypeKind::Struct {
+			return Err(
+				crate::error::InvalidStructType::NotStructType {
+					type_name: name.to_string(),
+				}
+				.into(),
+			);
+		}
+
+		let fields: HashMap<String, Value> = fields.map(|(name, value)| (name.into(), value)).collect();
+		let field_map = struct_type.fields().unwrap();
+		for (field_name, field_type) in field_map {
+			let value = fields
+				.get(field_name)
+				.ok_or_else(|| StructCreationError::MissingField {
+					type_name: name.to_string(),
+					field_name: field_name.to_string(),
+				})?;
+			let value_type = value.get_type();
+			if !TypeHandle::is_same(value_type, field_type) {
+				return Err(StructCreationError::FieldTypeMismatch {
+					type_name: name.to_string(),
+					field_name: field_name.to_string(),
+					field_type_name: field_type.name().to_string(),
+					value_type_name: value_type.name().to_string(),
+				});
+			}
+		}
+
+		// After establishing that `field_map.keys()` \subseteq `fields.keys()`, we can shortcut the reverse check if the
+		// lengths are equal, as this implies that `field_map.keys()` = `fields.keys()`
+		if fields.len() != field_map.len() {
+			for field_name in fields.keys() {
+				field_map
+					.get(field_name)
+					.ok_or_else(|| StructCreationError::SuperfluousField {
+						type_name: name.to_string(),
+						field_name: field_name.to_string(),
+					})?;
+			}
+		}
+
+		Ok(Value {
+			r#type: struct_type,
+			data: Data::Struct(fields),
+		})
+	}
+
+	pub fn new_unit_struct(context: &Context, name: &str) -> Result<Value, StructCreationError> {
+		let struct_type = context
+			.get_type(name)
+			.ok_or_else(|| crate::error::InvalidStructType::Missing {
+				type_name: name.to_string(),
+			})?
+			.clone();
+		if struct_type.kind() != TypeKind::Struct {
+			return Err(
+				crate::error::InvalidStructType::NotStructType {
+					type_name: name.to_string(),
+				}
+				.into(),
+			);
+		}
+
+		let field_map = struct_type.fields().unwrap();
+		if field_map.is_empty() {
+			Ok(Value {
+				r#type: struct_type,
+				data: Data::Struct(HashMap::new()),
+			})
+		} else {
+			Err(StructCreationError::MissingField {
+				type_name: name.to_string(),
+				field_name: field_map.keys().nth(0).unwrap().to_string(),
+			})
+		}
 	}
 
 	pub fn new_array(
@@ -262,8 +355,11 @@ impl Value {
 		}
 	}
 
-	pub fn field(&self, _name: &str) -> Option<&Value> {
-		None
+	pub fn field(&self, name: &str) -> Option<&Value> {
+		match &self.data {
+			Data::Struct(fields) => fields.get(name),
+			_ => None,
+		}
 	}
 
 	pub fn tuple_field(&self, index: usize) -> Option<&Value> {

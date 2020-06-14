@@ -1,3 +1,5 @@
+use std::collections::hash_map::HashMap;
+
 use crate::error::{Overflow, RuntimeError};
 use crate::{Context, Value};
 
@@ -59,6 +61,19 @@ pub enum TypeKind {
 pub trait Type: std::fmt::Debug {
 	fn name(&self) -> &str;
 	fn kind(&self) -> TypeKind;
+
+	fn parameters(&self) -> &[TypeHandle] {
+		assert!(self.kind() != TypeKind::Tuple);
+		assert!(self.kind() != TypeKind::Array);
+
+		&[]
+	}
+
+	fn fields(&self) -> Option<&HashMap<String, TypeHandle>> {
+		assert!(self.kind() != TypeKind::Struct);
+
+		None
+	}
 
 	fn get_function(&self, key: &str) -> Option<&MemberFunction>;
 	fn insert_function(&mut self, key: String, value: MemberFunction) -> Option<MemberFunction>;

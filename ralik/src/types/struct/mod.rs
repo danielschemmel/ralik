@@ -11,12 +11,24 @@ pub struct StructType {
 }
 
 impl StructType {
-	pub fn new(name: impl Into<String>, fields: impl Iterator<Item = (String, TypeHandle)>) -> Self {
+	pub fn new(name: impl Into<String>, fields: impl Iterator<Item = (impl Into<String>, TypeHandle)>) -> Self {
 		Self {
 			name: name.into(),
-			fields: fields.collect(),
+			fields: fields.map(|(name, r#type)| (name.into(), r#type)).collect(),
 			functions: StructFunctionStore::new(),
 		}
+	}
+
+	pub fn new_unit(name: impl Into<String>) -> Self {
+		Self {
+			name: name.into(),
+			fields: HashMap::new(),
+			functions: StructFunctionStore::new(),
+		}
+	}
+
+	pub fn insert_function(&mut self, key: impl Into<String>, value: MemberFunction) -> Option<MemberFunction> {
+		self.functions.insert(key.into(), value)
 	}
 }
 
@@ -27,6 +39,10 @@ impl Type for StructType {
 
 	fn kind(&self) -> TypeKind {
 		TypeKind::Struct
+	}
+
+	fn fields(&self) -> Option<&HashMap<String, TypeHandle>> {
+		Some(&self.fields)
 	}
 
 	fn get_function(&self, key: &str) -> Option<&MemberFunction> {

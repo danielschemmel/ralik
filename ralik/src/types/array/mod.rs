@@ -9,7 +9,7 @@ pub(crate) type ArrayFunctionStore = HashMap<String, MemberFunction>;
 
 pub(crate) struct ArrayType {
 	name: String,
-	element_type: TypeHandle,
+	element_type: [TypeHandle; 1],
 	functions: ArrayFunctionStore,
 }
 
@@ -28,7 +28,7 @@ impl ArrayType {
 
 		Self {
 			name: name.into(),
-			element_type,
+			element_type: [element_type],
 			functions,
 		}
 	}
@@ -41,6 +41,10 @@ impl Type for ArrayType {
 
 	fn kind(&self) -> TypeKind {
 		TypeKind::Array
+	}
+
+	fn parameters(&self) -> &[TypeHandle] {
+		&self.element_type
 	}
 
 	fn get_function(&self, key: &str) -> Option<&MemberFunction> {

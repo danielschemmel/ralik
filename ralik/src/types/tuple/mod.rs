@@ -47,6 +47,10 @@ impl Type for TupleType {
 		TypeKind::Tuple
 	}
 
+	fn parameters(&self) -> &[TypeHandle] {
+		&self.element_types
+	}
+
 	fn get_function(&self, key: &str) -> Option<&MemberFunction> {
 		self.functions.get(key)
 	}

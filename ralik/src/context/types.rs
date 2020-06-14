@@ -4,7 +4,7 @@ use crate::error::{
 	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType,
 	InvalidUnitType,
 };
-use crate::TypeHandle;
+use crate::{Type, TypeHandle};
 
 use super::Context;
 
@@ -111,14 +111,37 @@ impl Context {
 		Ok(array_type)
 	}
 
-	pub fn insert_type(&self, value: TypeHandle) {
+	pub fn insert_type(&self, value: impl Type + 'static) -> TypeHandle {
 		let name = value.name().to_string();
+		let handle = TypeHandle::new(value);
+
+		// check for consistency
+		{
+			let types = self.0.types.read().unwrap();
+			for type_parameter in handle.parameters() {
+				let registered = types.get(type_parameter.name());
+				assert!(registered.is_some(), "All dependent types must be registered first");
+				assert!(
+					TypeHandle::is_same(type_parameter, registered.unwrap()),
+					"All dependent types must refer to the exact same object that is registered under that name"
+				);
+			}
+			if let Some(fields) = handle.fields() {
+				for field_type in fields.values() {
+					let registered = types.get(field_type.name());
+					assert!(registered.is_some(), "All dependent types must be registered first");
+					assert!(
+						TypeHandle::is_same(field_type, registered.unwrap()),
+						"All dependent types must refer to the exact same object that is registered under that name"
+					);
+				}
+			}
+		}
+
 		let mut types = self.0.types.write().unwrap();
 		match types.entry(name) {
 			Entry::Occupied(_entry) => panic!("Overwriting existing types is not supported (yet?)"),
-			Entry::Vacant(entry) => {
-				entry.insert(value);
-			}
+			Entry::Vacant(entry) => entry.insert(handle).clone(),
 		}
 	}
 

@@ -15,6 +15,7 @@ atty = "0.2"
 build-info = { version = "0.0.19", default_features = false }
 ctrlc = "3"
 rustyline = "6"
+serde = { version = "1", features = ["derive"] }
 structopt = "0.3"
 
 ralik = { version = "0.0.0", path = "../ralik", features = ["serde"] }
