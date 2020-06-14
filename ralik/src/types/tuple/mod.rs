@@ -1,13 +1,12 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
-use super::{MemberFunction, Type};
+use super::{MemberFunction, Type, TypeHandle, TypeKind};
 
 pub(crate) type TupleFunctionStore = HashMap<String, MemberFunction>;
 
 pub(crate) struct TupleType {
 	name: String,
-	element_types: Vec<Arc<dyn Type>>,
+	element_types: Vec<TypeHandle>,
 	functions: TupleFunctionStore,
 }
 
@@ -30,7 +29,7 @@ pub fn name(element_types: &[&str]) -> String {
 }
 
 impl TupleType {
-	pub fn new(name: impl Into<String>, element_types: impl Into<Vec<Arc<dyn Type>>>) -> Self {
+	pub fn new(name: impl Into<String>, element_types: impl Into<Vec<TypeHandle>>) -> Self {
 		Self {
 			name: name.into(),
 			element_types: element_types.into(),
@@ -42,6 +41,10 @@ impl TupleType {
 impl Type for TupleType {
 	fn name(&self) -> &str {
 		&self.name
+	}
+
+	fn kind(&self) -> TypeKind {
+		TypeKind::Tuple
 	}
 
 	fn get_function(&self, key: &str) -> Option<&MemberFunction> {

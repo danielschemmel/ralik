@@ -7,5 +7,6 @@ pub use eval_error::EvalError;
 mod runtime_error;
 pub use runtime_error::{
 	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidCoreType, InvalidIntegerType, InvalidStringType,
-	InvalidTupleType, InvalidUnitType, Overflow, RuntimeError,
+	InvalidStructType, InvalidTupleType, InvalidUnitType, Overflow, RuntimeError, StructCreationError,
+	TupleCreationError, ValueCreationError,
 };

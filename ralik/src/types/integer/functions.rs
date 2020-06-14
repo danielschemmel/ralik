@@ -1,20 +1,18 @@
 use num_traits::{Signed, ToPrimitive};
 
-use std::sync::Arc;
-
 use crate::error::{Overflow, RuntimeError};
-use crate::{Context, Type, Value};
+use crate::{Context, TypeHandle, Value};
 
 use super::super::arguments::Arguments;
 
-pub(crate) fn abs(context: &Context, _this_type: &Arc<dyn Type>, arguments: &[Value]) -> Result<Value, RuntimeError> {
+pub(crate) fn abs(context: &Context, _this_type: &TypeHandle, arguments: &[Value]) -> Result<Value, RuntimeError> {
 	arguments.check_len(1)?;
 	let this = arguments.as_integer(0)?;
 	Ok(Value::new_integer(context, this.abs())?)
 }
 
 /*
-pub(crate) fn checked_div(context: &Context, _this_type: &Arc<dyn Type>, arguments: &[Value]) -> Result<Value, RuntimeError> {
+pub(crate) fn checked_div(context: &Context, _this_type: &TypeHandle, arguments: &[Value]) -> Result<Value, RuntimeError> {
 	arguments.check_len(2)?;
 	let lhs = arguments.as_integer(0)?;
 	let rhs = arguments.as_integer(1)?;
@@ -25,7 +23,7 @@ pub(crate) fn checked_div(context: &Context, _this_type: &Arc<dyn Type>, argumen
 
 pub(crate) fn is_negative(
 	context: &Context,
-	_this_type: &Arc<dyn Type>,
+	_this_type: &TypeHandle,
 	arguments: &[Value],
 ) -> Result<Value, RuntimeError> {
 	arguments.check_len(1)?;
@@ -35,7 +33,7 @@ pub(crate) fn is_negative(
 
 pub(crate) fn is_positive(
 	context: &Context,
-	_this_type: &Arc<dyn Type>,
+	_this_type: &TypeHandle,
 	arguments: &[Value],
 ) -> Result<Value, RuntimeError> {
 	arguments.check_len(1)?;
@@ -43,18 +41,14 @@ pub(crate) fn is_positive(
 	Ok(Value::new_bool(context, this.is_positive())?)
 }
 
-pub(crate) fn pow(context: &Context, _this_type: &Arc<dyn Type>, arguments: &[Value]) -> Result<Value, RuntimeError> {
+pub(crate) fn pow(context: &Context, _this_type: &TypeHandle, arguments: &[Value]) -> Result<Value, RuntimeError> {
 	arguments.check_len(2)?;
 	let this = arguments.as_integer(0)?;
 	let arg = arguments.as_integer(1)?.to_u32().ok_or_else(|| Overflow::U32)?;
 	Ok(Value::new_integer(context, this.pow(arg))?)
 }
 
-pub(crate) fn signum(
-	context: &Context,
-	_this_type: &Arc<dyn Type>,
-	arguments: &[Value],
-) -> Result<Value, RuntimeError> {
+pub(crate) fn signum(context: &Context, _this_type: &TypeHandle, arguments: &[Value]) -> Result<Value, RuntimeError> {
 	arguments.check_len(1)?;
 	let this = arguments.as_integer(0)?;
 	Ok(Value::new_integer(context, this.signum())?)
@@ -62,7 +56,7 @@ pub(crate) fn signum(
 
 pub(crate) fn to_string(
 	context: &Context,
-	_this_type: &Arc<dyn Type>,
+	_this_type: &TypeHandle,
 	arguments: &[Value],
 ) -> Result<Value, RuntimeError> {
 	arguments.check_len(1)?;

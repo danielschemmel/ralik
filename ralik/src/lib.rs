@@ -14,8 +14,8 @@ mod ops;
 mod syntax;
 use syntax::ast;
 
-mod types;
-pub use types::Type;
+pub mod types;
+pub use types::{Type, TypeHandle};
 
 mod value;
 pub use value::Value;

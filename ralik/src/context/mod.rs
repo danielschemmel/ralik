@@ -2,7 +2,7 @@ use std::collections::hash_map::HashMap;
 use std::sync::{Arc, RwLock};
 
 use crate::error::RuntimeError;
-use crate::{Type, Value};
+use crate::{TypeHandle, Value};
 
 mod debug;
 mod functions;
@@ -42,7 +42,7 @@ Value::new_unit(&context).unwrap_err();
 pub struct Context(Arc<ContextImpl>);
 
 struct ContextImpl {
-	types: RwLock<HashMap<String, Arc<dyn Type>>>,
+	types: RwLock<HashMap<String, TypeHandle>>,
 	variables: RwLock<HashMap<String, Value>>,
 	functions: RwLock<HashMap<String, Function>>,
 	macros: RwLock<HashMap<String, Macro>>,
@@ -52,11 +52,11 @@ impl Context {
 	pub fn new() -> Self {
 		let context = Self::new_empty();
 
-		context.insert_type(Arc::new(crate::types::UnitType::new()));
-		context.insert_type(Arc::new(crate::types::BoolType::new()));
-		context.insert_type(Arc::new(crate::types::CharType::new()));
-		context.insert_type(Arc::new(crate::types::IntegerType::new()));
-		context.insert_type(Arc::new(crate::types::StringType::new()));
+		context.insert_type(TypeHandle::new(crate::types::UnitType::new()));
+		context.insert_type(TypeHandle::new(crate::types::BoolType::new()));
+		context.insert_type(TypeHandle::new(crate::types::CharType::new()));
+		context.insert_type(TypeHandle::new(crate::types::IntegerType::new()));
+		context.insert_type(TypeHandle::new(crate::types::StringType::new()));
 
 		context.insert_macro("panic", |arguments| {
 			use std::fmt::Write;

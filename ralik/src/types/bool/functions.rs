@@ -1,13 +1,11 @@
-use std::sync::Arc;
-
 use crate::error::RuntimeError;
-use crate::{Context, Type, Value};
+use crate::{Context, TypeHandle, Value};
 
 use super::super::arguments::Arguments;
 
 pub(crate) fn to_string(
 	context: &Context,
-	_this_type: &Arc<dyn Type>,
+	_this_type: &TypeHandle,
 	arguments: &[Value],
 ) -> Result<Value, RuntimeError> {
 	arguments.check_len(1)?;

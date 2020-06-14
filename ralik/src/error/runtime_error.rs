@@ -23,13 +23,16 @@ pub enum RuntimeError {
 	#[error("A core type did not meet expectations")]
 	InvalidCoreType(InvalidCoreType),
 
+	#[error("Could not create object")]
+	ValueCreationError(#[from] ValueCreationError),
+
 	#[error("Panic!")]
 	Panic(#[from] anyhow::Error),
 }
 
 impl<T: Into<InvalidCoreType>> From<T> for RuntimeError {
 	fn from(value: T) -> Self {
-		value.into().into()
+		RuntimeError::InvalidCoreType(value.into())
 	}
 }
 
@@ -46,6 +49,36 @@ pub enum Overflow {
 
 	#[error("Value does not fit into a usize")]
 	USize,
+}
+
+#[derive(Error, Debug)]
+pub enum ValueCreationError {
+	#[error("Could not create object of type `{}`", crate::types::unit_name())]
+	UnitCreationError(#[from] UnitCreationError),
+
+	#[error("Could not create object of tuple type")]
+	TupleCreationError(#[from] TupleCreationError),
+
+	#[error("Could not create object of struct type")]
+	StructCreationError(#[from] StructCreationError),
+}
+
+#[derive(Error, Debug)]
+pub enum UnitCreationError {
+	#[error("Unit type `{}` is invalid", crate::types::unit_name())]
+	InvalidUnitType(#[from] InvalidUnitType),
+}
+
+#[derive(Error, Debug)]
+pub enum TupleCreationError {
+	#[error("Type is not a valid tuple type")]
+	InvalidTupleType(#[from] InvalidTupleType),
+}
+
+#[derive(Error, Debug)]
+pub enum StructCreationError {
+	#[error("Type is not a valid struct type")]
+	InvalidStructType(#[from] InvalidStructType),
 }
 
 #[derive(Error, Debug)]
@@ -98,6 +131,9 @@ pub enum InvalidStringType {
 
 #[derive(Error, Debug)]
 pub enum InvalidTupleType {
+	#[error("The type `{type_name}` is not a tuple type")]
+	NotTupleType { type_name: String },
+
 	#[error("The given context does not have the type `{missing_element_type_name}` registered that is required to create the tuple `{tuple_name}`")]
 	MissingSubtype {
 		tuple_name: String,
@@ -122,4 +158,13 @@ pub enum InvalidArrayType {
 		index: usize,
 		type_name: String,
 	},
+}
+
+#[derive(Error, Debug)]
+pub enum InvalidStructType {
+	#[error("The given context does not have the structure type `{type_name}` registered")]
+	Missing { type_name: String },
+
+	#[error("The type `{type_name}` is not a struct type")]
+	NotStructType { type_name: String },
 }

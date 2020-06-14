@@ -1,48 +1,47 @@
 use std::collections::hash_map::Entry;
-use std::sync::Arc;
 
 use crate::error::{
 	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType,
 	InvalidUnitType,
 };
-use crate::Type;
+use crate::TypeHandle;
 
 use super::Context;
 
 impl Context {
-	pub fn get_type(&self, key: &str) -> Option<Arc<dyn Type>> {
+	pub fn get_type(&self, key: &str) -> Option<TypeHandle> {
 		self.0.types.read().unwrap().get(key).cloned()
 	}
 
-	pub fn get_unit_type(&self) -> Result<Arc<dyn Type>, InvalidUnitType> {
+	pub fn get_unit_type(&self) -> Result<TypeHandle, InvalidUnitType> {
 		self.get_type("()").ok_or_else(|| InvalidUnitType::Missing)
 	}
 
-	pub fn get_bool_type(&self) -> Result<Arc<dyn Type>, InvalidBoolType> {
+	pub fn get_bool_type(&self) -> Result<TypeHandle, InvalidBoolType> {
 		self
 			.get_type(crate::types::bool_name())
 			.ok_or_else(|| InvalidBoolType::Missing)
 	}
 
-	pub fn get_char_type(&self) -> Result<Arc<dyn Type>, InvalidCharType> {
+	pub fn get_char_type(&self) -> Result<TypeHandle, InvalidCharType> {
 		self
 			.get_type(crate::types::char_name())
 			.ok_or_else(|| InvalidCharType::Missing)
 	}
 
-	pub fn get_integer_type(&self) -> Result<Arc<dyn Type>, InvalidIntegerType> {
+	pub fn get_integer_type(&self) -> Result<TypeHandle, InvalidIntegerType> {
 		self
 			.get_type(crate::types::integer_name())
 			.ok_or_else(|| InvalidIntegerType::Missing)
 	}
 
-	pub fn get_string_type(&self) -> Result<Arc<dyn Type>, InvalidStringType> {
+	pub fn get_string_type(&self) -> Result<TypeHandle, InvalidStringType> {
 		self
 			.get_type(crate::types::string_name())
 			.ok_or_else(|| InvalidStringType::Missing)
 	}
 
-	pub fn get_tuple_type(&self, element_type_names: &[&str]) -> Result<Arc<dyn Type>, InvalidTupleType> {
+	pub fn get_tuple_type(&self, element_type_names: &[&str]) -> Result<TypeHandle, InvalidTupleType> {
 		if element_type_names.len() == 0 {
 			return Err(InvalidTupleType::ZeroElements);
 		}
@@ -62,7 +61,7 @@ impl Context {
 			return Ok(tuple_type.clone());
 		}
 
-		let element_types: Result<Vec<Arc<dyn Type>>, &str> = element_type_names
+		let element_types: Result<Vec<TypeHandle>, &str> = element_type_names
 			.iter()
 			.map(|&name| types.get(name).cloned().ok_or(name))
 			.collect();
@@ -74,7 +73,7 @@ impl Context {
 		}
 		let element_types = element_types.unwrap();
 
-		let tuple_type = Arc::new(crate::types::TupleType::new(name, element_types));
+		let tuple_type = TypeHandle::new(crate::types::TupleType::new(name, element_types));
 		assert!(types
 			.insert(tuple_type.name().to_string(), tuple_type.clone())
 			.is_none());
@@ -82,7 +81,7 @@ impl Context {
 		Ok(tuple_type)
 	}
 
-	pub fn get_array_type(&self, element_type_name: &str) -> Result<Arc<dyn Type>, InvalidArrayType> {
+	pub fn get_array_type(&self, element_type_name: &str) -> Result<TypeHandle, InvalidArrayType> {
 		let name = crate::types::array_name(element_type_name);
 		if let Some(array_type) = self.get_type(&name) {
 			return Ok(array_type);
@@ -104,7 +103,7 @@ impl Context {
 				element_type_name: element_type_name.to_string(),
 			})?;
 
-		let array_type = crate::types::ArrayType::new(name, element_type.clone());
+		let array_type = TypeHandle::new(crate::types::ArrayType::new(name, element_type.clone()));
 		assert!(types
 			.insert(array_type.name().to_string(), array_type.clone())
 			.is_none());
@@ -112,7 +111,7 @@ impl Context {
 		Ok(array_type)
 	}
 
-	pub fn insert_type(&self, value: Arc<dyn Type>) {
+	pub fn insert_type(&self, value: TypeHandle) {
 		let name = value.name().to_string();
 		let mut types = self.0.types.write().unwrap();
 		match types.entry(name) {
@@ -123,11 +122,11 @@ impl Context {
 		}
 	}
 
-	pub fn remove_type(&self, key: &str) {
+	/*pub fn remove_type(&self, key: &str) {
 		let mut types = self.0.types.write().unwrap();
 		let (owned_key, weak_ref) = {
 			if let Some((key, value)) = types.remove_entry(key) {
-				(key, Arc::downgrade(&value))
+				(key, TypeHandle::downgrade(&value))
 			} else {
 				// type does not exist?
 				panic!("Type {} does not exist in context", key);
@@ -138,5 +137,5 @@ impl Context {
 			types.insert(owned_key, value);
 			panic!("Type {} is still in use", key);
 		}
-	}
+	}*/
 }

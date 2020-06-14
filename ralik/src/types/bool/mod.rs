@@ -1,4 +1,4 @@
-use super::{BasicFunctionStore, BasicType, BasicTypeBase};
+use super::{BasicFunctionStore, BasicType, BasicTypeBase, TypeKind};
 
 mod functions;
 mod ops;
@@ -25,6 +25,10 @@ impl Default for BoolType {
 impl BasicTypeBase for BoolImpl {
 	fn name(&self) -> &str {
 		self::name()
+	}
+
+	fn kind(&self) -> TypeKind {
+		TypeKind::Bool
 	}
 
 	fn register_functions(&self, functions: &mut BasicFunctionStore) {

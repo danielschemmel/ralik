@@ -80,6 +80,7 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 fn create_context() -> Result<ralik::Context> {
 	let context = ralik::Context::new();
 
+	//let interpreter_type = ralik::types::StructType::new("$Interpreter", [].iter());
 	context.insert_variable("$", ralik::Value::from_serde(&context, ()));
 	context.insert_function("exit", |args| match args.len() {
 		0 => std::process::exit(0),

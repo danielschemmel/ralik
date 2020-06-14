@@ -1,35 +1,32 @@
 use std::collections::HashMap;
 
-use super::{MemberFunction, Type, TypeKind};
+use super::{MemberFunction, Type, TypeHandle, TypeKind};
 
-pub type BasicFunctionStore = HashMap<String, MemberFunction>;
+pub type StructFunctionStore = HashMap<String, MemberFunction>;
 
-pub trait BasicTypeBase {
-	fn name(&self) -> &str;
-	fn kind(&self) -> TypeKind;
-	fn register_functions(&self, functions: &mut BasicFunctionStore);
+pub struct StructType {
+	name: String,
+	fields: HashMap<String, TypeHandle>,
+	functions: StructFunctionStore,
 }
 
-pub struct BasicType<T: BasicTypeBase> {
-	base: T,
-	functions: BasicFunctionStore,
-}
-
-impl<T: BasicTypeBase> BasicType<T> {
-	pub fn from_base(base: T) -> Self {
-		let mut functions = BasicFunctionStore::new();
-		base.register_functions(&mut functions);
-		Self { base, functions }
+impl StructType {
+	pub fn new(name: impl Into<String>, fields: impl Iterator<Item = (String, TypeHandle)>) -> Self {
+		Self {
+			name: name.into(),
+			fields: fields.collect(),
+			functions: StructFunctionStore::new(),
+		}
 	}
 }
 
-impl<T: BasicTypeBase> Type for BasicType<T> {
+impl Type for StructType {
 	fn name(&self) -> &str {
-		self.base.name()
+		&self.name
 	}
 
 	fn kind(&self) -> TypeKind {
-		self.base.kind()
+		TypeKind::Struct
 	}
 
 	fn get_function(&self, key: &str) -> Option<&MemberFunction> {
@@ -45,10 +42,11 @@ impl<T: BasicTypeBase> Type for BasicType<T> {
 	}
 }
 
-impl<T: BasicTypeBase> std::fmt::Debug for BasicType<T> {
+impl std::fmt::Debug for StructType {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("Type")
 			.field("name", &self.name())
+			.field("fields", &self.fields)
 			.field("functions", &super::debug::FunctionNameListFormatter(&self.functions))
 			.finish()
 	}

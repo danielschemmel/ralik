@@ -1,9 +1,7 @@
 use num_bigint::BigInt;
 
-use std::sync::Arc;
-
 use crate::error::RuntimeError;
-use crate::{Type, Value};
+use crate::{TypeHandle, Value};
 
 pub(crate) trait Arguments {
 	fn check_len(&self, count: usize) -> Result<(), RuntimeError>;
@@ -14,7 +12,7 @@ pub(crate) trait Arguments {
 	fn as_integer(&self, index: usize) -> Result<&BigInt, RuntimeError>;
 	fn as_string(&self, index: usize) -> Result<&String, RuntimeError>;
 
-	fn check_type(&self, index: usize, expected_type: &Arc<dyn Type>) -> Result<&Value, RuntimeError>;
+	fn check_type(&self, index: usize, expected_type: &TypeHandle) -> Result<&Value, RuntimeError>;
 }
 
 impl Arguments for [Value] {
@@ -73,7 +71,7 @@ impl Arguments for [Value] {
 			})
 	}
 
-	fn check_type(&self, index: usize, expected_type: &Arc<dyn Type>) -> Result<&Value, RuntimeError> {
+	fn check_type(&self, index: usize, expected_type: &TypeHandle) -> Result<&Value, RuntimeError> {
 		let value = &self[index];
 		if value.has_type(expected_type) {
 			Ok(value)

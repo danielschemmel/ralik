@@ -1,13 +1,11 @@
 use num_bigint::BigInt;
 use num_traits::ToPrimitive;
 
-use std::sync::Arc;
-
 use crate::error::{
 	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType,
 	InvalidUnitType,
 };
-use crate::{Context, Type};
+use crate::{Context, TypeHandle};
 
 mod debug;
 
@@ -16,7 +14,7 @@ mod serializer;
 
 #[derive(Clone)]
 pub struct Value {
-	r#type: Arc<dyn Type>,
+	r#type: TypeHandle,
 	data: Data,
 }
 
@@ -82,7 +80,7 @@ impl Value {
 
 	pub fn new_array(
 		context: &Context,
-		element_type: &Arc<dyn Type>,
+		element_type: &TypeHandle,
 		values: impl Into<Vec<Value>>,
 	) -> Result<Value, InvalidArrayType> {
 		let values: Vec<Value> = values.into();
@@ -107,12 +105,12 @@ impl Value {
 }
 
 impl Value {
-	pub fn get_type(&self) -> &Arc<dyn Type> {
+	pub fn get_type(&self) -> &TypeHandle {
 		&self.r#type
 	}
 
-	pub fn has_type(&self, expected_type: &Arc<dyn Type>) -> bool {
-		Arc::ptr_eq(&self.r#type, expected_type)
+	pub fn has_type(&self, expected_type: &TypeHandle) -> bool {
+		TypeHandle::is_same(&self.r#type, expected_type)
 	}
 
 	pub fn is_unit(&self) -> bool {

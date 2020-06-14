@@ -1,7 +1,6 @@
 use std::collections::HashMap;
-use std::sync::Arc;
 
-use super::{MemberFunction, Type};
+use super::{MemberFunction, Type, TypeHandle, TypeKind};
 
 mod functions;
 mod ops;
@@ -10,7 +9,7 @@ pub(crate) type ArrayFunctionStore = HashMap<String, MemberFunction>;
 
 pub(crate) struct ArrayType {
 	name: String,
-	element_type: Arc<dyn Type>,
+	element_type: TypeHandle,
 	functions: ArrayFunctionStore,
 }
 
@@ -19,7 +18,7 @@ pub fn name(element_type: &str) -> String {
 }
 
 impl ArrayType {
-	pub fn new(name: impl Into<String>, element_type: Arc<dyn Type>) -> Arc<Self> {
+	pub fn new(name: impl Into<String>, element_type: TypeHandle) -> Self {
 		let mut functions = ArrayFunctionStore::new();
 
 		functions.insert(crate::ops::INDEX.into(), ops::index);
@@ -27,19 +26,21 @@ impl ArrayType {
 		functions.insert("is_empty".into(), functions::is_empty);
 		functions.insert("len".into(), functions::len);
 
-		let result = Arc::new(Self {
+		Self {
 			name: name.into(),
 			element_type,
 			functions,
-		});
-
-		result
+		}
 	}
 }
 
 impl Type for ArrayType {
 	fn name(&self) -> &str {
 		&self.name
+	}
+
+	fn kind(&self) -> TypeKind {
+		TypeKind::Array
 	}
 
 	fn get_function(&self, key: &str) -> Option<&MemberFunction> {

@@ -1,4 +1,4 @@
-use super::{BasicFunctionStore, BasicType, BasicTypeBase};
+use super::{BasicFunctionStore, BasicType, BasicTypeBase, TypeKind};
 
 mod ops;
 
@@ -24,6 +24,10 @@ impl Default for UnitType {
 impl BasicTypeBase for UnitImpl {
 	fn name(&self) -> &str {
 		self::name()
+	}
+
+	fn kind(&self) -> TypeKind {
+		TypeKind::Unit
 	}
 
 	fn register_functions(&self, functions: &mut BasicFunctionStore) {
