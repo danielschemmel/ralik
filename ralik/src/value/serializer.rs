@@ -46,7 +46,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	type Ok = Value;
 	type Error = Error;
 	type SerializeSeq = SerializeSeq;
-	type SerializeTuple = SerializeTuple;
+	type SerializeTuple = SerializeTuple<'a>;
 	type SerializeTupleStruct = SerializeTupleStruct;
 	type SerializeTupleVariant = SerializeTupleVariant;
 	type SerializeMap = SerializeMap;
@@ -126,7 +126,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
-		unimplemented!()
+		Ok(Value::new_unit(self.context)?)
 	}
 
 	fn serialize_unit_struct(self, _name: &'static str) -> Result<Self::Ok, Self::Error> {
@@ -161,7 +161,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_tuple(self, _len: usize) -> Result<Self::SerializeTuple, Self::Error> {
-		unimplemented!()
+		Ok(SerializeTuple(self.context, Vec::new()))
 	}
 
 	fn serialize_tuple_struct(self, _name: &'static str, _len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
@@ -212,18 +212,19 @@ impl ser::SerializeSeq for SerializeSeq {
 	}
 }
 
-struct SerializeTuple;
+struct SerializeTuple<'a>(&'a Context, Vec<Value>);
 
-impl ser::SerializeTuple for SerializeTuple {
+impl<'a> ser::SerializeTuple for SerializeTuple<'a> {
 	type Ok = Value;
 	type Error = Error;
 
-	fn serialize_element<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error> {
-		unimplemented!()
+	fn serialize_element<T: ?Sized + ser::Serialize>(&mut self, value: &T) -> Result<(), Self::Error> {
+		self.1.push(Value::from_serde(self.0, value));
+		Ok(())
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		unimplemented!()
+		Ok(Value::new_tuple(self.0, self.1)?)
 	}
 }
 

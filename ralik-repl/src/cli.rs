@@ -80,7 +80,7 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 fn create_context() -> Result<ralik::Context> {
 	let context = ralik::Context::new();
 
-	context.insert_variable("$", ralik::Value::from_serde(&context, "DOLLAR"));
+	context.insert_variable("$", ralik::Value::from_serde(&context, ()));
 	context.insert_function("exit", |args| match args.len() {
 		0 => std::process::exit(0),
 		1 => args[0]
