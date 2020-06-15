@@ -90,7 +90,7 @@ fn create_context() -> Result<ralik::Context> {
 		ralik::Value::from_serde(&context, &Interpreter::new(), "$Interpreter").unwrap(),
 	);
 
-	context.insert_function("exit", |args| match args.len() {
+	context.insert_function("exit", |_context, args| match args.len() {
 		0 => std::process::exit(0),
 		1 => args[0]
 			.as_i32()

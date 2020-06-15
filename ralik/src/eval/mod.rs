@@ -234,7 +234,7 @@ impl Eval for AtomicExpression {
 					.iter()
 					.map(|argument| argument.eval(context))
 					.collect::<Result<Vec<Value>, EvalError>>()?;
-				function(&arguments).map_err(|source| EvalError::FunctionRuntimeError {
+				function(context, &arguments).map_err(|source| EvalError::FunctionRuntimeError {
 					name: name.into(),
 					source,
 					at: name_span.into(),
@@ -250,7 +250,7 @@ impl Eval for AtomicExpression {
 					.iter()
 					.map(|argument| argument.eval(context))
 					.collect::<Result<Vec<Value>, EvalError>>()?;
-				macro_function(&arguments).map_err(|source| EvalError::MacroRuntimeError {
+				macro_function(context, &arguments).map_err(|source| EvalError::MacroRuntimeError {
 					name: name.into(),
 					source,
 					at: name_span.into(),

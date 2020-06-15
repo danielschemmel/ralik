@@ -10,8 +10,8 @@ mod macros;
 mod types;
 mod variables;
 
-pub type Function = fn(&[Value]) -> Result<Value, RuntimeError>;
-pub type Macro = fn(&[Value]) -> Result<Value, RuntimeError>;
+pub type Function = fn(&Context, &[Value]) -> Result<Value, RuntimeError>;
+pub type Macro = fn(&Context, &[Value]) -> Result<Value, RuntimeError>;
 
 /**
 The `Context` stores all types, free functions and global variables.
@@ -58,7 +58,7 @@ impl Context {
 		context.insert_type(crate::types::IntegerType::new());
 		context.insert_type(crate::types::StringType::new());
 
-		context.insert_macro("panic", |arguments| {
+		context.insert_macro("panic", |_context, arguments| {
 			use std::fmt::Write;
 			let mut message = "Call to `panic!(".to_owned();
 			if !arguments.is_empty() {
@@ -69,6 +69,15 @@ impl Context {
 			}
 			write!(message, ")").unwrap();
 			Err(anyhow::anyhow!(message).into())
+		});
+
+		context.insert_macro("vec", |context, arguments| {
+			if arguments.is_empty() {
+				Err(anyhow::anyhow!("Empty `vec!` calls are currently not supported").into())
+			} else {
+				let type_0 = arguments[0].get_type();
+				Ok(Value::new_array(context, type_0, arguments)?)
+			}
 		});
 
 		context
