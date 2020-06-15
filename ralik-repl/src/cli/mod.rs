@@ -114,7 +114,7 @@ fn repl(context: ralik::Context) -> Result<ReturnCode> {
 				editor.add_history_entry(line.as_str());
 				match ralik::eval_str(&line, &context) {
 					Ok(expr) => {
-						println!("{:#?}", expr);
+						println!("{}", expr);
 					}
 					Err(err) => {
 						print_error_chain(&err);
@@ -145,7 +145,7 @@ fn print_error_chain(error: &dyn std::error::Error) {
 }
 
 fn write_error_chain<W: std::io::Write>(mut writer: W, error: &dyn std::error::Error) -> std::io::Result<()> {
-	println!("{}", error);
+	println!("Error: {}", error);
 	let mut source = error.source();
 	while let Some(err) = source {
 		writeln!(writer, "Caused by: {}", err)?;

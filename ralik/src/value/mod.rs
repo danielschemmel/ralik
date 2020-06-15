@@ -11,6 +11,7 @@ use crate::types::TypeKind;
 use crate::{Context, TypeHandle};
 
 mod debug;
+mod display;
 
 #[cfg(feature = "serde")]
 mod serializer;
