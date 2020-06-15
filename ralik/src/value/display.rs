@@ -12,12 +12,12 @@ impl fmt::Display for Value {
 				write!(f, "'")?;
 				value.escape_debug().fmt(f)?;
 				write!(f, "'")
-			},
+			}
 			Data::String(value) => {
 				write!(f, "\"")?;
 				value.escape_debug().fmt(f)?;
 				write!(f, "\"")
-			},
+			}
 			Data::Tuple(value) => {
 				assert!(value.len() > 0);
 				if value.len() == 1 {

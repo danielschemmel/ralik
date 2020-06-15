@@ -85,7 +85,7 @@ impl<T: Into<crate::error::ValueCreationError>> From<T> for SerializerError {
 }
 
 impl ser::Error for SerializerError {
-	fn custom<T: std::fmt::Display>(msg: T) -> Self{
+	fn custom<T: std::fmt::Display>(msg: T) -> Self {
 		SerializerError::Custom(msg.to_string())
 	}
 }

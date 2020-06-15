@@ -90,17 +90,10 @@ impl Value {
 	) -> Result<Value, StructCreationError> {
 		let struct_type = context
 			.get_type(name)
-			.ok_or_else(|| crate::error::InvalidStructType::Missing {
-				type_name: name.into(),
-			})?
+			.ok_or_else(|| crate::error::InvalidStructType::Missing { type_name: name.into() })?
 			.clone();
 		if struct_type.kind() != TypeKind::Struct {
-			return Err(
-				crate::error::InvalidStructType::NotStructType {
-					type_name: name.into(),
-				}
-				.into(),
-			);
+			return Err(crate::error::InvalidStructType::NotStructType { type_name: name.into() }.into());
 		}
 
 		let fields: HashMap<String, Value> = fields.map(|(name, value)| (name.into(), value)).collect();
@@ -145,17 +138,10 @@ impl Value {
 	pub fn new_unit_struct(context: &Context, name: &str) -> Result<Value, StructCreationError> {
 		let struct_type = context
 			.get_type(name)
-			.ok_or_else(|| crate::error::InvalidStructType::Missing {
-				type_name: name.into(),
-			})?
+			.ok_or_else(|| crate::error::InvalidStructType::Missing { type_name: name.into() })?
 			.clone();
 		if struct_type.kind() != TypeKind::Struct {
-			return Err(
-				crate::error::InvalidStructType::NotStructType {
-					type_name: name.into(),
-				}
-				.into(),
-			);
+			return Err(crate::error::InvalidStructType::NotStructType { type_name: name.into() }.into());
 		}
 
 		let field_map = struct_type.fields().unwrap();

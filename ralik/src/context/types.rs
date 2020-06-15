@@ -74,9 +74,7 @@ impl Context {
 		let element_types = element_types.unwrap();
 
 		let tuple_type = TypeHandle::new(crate::types::TupleType::new(name, element_types));
-		assert!(types
-			.insert(tuple_type.name().into(), tuple_type.clone())
-			.is_none());
+		assert!(types.insert(tuple_type.name().into(), tuple_type.clone()).is_none());
 
 		Ok(tuple_type)
 	}
@@ -104,9 +102,7 @@ impl Context {
 			})?;
 
 		let array_type = TypeHandle::new(crate::types::ArrayType::new(name, element_type.clone()));
-		assert!(types
-			.insert(array_type.name().into(), array_type.clone())
-			.is_none());
+		assert!(types.insert(array_type.name().into(), array_type.clone()).is_none());
 
 		Ok(array_type)
 	}

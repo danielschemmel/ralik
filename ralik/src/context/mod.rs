@@ -1,4 +1,8 @@
+use anyhow::anyhow;
+
 use std::collections::hash_map::HashMap;
+use std::fs::{read_to_string, File};
+use std::io::Read;
 use std::sync::{Arc, RwLock};
 
 use crate::error::RuntimeError;
@@ -57,6 +61,46 @@ impl Context {
 		context.insert_type(crate::types::CharType::new());
 		context.insert_type(crate::types::IntegerType::new());
 		context.insert_type(crate::types::StringType::new());
+
+		context.insert_macro("include_bytes", |context, arguments| {
+			if arguments.len() != 1 {
+				return Err(anyhow!("`include_bytes!` takes exactly one argument of string type").into());
+			}
+			let value = arguments[0]
+				.as_string()
+				.ok_or_else(|| anyhow!("`include_bytes!` takes exactly one argument of string type"))?;
+
+			let file = File::open(value).map_err(|err| anyhow!(err))?;
+			let bytes = file
+				.bytes()
+				.map(|result| {
+					result
+						.map_err(|err| RuntimeError::from(anyhow!(err)))
+						.and_then(|byte| Ok(Value::new_integer(context, byte)?))
+				})
+				.collect::<Result<Vec<Value>, RuntimeError>>()?;
+
+			Ok(Value::new_array(
+				context,
+				&context
+					.get_integer_type()
+					.map_err(|err| crate::error::ValueCreationError::IntegerCreationError(err.into()))?,
+				bytes,
+			)?)
+		});
+
+		context.insert_macro("include_str", |context, arguments| {
+			if arguments.len() != 1 {
+				return Err(anyhow!("`include_str!` takes exactly one argument of string type").into());
+			}
+			let value = arguments[0]
+				.as_string()
+				.ok_or_else(|| anyhow!("`include_str!` takes exactly one argument of string type"))?;
+
+			let content = read_to_string(value).map_err(|err| anyhow!(err))?;
+
+			Ok(Value::new_string(context, content)?)
+		});
 
 		context.insert_macro("panic", |_context, arguments| {
 			use std::fmt::Write;
