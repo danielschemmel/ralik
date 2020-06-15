@@ -5,7 +5,7 @@ use super::{Context, Function, Macro};
 impl std::fmt::Debug for Context {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		f.debug_struct("Context")
-			.field("types", &*self.0.types.read().unwrap())
+			.field("types", &self.0.types)
 			.field("variables", &*self.0.variables.read().unwrap())
 			.field(
 				"functions",

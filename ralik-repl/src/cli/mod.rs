@@ -18,6 +18,9 @@ pub struct Args {
 	)]
 	dump_context: bool,
 
+	#[structopt(long = "no-$", help = "Skip registering the interpreter object `$`.")]
+	no_interpreter_value: bool,
+
 	#[structopt(
 		short = "c",
 		long = "command",
@@ -58,7 +61,7 @@ const PROMPT: &str = "> ";
 pub fn main(args: Args) -> Result<ReturnCode> {
 	set_ctrlc_handler()?; // only active when not replaced by rustyline
 
-	let context = create_context()?;
+	let context = create_context(&args)?;
 
 	if args.dump_context {
 		println!("{:#?}", context);
@@ -80,14 +83,16 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 	}
 }
 
-fn create_context() -> Result<ralik::Context> {
+fn create_context(_: &Args) -> Result<ralik::Context> {
 	let context = ralik::Context::new();
 
 	Interpreter::register_type(&context);
 
 	context.insert_variable(
 		"$",
-		ralik::Value::from_serde(&context, &Interpreter::new(), "$Interpreter").unwrap(),
+		ralik::Value::from_serde(&context, &Interpreter::new(), "$Interpreter")
+			.map_err(|err| print_error_chain(&err))
+			.unwrap(),
 	);
 
 	context.insert_function("exit", |_context, args| match args.len() {

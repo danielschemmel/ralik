@@ -1,16 +1,13 @@
-use std::collections::HashMap;
-
-use super::{MemberFunction, Type, TypeHandle, TypeKind};
+use super::{BasicType, BasicTypeBase, TypeHandle, TypeKind};
 
 mod functions;
 mod ops;
 
-pub(crate) type ArrayFunctionStore = HashMap<String, MemberFunction>;
+pub(crate) type ArrayType = BasicType<ArrayImpl>;
 
-pub(crate) struct ArrayType {
+pub(crate) struct ArrayImpl {
 	name: String,
 	element_type: [TypeHandle; 1],
-	functions: ArrayFunctionStore,
 }
 
 pub fn name(element_type: &str) -> String {
@@ -19,23 +16,22 @@ pub fn name(element_type: &str) -> String {
 
 impl ArrayType {
 	pub fn new(name: impl Into<String>, element_type: TypeHandle) -> Self {
-		let mut functions = ArrayFunctionStore::new();
-
-		functions.insert(crate::ops::INDEX.into(), ops::index);
-
-		functions.insert("clone".into(), functions::clone); // FIXME: only insert if it makes sense
-		functions.insert("is_empty".into(), functions::is_empty);
-		functions.insert("len".into(), functions::len);
-
-		Self {
-			name: name.into(),
-			element_type: [element_type],
-			functions,
-		}
+		Self::from_base_with_functions(
+			ArrayImpl {
+				name: name.into(),
+				element_type: [element_type],
+			},
+			vec![
+				(crate::ops::INDEX, ops::index),
+				("clone", functions::clone), // FIXME: only insert if it makes sense
+				("is_empty", functions::is_empty),
+				("len", functions::len),
+			],
+		)
 	}
 }
 
-impl Type for ArrayType {
+impl BasicTypeBase for ArrayImpl {
 	fn name(&self) -> &str {
 		&self.name
 	}
@@ -44,29 +40,7 @@ impl Type for ArrayType {
 		TypeKind::Array
 	}
 
-	fn parameters(&self) -> &[TypeHandle] {
+	fn type_parameters(&self) -> &[TypeHandle] {
 		&self.element_type
-	}
-
-	fn get_function(&self, key: &str) -> Option<&MemberFunction> {
-		self.functions.get(key)
-	}
-
-	fn insert_function(&mut self, key: String, value: MemberFunction) -> Option<MemberFunction> {
-		self.functions.insert(key, value)
-	}
-
-	fn remove_function(&mut self, key: &str) -> Option<(String, MemberFunction)> {
-		self.functions.remove_entry(key)
-	}
-}
-
-impl std::fmt::Debug for ArrayType {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("Type")
-			.field("name", &self.name())
-			.field("element_type", &self.element_type)
-			.field("functions", &super::debug::FunctionNameListFormatter(&self.functions))
-			.finish()
 	}
 }

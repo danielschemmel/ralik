@@ -4,6 +4,7 @@
 		"backtrace",
 		"concat",
 		"eval",
+		"hasher",
 		"hexdigit",
 		"is",
 		"is ascii hexdigit",

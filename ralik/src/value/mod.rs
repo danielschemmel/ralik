@@ -7,7 +7,7 @@ use crate::error::{
 	ArrayCreationError, BoolCreationError, CharCreationError, IntegerCreationError, InvalidArrayType,
 	StringCreationError, StructCreationError, TupleCreationError, UnitCreationError,
 };
-use crate::types::TypeKind;
+use crate::types::{TypeKind, Variant};
 use crate::{Context, TypeHandle};
 
 mod debug;
@@ -31,6 +31,9 @@ enum Data {
 	String(String),
 	Tuple(Vec<Value>),
 	Struct(HashMap<String, Value>),
+	EnumUnit(String),
+	EnumTuple(String, Vec<Value>),
+	EnumStruct(String, HashMap<String, Value>),
 	Array(Vec<Value>),
 }
 
@@ -86,7 +89,7 @@ impl Value {
 	pub fn new_struct(
 		context: &Context,
 		name: &str,
-		fields: impl Iterator<Item = (impl Into<String>, Value)>,
+		mut fields: impl Iterator<Item = (impl Into<String>, Value)>,
 	) -> Result<Value, StructCreationError> {
 		let struct_type = context
 			.get_type(name)
@@ -96,43 +99,61 @@ impl Value {
 			return Err(crate::error::InvalidStructType::NotStructType { type_name: name.into() }.into());
 		}
 
-		let fields: HashMap<String, Value> = fields.map(|(name, value)| (name.into(), value)).collect();
-		let field_map = struct_type.fields().unwrap();
-		for (field_name, field_type) in field_map {
-			let value = fields
-				.get(field_name)
-				.ok_or_else(|| StructCreationError::MissingField {
+		if struct_type
+			.fields()
+			.map(|field_map| field_map.is_empty())
+			.unwrap_or(true)
+		{
+			if let Some((field_name, _field_value)) = fields.nth(0) {
+				Err(StructCreationError::SuperfluousField {
 					type_name: name.into(),
 					field_name: field_name.into(),
-				})?;
-			let value_type = value.get_type();
-			if !TypeHandle::is_same(value_type, field_type) {
-				return Err(StructCreationError::FieldTypeMismatch {
-					type_name: name.into(),
-					field_name: field_name.into(),
-					field_type_name: field_type.name().into(),
-					value_type_name: value_type.name().into(),
-				});
+				})
+			} else {
+				Ok(Value {
+					r#type: struct_type,
+					data: Data::Unit,
+				})
 			}
-		}
-
-		// After establishing that `field_map.keys()` \subseteq `fields.keys()`, we can shortcut the reverse check if the
-		// lengths are equal, as this implies that `field_map.keys()` = `fields.keys()`
-		if fields.len() != field_map.len() {
-			for field_name in fields.keys() {
-				field_map
+		} else {
+			let field_map = struct_type.fields().unwrap();
+			let fields: HashMap<String, Value> = fields.map(|(name, value)| (name.into(), value)).collect();
+			for (field_name, field_type) in field_map {
+				let value = fields
 					.get(field_name)
-					.ok_or_else(|| StructCreationError::SuperfluousField {
+					.ok_or_else(|| StructCreationError::MissingField {
 						type_name: name.into(),
 						field_name: field_name.into(),
 					})?;
+				let value_type = value.get_type();
+				if !TypeHandle::is_same(value_type, field_type) {
+					return Err(StructCreationError::FieldTypeMismatch {
+						type_name: name.into(),
+						field_name: field_name.into(),
+						field_type_name: field_type.name().into(),
+						value_type_name: value_type.name().into(),
+					});
+				}
 			}
-		}
 
-		Ok(Value {
-			r#type: struct_type,
-			data: Data::Struct(fields),
-		})
+			// After establishing that `field_map.keys()` ⊆ `fields.keys()`, we can shortcut the reverse check if the
+			// lengths are equal, as this implies that `field_map.keys()` = `fields.keys()`
+			if fields.len() != field_map.len() {
+				for field_name in fields.keys() {
+					field_map
+						.get(field_name)
+						.ok_or_else(|| StructCreationError::SuperfluousField {
+							type_name: name.into(),
+							field_name: field_name.into(),
+						})?;
+				}
+			}
+
+			Ok(Value {
+				r#type: struct_type,
+				data: Data::Struct(fields),
+			})
+		}
 	}
 
 	pub fn new_unit_struct(context: &Context, name: &str) -> Result<Value, StructCreationError> {
@@ -148,7 +169,7 @@ impl Value {
 		if field_map.is_empty() {
 			Ok(Value {
 				r#type: struct_type,
-				data: Data::Struct(HashMap::new()),
+				data: Data::Unit,
 			})
 		} else {
 			Err(StructCreationError::MissingField {
@@ -345,11 +366,16 @@ impl Value {
 	pub fn field(&self, name: &str) -> Option<&Value> {
 		match &self.data {
 			Data::Struct(fields) => fields.get(name),
+			Data::EnumStruct(_name, fields) => fields.get(name),
 			_ => None,
 		}
 	}
 
 	pub fn tuple_field(&self, index: usize) -> Option<&Value> {
-		self.as_tuple().and_then(|slice| slice.get(index))
+		match &self.data {
+			Data::Tuple(elements) => elements.get(index),
+			Data::EnumTuple(_name, elements) => elements.get(index),
+			_ => None,
+		}
 	}
 }

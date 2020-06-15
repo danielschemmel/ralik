@@ -207,11 +207,11 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-		unimplemented!()
+		unimplemented!("`serialize_none` for type {}", self.expected_type.name())
 	}
 
 	fn serialize_some<T: ?Sized>(self, _value: &T) -> Result<Self::Ok, Self::Error> {
-		unimplemented!()
+		unimplemented!("`serialize_some` for type {}", self.expected_type.name())
 	}
 
 	fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {
@@ -240,11 +240,11 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		_variant_index: u32,
 		_variant: &'static str,
 	) -> Result<Self::Ok, Self::Error> {
-		unimplemented!()
+		unimplemented!("`serialize_unit_variant` for type {}", self.expected_type.name())
 	}
 
 	fn serialize_newtype_struct<T: ?Sized>(self, _name: &'static str, _value: &T) -> Result<Self::Ok, Self::Error> {
-		unimplemented!()
+		unimplemented!("`serialize_newtype_struct` for type {}", self.expected_type.name())
 	}
 
 	fn serialize_newtype_variant<T: ?Sized>(
@@ -254,7 +254,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		_variant: &'static str,
 		_value: &T,
 	) -> Result<Self::Ok, Self::Error> {
-		unimplemented!()
+		unimplemented!("`serialize_newtype_variant` for type {}", self.expected_type.name())
 	}
 
 	fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
@@ -262,7 +262,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
-		SerializeSequence::new(self.context, self.expected_type, Some(len))
+		SerializeSequence::new(self.context, self.expected_type, len)
 	}
 
 	fn serialize_tuple_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
@@ -272,7 +272,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 				actual: name.into(),
 			})
 		} else {
-			SerializeSequence::new(self.context, self.expected_type, Some(len))
+			SerializeSequence::new(self.context, self.expected_type, len)
 		}
 	}
 
@@ -283,7 +283,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		_variant: &'static str,
 		_len: usize,
 	) -> Result<Self::SerializeTupleVariant, Self::Error> {
-		unimplemented!()
+		unimplemented!("`serialize_tuple_variant` for type {}", self.expected_type.name())
 	}
 
 	fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
@@ -297,7 +297,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 				actual: name.into(),
 			})
 		} else {
-			SerializeMap::new(self.context, self.expected_type, Some(len))
+			SerializeMap::new(self.context, self.expected_type, len)
 		}
 	}
 
@@ -308,6 +308,6 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		_variant: &'static str,
 		_len: usize,
 	) -> Result<Self::SerializeStructVariant, Self::Error> {
-		unimplemented!()
+		unimplemented!("`serialize_struct_variant` for type {}", self.expected_type.name())
 	}
 }

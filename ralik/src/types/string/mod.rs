@@ -1,4 +1,4 @@
-use super::{BasicFunctionStore, BasicType, BasicTypeBase, TypeKind};
+use super::{BasicType, BasicTypeBase, TypeKind};
 
 mod functions;
 mod ops;
@@ -18,7 +18,33 @@ impl StringType {
 
 impl Default for StringType {
 	fn default() -> Self {
-		BasicType::from_base(StringImpl)
+		BasicType::from_base_with_functions(
+			StringImpl,
+			vec![
+				(crate::ops::ADD, ops::add),
+				(crate::ops::EQUAL, ops::equal),
+				(crate::ops::NOT_EQUAL, ops::not_equal),
+				(crate::ops::LESS, ops::less),
+				(crate::ops::LESS_OR_EQUAL, ops::less_or_equal),
+				(crate::ops::GREATER, ops::greater),
+				(crate::ops::GREATER_OR_EQUAL, ops::greater_or_equal),
+				("clone", functions::clone),
+				("eq_ignore_ascii_case", functions::eq_ignore_ascii_case),
+				("is_ascii", functions::is_ascii),
+				("is_char_boundary", functions::is_char_boundary),
+				("is_empty", functions::is_empty),
+				("len", functions::len),
+				("repeat", functions::repeat),
+				("to_ascii_lowercase", functions::to_ascii_lowercase),
+				("to_ascii_uppercase", functions::to_ascii_uppercase),
+				("to_lowercase", functions::to_lowercase),
+				("to_string", functions::to_string),
+				("to_uppercase", functions::to_uppercase),
+				("trim", functions::trim),
+				("trim_end", functions::trim_end),
+				("trim_start", functions::trim_start),
+			],
+		)
 	}
 }
 
@@ -29,31 +55,5 @@ impl BasicTypeBase for StringImpl {
 
 	fn kind(&self) -> TypeKind {
 		TypeKind::String
-	}
-
-	fn register_functions(&self, functions: &mut BasicFunctionStore) {
-		functions.insert(crate::ops::ADD.into(), ops::add);
-		functions.insert(crate::ops::EQUAL.into(), ops::equal);
-		functions.insert(crate::ops::NOT_EQUAL.into(), ops::not_equal);
-		functions.insert(crate::ops::LESS.into(), ops::less);
-		functions.insert(crate::ops::LESS_OR_EQUAL.into(), ops::less_or_equal);
-		functions.insert(crate::ops::GREATER.into(), ops::greater);
-		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
-
-		functions.insert("clone".into(), functions::clone);
-		functions.insert("eq_ignore_ascii_case".into(), functions::eq_ignore_ascii_case);
-		functions.insert("is_ascii".into(), functions::is_ascii);
-		functions.insert("is_char_boundary".into(), functions::is_char_boundary);
-		functions.insert("is_empty".into(), functions::is_empty);
-		functions.insert("len".into(), functions::len);
-		functions.insert("repeat".into(), functions::repeat);
-		functions.insert("to_ascii_lowercase".into(), functions::to_ascii_lowercase);
-		functions.insert("to_ascii_uppercase".into(), functions::to_ascii_uppercase);
-		functions.insert("to_lowercase".into(), functions::to_lowercase);
-		functions.insert("to_string".into(), functions::to_string);
-		functions.insert("to_uppercase".into(), functions::to_uppercase);
-		functions.insert("trim".into(), functions::trim);
-		functions.insert("trim_end".into(), functions::trim_end);
-		functions.insert("trim_start".into(), functions::trim_start);
 	}
 }

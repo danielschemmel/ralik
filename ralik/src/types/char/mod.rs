@@ -1,4 +1,4 @@
-use super::{BasicFunctionStore, BasicType, BasicTypeBase, TypeKind};
+use super::{BasicType, BasicTypeBase, TypeKind};
 
 mod functions;
 mod ops;
@@ -18,7 +18,43 @@ impl CharType {
 
 impl Default for CharType {
 	fn default() -> Self {
-		BasicType::from_base(CharImpl)
+		BasicType::from_base_with_functions(
+			CharImpl,
+			vec![
+				(crate::ops::EQUAL, ops::equal),
+				(crate::ops::NOT_EQUAL, ops::not_equal),
+				(crate::ops::LESS, ops::less),
+				(crate::ops::LESS_OR_EQUAL, ops::less_or_equal),
+				(crate::ops::GREATER, ops::greater),
+				(crate::ops::GREATER_OR_EQUAL, ops::greater_or_equal),
+				("clone", functions::clone),
+				("eq_ignore_ascii_case", functions::eq_ignore_ascii_case),
+				("is_alphabetic", functions::is_alphabetic),
+				("is_alphanumeric", functions::is_alphanumeric),
+				("is_ascii", functions::is_ascii),
+				("is_ascii_alphabetic", functions::is_ascii_alphabetic),
+				("is_ascii_alphanumeric", functions::is_ascii_alphanumeric),
+				("is_ascii_control", functions::is_ascii_control),
+				("is_ascii_digit", functions::is_ascii_digit),
+				("is_ascii_graphic", functions::is_ascii_graphic),
+				("is_ascii_hexdigit", functions::is_ascii_hexdigit),
+				("is_ascii_lowercase", functions::is_ascii_lowercase),
+				("is_ascii_punctuation", functions::is_ascii_punctuation),
+				("is_ascii_uppercase", functions::is_ascii_uppercase),
+				("is_ascii_whitespace", functions::is_ascii_whitespace),
+				("is_control", functions::is_control),
+				("is_digit", functions::is_digit),
+				("is_lowercase", functions::is_lowercase),
+				("is_numeric", functions::is_numeric),
+				("is_uppercase", functions::is_uppercase),
+				("is_whitespace", functions::is_whitespace),
+				("len_utf16", functions::len_utf16),
+				("len_utf8", functions::len_utf8),
+				("to_ascii_lowercase", functions::to_ascii_lowercase),
+				("to_ascii_uppercase", functions::to_ascii_uppercase),
+				("to_string", functions::to_string),
+			],
+		)
 	}
 }
 
@@ -29,41 +65,5 @@ impl BasicTypeBase for CharImpl {
 
 	fn kind(&self) -> TypeKind {
 		TypeKind::Char
-	}
-
-	fn register_functions(&self, functions: &mut BasicFunctionStore) {
-		functions.insert(crate::ops::EQUAL.into(), ops::equal);
-		functions.insert(crate::ops::NOT_EQUAL.into(), ops::not_equal);
-		functions.insert(crate::ops::LESS.into(), ops::less);
-		functions.insert(crate::ops::LESS_OR_EQUAL.into(), ops::less_or_equal);
-		functions.insert(crate::ops::GREATER.into(), ops::greater);
-		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
-
-		functions.insert("clone".into(), functions::clone);
-		functions.insert("eq_ignore_ascii_case".into(), functions::eq_ignore_ascii_case);
-		functions.insert("is_alphabetic".into(), functions::is_alphabetic);
-		functions.insert("is_alphanumeric".into(), functions::is_alphanumeric);
-		functions.insert("is_ascii".into(), functions::is_ascii);
-		functions.insert("is_ascii_alphabetic".into(), functions::is_ascii_alphabetic);
-		functions.insert("is_ascii_alphanumeric".into(), functions::is_ascii_alphanumeric);
-		functions.insert("is_ascii_control".into(), functions::is_ascii_control);
-		functions.insert("is_ascii_digit".into(), functions::is_ascii_digit);
-		functions.insert("is_ascii_graphic".into(), functions::is_ascii_graphic);
-		functions.insert("is_ascii_hexdigit".into(), functions::is_ascii_hexdigit);
-		functions.insert("is_ascii_lowercase".into(), functions::is_ascii_lowercase);
-		functions.insert("is_ascii_punctuation".into(), functions::is_ascii_punctuation);
-		functions.insert("is_ascii_uppercase".into(), functions::is_ascii_uppercase);
-		functions.insert("is_ascii_whitespace".into(), functions::is_ascii_whitespace);
-		functions.insert("is_control".into(), functions::is_control);
-		functions.insert("is_digit".into(), functions::is_digit);
-		functions.insert("is_lowercase".into(), functions::is_lowercase);
-		functions.insert("is_numeric".into(), functions::is_numeric);
-		functions.insert("is_uppercase".into(), functions::is_uppercase);
-		functions.insert("is_whitespace".into(), functions::is_whitespace);
-		functions.insert("len_utf16".into(), functions::len_utf16);
-		functions.insert("len_utf8".into(), functions::len_utf8);
-		functions.insert("to_ascii_lowercase".into(), functions::to_ascii_lowercase);
-		functions.insert("to_ascii_uppercase".into(), functions::to_ascii_uppercase);
-		functions.insert("to_string".into(), functions::to_string);
 	}
 }

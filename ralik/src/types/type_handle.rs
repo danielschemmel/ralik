@@ -9,7 +9,8 @@ pub struct TypeHandle {
 }
 
 impl TypeHandle {
-	pub fn new(r#type: impl Type + 'static) -> Self {
+	/// For increased safety, `TypeHandle`s should only be created by `Context`s
+	pub(crate) fn new(r#type: impl Type + 'static) -> Self {
 		Self {
 			handle: Arc::new(r#type),
 		}
@@ -25,5 +26,11 @@ impl Deref for TypeHandle {
 
 	fn deref(&self) -> &Self::Target {
 		Arc::deref(&self.handle)
+	}
+}
+
+impl std::fmt::Display for TypeHandle {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		self.handle.fmt(f)
 	}
 }

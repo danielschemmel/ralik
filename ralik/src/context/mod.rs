@@ -1,12 +1,12 @@
 use anyhow::anyhow;
 
-use std::collections::hash_map::HashMap;
+use std::collections::HashMap;
 use std::fs::{read_to_string, File};
 use std::io::Read;
 use std::sync::{Arc, RwLock};
 
 use crate::error::RuntimeError;
-use crate::{TypeHandle, Value};
+use crate::Value;
 
 mod debug;
 mod functions;
@@ -46,7 +46,7 @@ Value::new_unit(&context).unwrap_err();
 pub struct Context(Arc<ContextImpl>);
 
 struct ContextImpl {
-	types: RwLock<HashMap<String, TypeHandle>>,
+	types: types::TypeContainer,
 	variables: RwLock<HashMap<String, Value>>,
 	functions: RwLock<HashMap<String, Function>>,
 	macros: RwLock<HashMap<String, Macro>>,
@@ -143,7 +143,7 @@ impl Context {
 
 	pub fn new_empty() -> Self {
 		Context(Arc::new(ContextImpl {
-			types: RwLock::new(HashMap::new()),
+			types: Default::default(),
 			variables: RwLock::new(HashMap::new()),
 			functions: RwLock::new(HashMap::new()),
 			macros: RwLock::new(HashMap::new()),

@@ -4,7 +4,7 @@ use super::{Location, RuntimeError};
 
 #[derive(Error, Debug)]
 pub enum EvalError {
-	#[error("Could not parse input")]
+	#[error("Could not parse input at {}", Location::from(.cause.span()))]
 	ParseError {
 		#[from]
 		cause: syn::Error,

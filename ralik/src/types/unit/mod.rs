@@ -1,4 +1,4 @@
-use super::{BasicFunctionStore, BasicType, BasicTypeBase, TypeKind};
+use super::{BasicType, BasicTypeBase, TypeKind};
 
 mod functions;
 mod ops;
@@ -18,7 +18,18 @@ impl UnitType {
 
 impl Default for UnitType {
 	fn default() -> Self {
-		BasicType::from_base(UnitImpl)
+		BasicType::from_base_with_functions(
+			UnitImpl,
+			vec![
+				(crate::ops::EQUAL, ops::equal),
+				(crate::ops::NOT_EQUAL, ops::not_equal),
+				(crate::ops::LESS, ops::less),
+				(crate::ops::LESS_OR_EQUAL, ops::less_or_equal),
+				(crate::ops::GREATER, ops::greater),
+				(crate::ops::GREATER_OR_EQUAL, ops::greater_or_equal),
+				("clone", functions::clone),
+			],
+		)
 	}
 }
 
@@ -29,16 +40,5 @@ impl BasicTypeBase for UnitImpl {
 
 	fn kind(&self) -> TypeKind {
 		TypeKind::Unit
-	}
-
-	fn register_functions(&self, functions: &mut BasicFunctionStore) {
-		functions.insert(crate::ops::EQUAL.into(), ops::equal);
-		functions.insert(crate::ops::NOT_EQUAL.into(), ops::not_equal);
-		functions.insert(crate::ops::LESS.into(), ops::less);
-		functions.insert(crate::ops::LESS_OR_EQUAL.into(), ops::less_or_equal);
-		functions.insert(crate::ops::GREATER.into(), ops::greater);
-		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
-
-		functions.insert("clone".into(), functions::clone);
 	}
 }

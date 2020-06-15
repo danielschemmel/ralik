@@ -5,7 +5,7 @@ use super::super::arguments::Arguments;
 
 pub(crate) fn clone(context: &Context, this_type: &TypeHandle, arguments: &[Value]) -> Result<Value, RuntimeError> {
 	assert!(this_type.kind() == crate::types::TypeKind::Array);
-	let element_type = &this_type.parameters()[0];
+	let element_type = &this_type.type_parameters()[0];
 
 	arguments.check_len(1)?;
 	let this = arguments.check_type(0, this_type)?.as_array().unwrap();

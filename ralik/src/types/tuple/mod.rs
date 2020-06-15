@@ -1,13 +1,10 @@
-use std::collections::HashMap;
+use super::{BasicType, BasicTypeBase, TypeHandle, TypeKind};
 
-use super::{MemberFunction, Type, TypeHandle, TypeKind};
+pub(crate) type TupleType = BasicType<TupleImpl>;
 
-pub(crate) type TupleFunctionStore = HashMap<String, MemberFunction>;
-
-pub(crate) struct TupleType {
+pub(crate) struct TupleImpl {
 	name: String,
 	element_types: Vec<TypeHandle>,
-	functions: TupleFunctionStore,
 }
 
 pub fn name(element_types: &[&str]) -> String {
@@ -30,15 +27,14 @@ pub fn name(element_types: &[&str]) -> String {
 
 impl TupleType {
 	pub fn new(name: impl Into<String>, element_types: impl Into<Vec<TypeHandle>>) -> Self {
-		Self {
+		Self::from_base(TupleImpl {
 			name: name.into(),
 			element_types: element_types.into(),
-			functions: TupleFunctionStore::new(),
-		}
+		})
 	}
 }
 
-impl Type for TupleType {
+impl BasicTypeBase for TupleImpl {
 	fn name(&self) -> &str {
 		&self.name
 	}
@@ -47,29 +43,7 @@ impl Type for TupleType {
 		TypeKind::Tuple
 	}
 
-	fn parameters(&self) -> &[TypeHandle] {
+	fn type_parameters(&self) -> &[TypeHandle] {
 		&self.element_types
-	}
-
-	fn get_function(&self, key: &str) -> Option<&MemberFunction> {
-		self.functions.get(key)
-	}
-
-	fn insert_function(&mut self, key: String, value: MemberFunction) -> Option<MemberFunction> {
-		self.functions.insert(key, value)
-	}
-
-	fn remove_function(&mut self, key: &str) -> Option<(String, MemberFunction)> {
-		self.functions.remove_entry(key)
-	}
-}
-
-impl std::fmt::Debug for TupleType {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("Type")
-			.field("name", &self.name())
-			.field("element_types", &self.element_types)
-			.field("functions", &super::debug::FunctionNameListFormatter(&self.functions))
-			.finish()
 	}
 }

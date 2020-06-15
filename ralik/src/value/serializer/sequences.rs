@@ -19,11 +19,15 @@ pub(super) struct SerializeSequence<'a> {
 }
 
 impl<'a> SerializeSequence<'a> {
-	pub fn new(context: &'a Context, expected_type: TypeHandle, len: Option<usize>) -> Result<Self, SerializerError> {
+	pub fn new(
+		context: &'a Context,
+		expected_type: TypeHandle,
+		len: impl Into<Option<usize>>,
+	) -> Result<Self, SerializerError> {
 		let element_types = match expected_type.kind() {
 			TypeKind::Unit => ElementTypes::None,
-			TypeKind::Tuple => ElementTypes::Consuming(expected_type.parameters().iter().cloned().rev().collect()),
-			TypeKind::Array => ElementTypes::Repeating(expected_type.parameters()[0].clone()),
+			TypeKind::Tuple => ElementTypes::Consuming(expected_type.type_parameters().iter().cloned().rev().collect()),
+			TypeKind::Array => ElementTypes::Repeating(expected_type.type_parameters()[0].clone()),
 			_ => {
 				return Err(SerializerError::InvalidTypeForSequence {
 					expected: expected_type,
@@ -35,7 +39,7 @@ impl<'a> SerializeSequence<'a> {
 			context,
 			expected_type,
 			element_types,
-			result: Vec::with_capacity(len.unwrap_or(0)),
+			result: Vec::with_capacity(len.into().unwrap_or(0)),
 		})
 	}
 }
@@ -90,7 +94,7 @@ impl<'a> SerializeSequence<'a> {
 				}
 			}
 			TypeKind::Array => {
-				let value = Value::new_array(self.context, &self.expected_type.parameters()[0], self.result)?;
+				let value = Value::new_array(self.context, &self.expected_type.type_parameters()[0], self.result)?;
 				assert!(value.has_type(&self.expected_type));
 				Ok(value)
 			}

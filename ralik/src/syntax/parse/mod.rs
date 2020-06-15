@@ -515,29 +515,20 @@ impl parse::Parse for ast::Prefix {
 
 fn parse_arguments(input: parse::ParseStream) -> parse::Result<ast::Arguments> {
 	let mut arguments = Vec::new();
-	if !input.is_empty() {
+	while !input.is_empty() {
 		let (expression, lookahead) = parse_expression(input)?;
 		arguments.push(expression);
-		parse_trailing_arguments_impl(&mut arguments, input, lookahead)?;
-	}
 
-	debug_assert!(input.is_empty());
-	Ok(ast::Arguments { arguments })
-}
+		if input.is_empty() {
+			break;
+		}
 
-fn parse_trailing_arguments_impl<'a>(
-	arguments: &mut Vec<ast::Expression>,
-	input: parse::ParseStream<'a>,
-	mut lookahead: Lookahead1<'a>,
-) -> parse::Result<()> {
-	while !input.is_empty() {
 		if lookahead.peek(Token![,]) {
 			input.parse::<Token![,]>()?;
-			arguments.push(input.parse::<ast::Expression>()?);
-			lookahead = input.lookahead1();
 		} else {
 			return Err(lookahead.error());
 		}
 	}
-	Ok(())
+
+	Ok(ast::Arguments { arguments })
 }

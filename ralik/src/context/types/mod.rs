@@ -1,5 +1,3 @@
-use std::collections::hash_map::Entry;
-
 use crate::error::{
 	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType,
 	InvalidUnitType,
@@ -8,9 +6,12 @@ use crate::{Type, TypeHandle};
 
 use super::Context;
 
+mod type_container;
+pub(super) use type_container::TypeContainer;
+
 impl Context {
 	pub fn get_type(&self, key: &str) -> Option<TypeHandle> {
-		self.0.types.read().unwrap().get(key).cloned()
+		self.0.types.data.read().unwrap().get(key).map(TypeHandle::from)
 	}
 
 	pub fn get_unit_type(&self) -> Result<TypeHandle, InvalidUnitType> {
@@ -53,17 +54,17 @@ impl Context {
 
 		// The fast path failed, we have to construct this tuple type. To ensure internal consistency, we have to claim a
 		// write lock at this point, and can only release it once the newly created type is inserted.
-		let mut types = self.0.types.write().unwrap();
+		let mut types = self.0.types.data.write().unwrap();
 
 		// Some other thread may have concurrently created this type in between our previous check and the acquisition of
 		// the write lock, so we need to check again.
-		if let Some(tuple_type) = types.get(&name) {
-			return Ok(tuple_type.clone());
+		if let Some(tuple_type) = types.get(name.as_str()) {
+			return Ok(tuple_type.into());
 		}
 
 		let element_types: Result<Vec<TypeHandle>, &str> = element_type_names
 			.iter()
-			.map(|&name| types.get(name).cloned().ok_or(name))
+			.map(|&name| types.get(name).map(TypeHandle::from).ok_or(name))
 			.collect();
 		if let Err(element_type_name) = element_types {
 			return Err(InvalidTupleType::MissingSubtype {
@@ -74,7 +75,7 @@ impl Context {
 		let element_types = element_types.unwrap();
 
 		let tuple_type = TypeHandle::new(crate::types::TupleType::new(name, element_types));
-		assert!(types.insert(tuple_type.name().into(), tuple_type.clone()).is_none());
+		assert!(types.insert(tuple_type.clone().into()) == true);
 
 		Ok(tuple_type)
 	}
@@ -87,74 +88,63 @@ impl Context {
 
 		// The fast path failed, we have to construct this tuple type. To ensure internal consistency, we have to claim a
 		// write lock at this point, and can only release it once the newly created type is inserted.
-		let mut types = self.0.types.write().unwrap();
+		let mut types = self.0.types.data.write().unwrap();
 
 		// Some other thread may have concurrently created this type in between our previous check and the acquisition of
 		// the write lock, so we need to check again.
-		if let Some(array_type) = types.get(&name) {
-			return Ok(array_type.clone());
+		if let Some(array_type) = types.get(name.as_str()) {
+			return Ok(array_type.into());
 		}
 
-		let element_type = types
-			.get(element_type_name)
-			.ok_or_else(|| InvalidArrayType::MissingSubtype {
-				element_type_name: element_type_name.into(),
-			})?;
+		let element_type =
+			types
+				.get(element_type_name)
+				.map(TypeHandle::from)
+				.ok_or_else(|| InvalidArrayType::MissingSubtype {
+					element_type_name: element_type_name.into(),
+				})?;
 
-		let array_type = TypeHandle::new(crate::types::ArrayType::new(name, element_type.clone()));
-		assert!(types.insert(array_type.name().into(), array_type.clone()).is_none());
+		let array_type = TypeHandle::new(crate::types::ArrayType::new(name, element_type));
+		assert!(types.insert(array_type.clone().into()) == true);
 
 		Ok(array_type)
 	}
 
 	pub fn insert_type(&self, value: impl Type + 'static) -> TypeHandle {
-		let name = value.name().to_owned();
 		let handle = TypeHandle::new(value);
 
 		// check for consistency
 		{
-			let types = self.0.types.read().unwrap();
-			for type_parameter in handle.parameters() {
+			let types = self.0.types.data.read().unwrap();
+			let type_parameters = handle.type_parameters().iter();
+			let field_types = handle.fields().map(|fields| fields.values()).into_iter().flatten();
+			use crate::types::Variant;
+			let variant_types = handle
+				.variants()
+				.map(|fields| fields.values())
+				.into_iter()
+				.flatten()
+				.flat_map(|variant| {
+					let iterator: Box<dyn Iterator<Item = &TypeHandle>> = match variant {
+						Variant::Unit => Box::new(None.iter()),
+						Variant::Tuple(types) => Box::new(types.iter()),
+						Variant::Struct(map) => Box::new(map.values()),
+					};
+					iterator
+				});
+
+			for type_parameter in type_parameters.chain(field_types).chain(variant_types) {
 				let registered = types.get(type_parameter.name());
 				assert!(registered.is_some(), "All dependent types must be registered first");
 				assert!(
-					TypeHandle::is_same(type_parameter, registered.unwrap()),
+					TypeHandle::is_same(type_parameter, registered.unwrap().into()),
 					"All dependent types must refer to the exact same object that is registered under that name"
 				);
 			}
-			if let Some(fields) = handle.fields() {
-				for field_type in fields.values() {
-					let registered = types.get(field_type.name());
-					assert!(registered.is_some(), "All dependent types must be registered first");
-					assert!(
-						TypeHandle::is_same(field_type, registered.unwrap()),
-						"All dependent types must refer to the exact same object that is registered under that name"
-					);
-				}
-			}
 		}
 
-		let mut types = self.0.types.write().unwrap();
-		match types.entry(name) {
-			Entry::Occupied(_entry) => panic!("Overwriting existing types is not supported (yet?)"),
-			Entry::Vacant(entry) => entry.insert(handle).clone(),
-		}
+		let mut types = self.0.types.data.write().unwrap();
+		assert!(types.insert(handle.clone().into()) == true);
+		handle
 	}
-
-	/*pub fn remove_type(&self, key: &str) {
-		let mut types = self.0.types.write().unwrap();
-		let (owned_key, weak_ref) = {
-			if let Some((key, value)) = types.remove_entry(key) {
-				(key, TypeHandle::downgrade(&value))
-			} else {
-				// type does not exist?
-				panic!("Type {} does not exist in context", key);
-			}
-		};
-		if let Some(value) = weak_ref.upgrade() {
-			// type is still in use somewhere else, or it would not have been possible to upgrade it again
-			types.insert(owned_key, value);
-			panic!("Type {} is still in use", key);
-		}
-	}*/
 }

@@ -27,12 +27,16 @@ pub(super) struct SerializeMap<'a> {
 }
 
 impl<'a> SerializeMap<'a> {
-	pub fn new(context: &'a Context, expected_type: TypeHandle, len: Option<usize>) -> Result<Self, SerializerError> {
+	pub fn new(
+		context: &'a Context,
+		expected_type: TypeHandle,
+		len: impl Into<Option<usize>>,
+	) -> Result<Self, SerializerError> {
 		let key_type = match expected_type.kind() {
 			TypeKind::Struct => Variant::Struct {
 				last_key: None,
 				string_type: context.get_string_type()?,
-				result: HashMap::with_capacity(len.unwrap_or(0)),
+				result: HashMap::with_capacity(len.into().unwrap_or(0)),
 			},
 			_ => {
 				return Err(SerializerError::InvalidTypeForMap {
