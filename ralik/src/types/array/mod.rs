@@ -23,6 +23,7 @@ impl ArrayType {
 
 		functions.insert(crate::ops::INDEX.into(), ops::index);
 
+		functions.insert("clone".into(), functions::clone); // FIXME: only insert if it makes sense
 		functions.insert("is_empty".into(), functions::is_empty);
 		functions.insert("len".into(), functions::len);
 

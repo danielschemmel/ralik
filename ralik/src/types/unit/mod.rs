@@ -1,5 +1,6 @@
 use super::{BasicFunctionStore, BasicType, BasicTypeBase, TypeKind};
 
+mod functions;
 mod ops;
 
 pub type UnitType = BasicType<UnitImpl>;
@@ -37,5 +38,7 @@ impl BasicTypeBase for UnitImpl {
 		functions.insert(crate::ops::LESS_OR_EQUAL.into(), ops::less_or_equal);
 		functions.insert(crate::ops::GREATER.into(), ops::greater);
 		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
+
+		functions.insert("clone".into(), functions::clone);
 	}
 }

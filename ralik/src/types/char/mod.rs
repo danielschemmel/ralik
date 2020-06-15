@@ -39,6 +39,7 @@ impl BasicTypeBase for CharImpl {
 		functions.insert(crate::ops::GREATER.into(), ops::greater);
 		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
 
+		functions.insert("clone".into(), functions::clone);
 		functions.insert("eq_ignore_ascii_case".into(), functions::eq_ignore_ascii_case);
 		functions.insert("is_alphabetic".into(), functions::is_alphabetic);
 		functions.insert("is_alphanumeric".into(), functions::is_alphanumeric);

@@ -40,6 +40,7 @@ impl BasicTypeBase for StringImpl {
 		functions.insert(crate::ops::GREATER.into(), ops::greater);
 		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
 
+		functions.insert("clone".into(), functions::clone);
 		functions.insert("eq_ignore_ascii_case".into(), functions::eq_ignore_ascii_case);
 		functions.insert("is_ascii".into(), functions::is_ascii);
 		functions.insert("is_char_boundary".into(), functions::is_char_boundary);

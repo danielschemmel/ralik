@@ -43,6 +43,7 @@ impl BasicTypeBase for BoolImpl {
 		functions.insert(crate::ops::GREATER.into(), ops::greater);
 		functions.insert(crate::ops::GREATER_OR_EQUAL.into(), ops::greater_or_equal);
 
+		functions.insert("clone".into(), functions::clone);
 		functions.insert("to_string".into(), functions::to_string);
 	}
 }
