@@ -68,14 +68,14 @@ impl Context {
 		if let Err(element_type_name) = element_types {
 			return Err(InvalidTupleType::MissingSubtype {
 				tuple_name: name,
-				missing_element_type_name: element_type_name.to_string(),
+				missing_element_type_name: element_type_name.into(),
 			});
 		}
 		let element_types = element_types.unwrap();
 
 		let tuple_type = TypeHandle::new(crate::types::TupleType::new(name, element_types));
 		assert!(types
-			.insert(tuple_type.name().to_string(), tuple_type.clone())
+			.insert(tuple_type.name().into(), tuple_type.clone())
 			.is_none());
 
 		Ok(tuple_type)
@@ -100,19 +100,19 @@ impl Context {
 		let element_type = types
 			.get(element_type_name)
 			.ok_or_else(|| InvalidArrayType::MissingSubtype {
-				element_type_name: element_type_name.to_string(),
+				element_type_name: element_type_name.into(),
 			})?;
 
 		let array_type = TypeHandle::new(crate::types::ArrayType::new(name, element_type.clone()));
 		assert!(types
-			.insert(array_type.name().to_string(), array_type.clone())
+			.insert(array_type.name().into(), array_type.clone())
 			.is_none());
 
 		Ok(array_type)
 	}
 
 	pub fn insert_type(&self, value: impl Type + 'static) -> TypeHandle {
-		let name = value.name().to_string();
+		let name = value.name().to_owned();
 		let handle = TypeHandle::new(value);
 
 		// check for consistency

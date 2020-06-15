@@ -30,7 +30,7 @@ impl Arguments for [Value] {
 	fn as_unit(&self, index: usize) -> Result<(), RuntimeError> {
 		self[index].as_unit().ok_or_else(|| RuntimeError::InvalidArgumentType {
 			argument_number: index,
-			actual_type_name: self[index].get_type().name().to_string(),
+			actual_type_name: self[index].get_type().name().into(),
 			expected_type_name: super::unit_name().to_owned(),
 		})
 	}
@@ -38,7 +38,7 @@ impl Arguments for [Value] {
 	fn as_bool(&self, index: usize) -> Result<bool, RuntimeError> {
 		self[index].as_bool().ok_or_else(|| RuntimeError::InvalidArgumentType {
 			argument_number: index,
-			actual_type_name: self[index].get_type().name().to_string(),
+			actual_type_name: self[index].get_type().name().into(),
 			expected_type_name: super::bool_name().to_owned(),
 		})
 	}
@@ -46,7 +46,7 @@ impl Arguments for [Value] {
 	fn as_char(&self, index: usize) -> Result<char, RuntimeError> {
 		self[index].as_char().ok_or_else(|| RuntimeError::InvalidArgumentType {
 			argument_number: index,
-			actual_type_name: self[index].get_type().name().to_string(),
+			actual_type_name: self[index].get_type().name().into(),
 			expected_type_name: super::char_name().to_owned(),
 		})
 	}
@@ -56,7 +56,7 @@ impl Arguments for [Value] {
 			.as_integer()
 			.ok_or_else(|| RuntimeError::InvalidArgumentType {
 				argument_number: index,
-				actual_type_name: self[index].get_type().name().to_string(),
+				actual_type_name: self[index].get_type().name().into(),
 				expected_type_name: super::integer_name().to_owned(),
 			})
 	}
@@ -66,7 +66,7 @@ impl Arguments for [Value] {
 			.as_string()
 			.ok_or_else(|| RuntimeError::InvalidArgumentType {
 				argument_number: index,
-				actual_type_name: self[index].get_type().name().to_string(),
+				actual_type_name: self[index].get_type().name().into(),
 				expected_type_name: super::string_name().to_owned(),
 			})
 	}
@@ -78,7 +78,7 @@ impl Arguments for [Value] {
 		} else {
 			Err(RuntimeError::InvalidArgumentType {
 				argument_number: index,
-				actual_type_name: self[index].get_type().name().to_string(),
+				actual_type_name: self[index].get_type().name().into(),
 				expected_type_name: expected_type.name().to_owned(),
 			})
 		}

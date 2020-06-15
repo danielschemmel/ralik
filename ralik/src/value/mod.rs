@@ -91,13 +91,13 @@ impl Value {
 		let struct_type = context
 			.get_type(name)
 			.ok_or_else(|| crate::error::InvalidStructType::Missing {
-				type_name: name.to_string(),
+				type_name: name.into(),
 			})?
 			.clone();
 		if struct_type.kind() != TypeKind::Struct {
 			return Err(
 				crate::error::InvalidStructType::NotStructType {
-					type_name: name.to_string(),
+					type_name: name.into(),
 				}
 				.into(),
 			);
@@ -109,16 +109,16 @@ impl Value {
 			let value = fields
 				.get(field_name)
 				.ok_or_else(|| StructCreationError::MissingField {
-					type_name: name.to_string(),
-					field_name: field_name.to_string(),
+					type_name: name.into(),
+					field_name: field_name.into(),
 				})?;
 			let value_type = value.get_type();
 			if !TypeHandle::is_same(value_type, field_type) {
 				return Err(StructCreationError::FieldTypeMismatch {
-					type_name: name.to_string(),
-					field_name: field_name.to_string(),
-					field_type_name: field_type.name().to_string(),
-					value_type_name: value_type.name().to_string(),
+					type_name: name.into(),
+					field_name: field_name.into(),
+					field_type_name: field_type.name().into(),
+					value_type_name: value_type.name().into(),
 				});
 			}
 		}
@@ -130,8 +130,8 @@ impl Value {
 				field_map
 					.get(field_name)
 					.ok_or_else(|| StructCreationError::SuperfluousField {
-						type_name: name.to_string(),
-						field_name: field_name.to_string(),
+						type_name: name.into(),
+						field_name: field_name.into(),
 					})?;
 			}
 		}
@@ -146,13 +146,13 @@ impl Value {
 		let struct_type = context
 			.get_type(name)
 			.ok_or_else(|| crate::error::InvalidStructType::Missing {
-				type_name: name.to_string(),
+				type_name: name.into(),
 			})?
 			.clone();
 		if struct_type.kind() != TypeKind::Struct {
 			return Err(
 				crate::error::InvalidStructType::NotStructType {
-					type_name: name.to_string(),
+					type_name: name.into(),
 				}
 				.into(),
 			);
@@ -166,8 +166,8 @@ impl Value {
 			})
 		} else {
 			Err(StructCreationError::MissingField {
-				type_name: name.to_string(),
-				field_name: field_map.keys().nth(0).unwrap().to_string(),
+				type_name: name.into(),
+				field_name: field_map.keys().nth(0).unwrap().into(),
 			})
 		}
 	}

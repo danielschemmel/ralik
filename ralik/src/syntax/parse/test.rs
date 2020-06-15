@@ -5,7 +5,7 @@ use quote::quote;
 
 #[test]
 fn string_lit() {
-	let format = "This is a $test".to_string();
+	let format = "This is a $test".to_owned();
 	let ast = quote! {#format};
 	let result = syn::parse2::<ast::Expression>(ast).unwrap();
 

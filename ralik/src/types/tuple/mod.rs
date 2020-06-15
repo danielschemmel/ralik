@@ -16,7 +16,7 @@ pub fn name(element_types: &[&str]) -> String {
 		"Empty tuples do not exist (see also \"Unit Type\")"
 	);
 
-	let mut name = "(".to_string();
+	let mut name = "(".to_owned();
 	for (i, &element_type_name) in element_types.iter().enumerate() {
 		if i > 0 {
 			name.push_str(", ");

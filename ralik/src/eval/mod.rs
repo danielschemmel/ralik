@@ -29,13 +29,13 @@ impl Eval for Expression {
 					Suffix::Unwrap(span) => call_member_function_0(context, crate::ops::UNWRAP, value, span),
 					Suffix::Field(name, span) => value.field(name).cloned().ok_or_else(|| EvalError::InvalidFieldAccess {
 						member_name: name.clone(),
-						type_name: value.get_type().name().to_string(),
+						type_name: value.get_type().name().into(),
 						at: span.into(),
 					}),
 					Suffix::TupleIndex(index, span) => {
 						let index = usize::try_from(*index).map_err(|_| EvalError::InvalidFieldAccess {
 							member_name: index.to_string(),
-							type_name: value.get_type().name().to_string(),
+							type_name: value.get_type().name().into(),
 							at: span.into(),
 						})?;
 						value
@@ -43,7 +43,7 @@ impl Eval for Expression {
 							.cloned()
 							.ok_or_else(|| EvalError::InvalidFieldAccess {
 								member_name: index.to_string(),
-								type_name: value.get_type().name().to_string(),
+								type_name: value.get_type().name().into(),
 								at: span.into(),
 							})
 					}
@@ -80,7 +80,7 @@ impl Eval for Expression {
 					}
 					BinaryOperator::LazyAnd(span) => {
 						let lhs_bool = lhs_value.as_bool().ok_or_else(|| EvalError::NotBoolInLazyAnd {
-							type_name: lhs_value.get_type().name().to_string(),
+							type_name: lhs_value.get_type().name().into(),
 							at: span.into(), // TODO: use the lhs span instead of the operator span here
 						})?;
 						if lhs_bool == false {
@@ -91,7 +91,7 @@ impl Eval for Expression {
 								Ok(rhs_value)
 							} else {
 								Err(EvalError::NotBoolInLazyAnd {
-									type_name: rhs_value.get_type().name().to_string(),
+									type_name: rhs_value.get_type().name().into(),
 									at: span.into(), // TODO: use the lhs span instead of the operator span here
 								})
 							}
@@ -99,7 +99,7 @@ impl Eval for Expression {
 					}
 					BinaryOperator::LazyOr(span) => {
 						let lhs_bool = lhs_value.as_bool().ok_or_else(|| EvalError::NotBoolInLazyAnd {
-							type_name: lhs_value.get_type().name().to_string(),
+							type_name: lhs_value.get_type().name().into(),
 							at: span.into(), // TODO: use the lhs span instead of the operator span here
 						})?;
 						if lhs_bool == true {
@@ -110,7 +110,7 @@ impl Eval for Expression {
 								Ok(rhs_value)
 							} else {
 								Err(EvalError::NotBoolInLazyAnd {
-									type_name: rhs_value.get_type().name().to_string(),
+									type_name: rhs_value.get_type().name().into(),
 									at: span.into(), // TODO: use the lhs span instead of the operator span here
 								})
 							}
@@ -221,7 +221,7 @@ impl Eval for AtomicExpression {
 				})
 			}
 			AtomicExpression::Dollar(span) => context.get_variable("$").ok_or_else(|| EvalError::UnknownVariable {
-				name: "$".to_string(),
+				name: "$".into(),
 				at: span.into(),
 			}),
 			AtomicExpression::FunctionCall(name, name_span, arguments, _arguments_span) => {
@@ -235,7 +235,7 @@ impl Eval for AtomicExpression {
 					.map(|argument| argument.eval(context))
 					.collect::<Result<Vec<Value>, EvalError>>()?;
 				function(&arguments).map_err(|source| EvalError::FunctionRuntimeError {
-					name: name.to_string(),
+					name: name.into(),
 					source,
 					at: name_span.into(),
 				})
@@ -251,7 +251,7 @@ impl Eval for AtomicExpression {
 					.map(|argument| argument.eval(context))
 					.collect::<Result<Vec<Value>, EvalError>>()?;
 				macro_function(&arguments).map_err(|source| EvalError::MacroRuntimeError {
-					name: name.to_string(),
+					name: name.into(),
 					source,
 					at: name_span.into(),
 				})

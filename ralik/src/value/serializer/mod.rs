@@ -85,10 +85,7 @@ impl<T: Into<crate::error::ValueCreationError>> From<T> for SerializerError {
 }
 
 impl ser::Error for SerializerError {
-	fn custom<T>(msg: T) -> Self
-	where
-		T: std::fmt::Display,
-	{
+	fn custom<T: std::fmt::Display>(msg: T) -> Self{
 		SerializerError::Custom(msg.to_string())
 	}
 }
@@ -226,7 +223,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		if self.expected_type.name() != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
-				actual: name.to_string(),
+				actual: name.into(),
 			})
 		} else {
 			let value = match self.expected_type.kind() {
@@ -272,7 +269,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		if self.expected_type.name() != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
-				actual: name.to_string(),
+				actual: name.into(),
 			})
 		} else {
 			SerializeSequence::new(self.context, self.expected_type, Some(len))
@@ -297,7 +294,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		if self.expected_type.name() != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
-				actual: name.to_string(),
+				actual: name.into(),
 			})
 		} else {
 			SerializeMap::new(self.context, self.expected_type, Some(len))

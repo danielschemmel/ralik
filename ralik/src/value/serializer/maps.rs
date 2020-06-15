@@ -174,17 +174,17 @@ impl<'a> SerializeMap<'a> {
 						} else {
 							return Err(SerializerError::UnexpectedKey {
 								r#type: self.expected_type.clone(),
-								key: key.to_string(),
+								key: key.into(),
 							});
 						}
 					}
 					_ => unreachable!(),
 				};
 
-				match result.entry(key.to_string()) {
+				match result.entry(key.into()) {
 					Entry::Occupied(_) => Err(SerializerError::DuplicateKey {
 						r#type: self.expected_type.clone(),
-						key: key.to_string(),
+						key: key.into(),
 					}),
 					Entry::Vacant(entry) => {
 						entry.insert(value);

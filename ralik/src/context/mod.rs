@@ -60,7 +60,7 @@ impl Context {
 
 		context.insert_macro("panic", |arguments| {
 			use std::fmt::Write;
-			let mut message = "Call to `panic!(".to_string();
+			let mut message = "Call to `panic!(".to_owned();
 			if !arguments.is_empty() {
 				write!(message, "\n").unwrap();
 			}
