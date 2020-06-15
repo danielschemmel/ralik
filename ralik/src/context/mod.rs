@@ -62,6 +62,20 @@ impl Context {
 		context.insert_type(crate::types::IntegerType::new());
 		context.insert_type(crate::types::StringType::new());
 
+		context.insert_macro("include", |context, arguments| {
+			if arguments.len() != 1 {
+				return Err(anyhow!("`include!` takes exactly one argument of string type").into());
+			}
+			let value = arguments[0]
+				.as_string()
+				.ok_or_else(|| anyhow!("`include!` takes exactly one argument of string type"))?;
+
+			let content = read_to_string(value).map_err(|err| anyhow!(err))?;
+
+			// FIXME: figure out why `anyhow!(err)` does not work
+			Ok(crate::eval_str(&content, context).map_err(|err| anyhow!(err.to_string()))?)
+		});
+
 		context.insert_macro("include_bytes", |context, arguments| {
 			if arguments.len() != 1 {
 				return Err(anyhow!("`include_bytes!` takes exactly one argument of string type").into());
