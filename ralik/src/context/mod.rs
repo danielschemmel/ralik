@@ -39,7 +39,7 @@ When starting with an empty context, the core types are not available by default
 ```rust
 # use ralik::{Context, Value};
 let context = Context::new_empty();
-Value::new_unit(&context).unwrap_err();
+Value::new_bool(&context, true).unwrap_err();
 ```
 */
 #[derive(Clone)]
