@@ -5,22 +5,30 @@ use super::{BasicType, BasicTypeBase, TypeHandle, TypeKind};
 pub type StructType = BasicType<StructImpl>;
 
 pub struct StructImpl {
-	name: String,
-	fields: HashMap<String, TypeHandle>,
+	name: Box<str>,
+	field_names: HashMap<Box<str>, usize>,
+	field_types: Vec<TypeHandle>,
 }
 
 impl StructType {
-	pub fn new(name: impl Into<String>, fields: impl Iterator<Item = (impl Into<String>, TypeHandle)>) -> Self {
+	pub fn new(name: impl Into<Box<str>>, fields: impl Iterator<Item = (impl Into<Box<str>>, TypeHandle)>) -> Self {
+		let fields = fields
+			.enumerate()
+			.map(|(i, (name, r#type))| ((name.into(), i), r#type))
+			.unzip();
+
 		Self::from_base(StructImpl {
 			name: name.into(),
-			fields: fields.map(|(name, r#type)| (name.into(), r#type)).collect(),
+			field_names: fields.0,
+			field_types: fields.1,
 		})
 	}
 
-	pub fn new_unit(name: impl Into<String>) -> Self {
+	pub fn new_empty(name: impl Into<Box<str>>) -> Self {
 		Self::from_base(StructImpl {
 			name: name.into(),
-			fields: HashMap::new(),
+			field_names: HashMap::new(),
+			field_types: Vec::new(),
 		})
 	}
 }
@@ -34,7 +42,7 @@ impl BasicTypeBase for StructImpl {
 		TypeKind::Struct
 	}
 
-	fn fields(&self) -> Option<&HashMap<String, TypeHandle>> {
-		Some(&self.fields)
+	fn fields(&self) -> (Option<&HashMap<Box<str>, usize>>, &[TypeHandle]) {
+		(Some(&self.field_names), &self.field_types)
 	}
 }

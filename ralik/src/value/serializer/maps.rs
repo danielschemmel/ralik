@@ -64,7 +64,7 @@ impl<'a> SerializeMap<'a> {
 					Value::from_serde_by_type(self.context, key, string_type.clone())?
 						.as_string()
 						.unwrap()
-						.clone(),
+						.to_owned(),
 				);
 
 				Ok(())
@@ -87,7 +87,11 @@ impl<'a> SerializeMap<'a> {
 
 				let value = match self.expected_type.kind() {
 					TypeKind::Struct => {
-						if let Some(key_type) = self.expected_type.fields().unwrap().get(&key) {
+						let (field_names, field_types) = self.expected_type.fields();
+						if let Some(key_type) = field_names
+							.and_then(|field_names| field_names.get(&key as &str))
+							.map(|id| &field_types[*id])
+						{
 							Value::from_serde_by_type(self.context, value, key_type.clone())?
 						} else {
 							return Err(SerializerError::UnexpectedKey {
@@ -131,22 +135,26 @@ impl<'a> SerializeMap<'a> {
 
 				let value = match self.expected_type.kind() {
 					TypeKind::Struct => {
-						if let Some(key_type) = self.expected_type.fields().unwrap().get(key) {
+						let (field_names, field_types) = self.expected_type.fields();
+						if let Some(key_type) = field_names
+							.and_then(|field_names| field_names.get(&key as &str))
+							.map(|id| &field_types[*id])
+						{
 							Value::from_serde_by_type(self.context, value, key_type.clone())?
 						} else {
 							return Err(SerializerError::UnexpectedKey {
 								r#type: self.expected_type.clone(),
-								key: key.clone(),
+								key: key.to_owned(),
 							});
 						}
 					}
 					_ => unreachable!(),
 				};
 
-				match result.entry(key.clone()) {
+				match result.entry(key.to_owned()) {
 					Entry::Occupied(_) => Err(SerializerError::DuplicateKey {
 						r#type: self.expected_type.clone(),
-						key: key.clone(),
+						key: key.to_owned(),
 					}),
 					Entry::Vacant(entry) => {
 						entry.insert(value);
@@ -173,7 +181,11 @@ impl<'a> SerializeMap<'a> {
 
 				let value = match self.expected_type.kind() {
 					TypeKind::Struct => {
-						if let Some(key_type) = self.expected_type.fields().unwrap().get(key) {
+						let (field_names, field_types) = self.expected_type.fields();
+						if let Some(key_type) = field_names
+							.and_then(|field_names| field_names.get(&key as &str))
+							.map(|id| &field_types[*id])
+						{
 							Value::from_serde_by_type(self.context, value, key_type.clone())?
 						} else {
 							return Err(SerializerError::UnexpectedKey {

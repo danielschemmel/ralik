@@ -5,22 +5,30 @@ use super::{BasicType, BasicTypeBase, TypeKind, Variant};
 pub type EnumType = BasicType<EnumImpl>;
 
 pub struct EnumImpl {
-	name: String,
-	variants: HashMap<String, Variant>,
+	name: Box<str>,
+	variant_names: HashMap<Box<str>, usize>,
+	variant_kinds: Vec<Variant>,
 }
 
 impl EnumType {
-	pub fn new(name: impl Into<String>, variants: impl Iterator<Item = (impl Into<String>, Variant)>) -> Self {
+	pub fn new(name: impl Into<Box<str>>, variants: impl Iterator<Item = (impl Into<Box<str>>, Variant)>) -> Self {
+		let variants = variants
+			.enumerate()
+			.map(|(i, (name, r#type))| ((name.into(), i), r#type))
+			.unzip();
+
 		Self::from_base(EnumImpl {
 			name: name.into(),
-			variants: variants.map(|(name, r#type)| (name.into(), r#type)).collect(),
+			variant_names: variants.0,
+			variant_kinds: variants.1,
 		})
 	}
 
-	pub fn new_unit(name: impl Into<String>) -> Self {
+	pub fn new_unit(name: impl Into<Box<str>>) -> Self {
 		Self::from_base(EnumImpl {
 			name: name.into(),
-			variants: HashMap::new(),
+			variant_names: HashMap::new(),
+			variant_kinds: Vec::new(),
 		})
 	}
 }
@@ -34,7 +42,7 @@ impl BasicTypeBase for EnumImpl {
 		TypeKind::Enum
 	}
 
-	fn variants(&self) -> Option<&HashMap<String, Variant>> {
-		Some(&self.variants)
+	fn variants(&self) -> Option<(&HashMap<Box<str>, usize>, &[Variant])> {
+		Some((&self.variant_names, &self.variant_kinds))
 	}
 }

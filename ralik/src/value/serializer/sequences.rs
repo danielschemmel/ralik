@@ -6,7 +6,6 @@ use crate::types::TypeKind;
 use crate::{Context, TypeHandle, Value};
 
 enum ElementTypes {
-	None,
 	Repeating(TypeHandle),
 	Consuming(Vec<TypeHandle>),
 }
@@ -25,7 +24,6 @@ impl<'a> SerializeSequence<'a> {
 		len: impl Into<Option<usize>>,
 	) -> Result<Self, SerializerError> {
 		let element_types = match expected_type.kind() {
-			TypeKind::Unit => ElementTypes::None,
 			TypeKind::Tuple => ElementTypes::Consuming(expected_type.type_parameters().iter().cloned().rev().collect()),
 			TypeKind::Array => ElementTypes::Repeating(expected_type.type_parameters()[0].clone()),
 			_ => {
@@ -47,9 +45,6 @@ impl<'a> SerializeSequence<'a> {
 impl<'a> SerializeSequence<'a> {
 	fn serialize_element<T: ?Sized + ser::Serialize>(&mut self, value: &T) -> Result<(), SerializerError> {
 		match &mut self.element_types {
-			ElementTypes::None => Err(SerializerError::TooManyValues {
-				r#type: self.expected_type.clone(),
-			}),
 			ElementTypes::Repeating(element_type) => {
 				self
 					.result
@@ -81,7 +76,6 @@ impl<'a> SerializeSequence<'a> {
 		}
 
 		match self.expected_type.kind() {
-			TypeKind::Unit => Ok(Value::new_unit(self.context)?),
 			TypeKind::Tuple => {
 				let value = Value::new_tuple(self.context, self.result)?;
 				if value.has_type(&self.expected_type) {

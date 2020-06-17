@@ -1,4 +1,4 @@
-use num_bigint::BigInt;
+use num::BigInt;
 use syn::parse::Lookahead1;
 use syn::{
 	braced, bracketed, parenthesized, parse, Ident, LitBool, LitByte, LitByteStr, LitChar, LitInt, LitStr, Token,

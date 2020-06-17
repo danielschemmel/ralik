@@ -79,15 +79,24 @@ impl Eval for Expression {
 						call_member_function_1(context, crate::ops::GREATER_OR_EQUAL, lhs_value, rhs, span)
 					}
 					BinaryOperator::LazyAnd(span) => {
-						let lhs_bool = lhs_value.as_bool().ok_or_else(|| EvalError::NotBoolInLazyAnd {
-							type_name: lhs_value.get_type().name().into(),
-							at: span.into(), // TODO: use the lhs span instead of the operator span here
+						let bool_type = context.get_bool_type().map_err(|err| EvalError::InvalidCoreType {
+							source: err.into(),
+							at: span.into(),
 						})?;
+
+						if !lhs_value.has_type(&bool_type) {
+							return Err(EvalError::NotBoolInLazyAnd {
+								type_name: lhs_value.get_type().name().into(),
+								at: span.into(), // TODO: use the lhs span instead of the operator span here
+							});
+						}
+
+						let lhs_bool = lhs_value.as_bool().unwrap();
 						if lhs_bool == false {
 							Ok(lhs_value)
 						} else {
 							let rhs_value = rhs.eval(context)?;
-							if rhs_value.is_bool() {
+							if rhs_value.has_type(&bool_type) {
 								Ok(rhs_value)
 							} else {
 								Err(EvalError::NotBoolInLazyAnd {
@@ -98,15 +107,24 @@ impl Eval for Expression {
 						}
 					}
 					BinaryOperator::LazyOr(span) => {
-						let lhs_bool = lhs_value.as_bool().ok_or_else(|| EvalError::NotBoolInLazyAnd {
-							type_name: lhs_value.get_type().name().into(),
-							at: span.into(), // TODO: use the lhs span instead of the operator span here
+						let bool_type = context.get_bool_type().map_err(|err| EvalError::InvalidCoreType {
+							source: err.into(),
+							at: span.into(),
 						})?;
+
+						if !lhs_value.has_type(&bool_type) {
+							return Err(EvalError::NotBoolInLazyAnd {
+								type_name: lhs_value.get_type().name().into(),
+								at: span.into(), // TODO: use the lhs span instead of the operator span here
+							});
+						}
+
+						let lhs_bool = lhs_value.as_bool().unwrap();
 						if lhs_bool == true {
 							Ok(lhs_value)
 						} else {
 							let rhs_value = rhs.eval(context)?;
-							if rhs_value.is_bool() {
+							if rhs_value.has_type(&bool_type) {
 								Ok(rhs_value)
 							} else {
 								Err(EvalError::NotBoolInLazyAnd {
@@ -215,7 +233,7 @@ impl Eval for AtomicExpression {
 				})
 			}
 			AtomicExpression::LitStr(value, span) => {
-				Value::new_string(context, value).map_err(|err| EvalError::ObjectCreationError {
+				Value::new_string(context, value.clone().into_boxed_str()).map_err(|err| EvalError::ObjectCreationError {
 					source: err.into(),
 					at: span.into(),
 				})

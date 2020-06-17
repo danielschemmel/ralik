@@ -56,7 +56,6 @@ impl Context {
 	pub fn new() -> Self {
 		let context = Self::new_empty();
 
-		context.insert_type(crate::types::UnitType::new());
 		context.insert_type(crate::types::BoolType::new());
 		context.insert_type(crate::types::CharType::new());
 		context.insert_type(crate::types::IntegerType::new());
@@ -134,7 +133,11 @@ impl Context {
 				Err(anyhow::anyhow!("Empty `vec!` calls are currently not supported").into())
 			} else {
 				let type_0 = arguments[0].get_type();
-				Ok(Value::new_array(context, type_0, arguments)?)
+				Ok(Value::new_array(
+					context,
+					type_0,
+					arguments.iter().cloned().collect::<Box<[Value]>>(),
+				)?)
 			}
 		});
 

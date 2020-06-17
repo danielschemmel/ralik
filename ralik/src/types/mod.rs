@@ -6,7 +6,7 @@ use crate::{Context, Value};
 mod arguments;
 
 mod array;
-pub use self::array::name as array_name;
+pub(crate) use self::array::name as array_name;
 pub(crate) use self::array::ArrayType;
 
 mod basic;
@@ -31,33 +31,33 @@ mod string;
 pub use self::string::name as string_name;
 pub use self::string::StringType;
 
+mod r#struct;
+pub use self::r#struct::StructType;
+
 mod tuple;
-pub use self::tuple::name as tuple_name;
+pub(crate) use self::tuple::make_name as make_tuple_name;
 pub(crate) use self::tuple::TupleType;
 
 mod type_handle;
 pub use self::type_handle::TypeHandle;
 
-mod r#struct;
-pub use self::r#struct::StructType;
+mod tuple_struct;
+pub use self::tuple_struct::TupleStructType;
 
-mod struct_tuple;
-pub use self::struct_tuple::StructTupleType;
-
-mod unit;
-pub use self::unit::name as unit_name;
-pub use self::unit::UnitType;
+mod unit_struct;
+pub use self::unit_struct::UnitStructType;
 
 pub type MemberFunction = fn(&Context, &TypeHandle, &[Value]) -> Result<Value, RuntimeError>;
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone, Debug)]
 pub enum TypeKind {
-	Unit,
 	Bool,
 	Integer,
 	Char,
 	String,
 	Tuple,
+	UnitStruct,
+	TupleStruct,
 	Struct,
 	Enum,
 	Array,
@@ -65,9 +65,9 @@ pub enum TypeKind {
 
 #[derive(Clone, Debug)]
 pub enum Variant {
-	Unit,
-	Tuple(Box<[TypeHandle]>),
-	Struct(HashMap<String, TypeHandle>),
+	Unit(Box<str>),
+	Tuple(Box<str>, Box<[TypeHandle]>),
+	Struct(Box<str>, HashMap<Box<str>, usize>, Box<[TypeHandle]>),
 }
 
 pub trait Type: std::fmt::Debug {
@@ -75,10 +75,10 @@ pub trait Type: std::fmt::Debug {
 	fn kind(&self) -> TypeKind;
 
 	fn type_parameters(&self) -> &[TypeHandle];
-	fn fields(&self) -> Option<&HashMap<String, TypeHandle>>;
-	fn variants(&self) -> Option<&HashMap<String, Variant>>;
+	fn fields(&self) -> (Option<&HashMap<Box<str>, usize>>, &[TypeHandle]);
+	fn variants(&self) -> Option<(&HashMap<Box<str>, usize>, &[Variant])>;
 
 	fn get_function(&self, key: &str) -> Option<&MemberFunction>;
-	fn insert_function(&mut self, key: String, value: MemberFunction) -> Option<MemberFunction>;
-	fn remove_function(&mut self, key: &str) -> Option<(String, MemberFunction)>;
+	fn insert_function(&mut self, key: Box<str>, value: MemberFunction) -> Option<MemberFunction>;
+	fn remove_function(&mut self, key: &str) -> Option<(Box<str>, MemberFunction)>;
 }

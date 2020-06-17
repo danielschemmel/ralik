@@ -1,16 +1,15 @@
-use num_bigint::BigInt;
+use num::BigInt;
 
 use crate::error::RuntimeError;
-use crate::{TypeHandle, Value};
+use crate::{Context, TypeHandle, Value};
 
 pub(crate) trait Arguments {
 	fn check_len(&self, count: usize) -> Result<(), RuntimeError>;
 
-	fn as_unit(&self, index: usize) -> Result<(), RuntimeError>;
-	fn as_bool(&self, index: usize) -> Result<bool, RuntimeError>;
-	fn as_char(&self, index: usize) -> Result<char, RuntimeError>;
-	fn as_integer(&self, index: usize) -> Result<&BigInt, RuntimeError>;
-	fn as_string(&self, index: usize) -> Result<&String, RuntimeError>;
+	fn as_bool(&self, index: usize, context: &Context) -> Result<bool, RuntimeError>;
+	fn as_char(&self, index: usize, context: &Context) -> Result<char, RuntimeError>;
+	fn as_integer(&self, index: usize, context: &Context) -> Result<&BigInt, RuntimeError>;
+	fn as_string(&self, index: usize, context: &Context) -> Result<&str, RuntimeError>;
 
 	fn check_type(&self, index: usize, expected_type: &TypeHandle) -> Result<&Value, RuntimeError>;
 }
@@ -27,48 +26,60 @@ impl Arguments for [Value] {
 		}
 	}
 
-	fn as_unit(&self, index: usize) -> Result<(), RuntimeError> {
-		self[index].as_unit().ok_or_else(|| RuntimeError::InvalidArgumentType {
-			argument_number: index,
-			actual_type_name: self[index].get_type().name().into(),
-			expected_type_name: super::unit_name().to_owned(),
-		})
+	fn as_bool(&self, index: usize, context: &Context) -> Result<bool, RuntimeError> {
+		Ok(
+			self
+				.check_type(
+					index,
+					&context
+						.get_bool_type()
+						.map_err(|err| RuntimeError::InvalidCoreType(err.into()))?,
+				)?
+				.as_bool()
+				.unwrap(),
+		)
 	}
 
-	fn as_bool(&self, index: usize) -> Result<bool, RuntimeError> {
-		self[index].as_bool().ok_or_else(|| RuntimeError::InvalidArgumentType {
-			argument_number: index,
-			actual_type_name: self[index].get_type().name().into(),
-			expected_type_name: super::bool_name().to_owned(),
-		})
+	fn as_char(&self, index: usize, context: &Context) -> Result<char, RuntimeError> {
+		Ok(
+			self
+				.check_type(
+					index,
+					&context
+						.get_char_type()
+						.map_err(|err| RuntimeError::InvalidCoreType(err.into()))?,
+				)?
+				.as_char()
+				.unwrap(),
+		)
 	}
 
-	fn as_char(&self, index: usize) -> Result<char, RuntimeError> {
-		self[index].as_char().ok_or_else(|| RuntimeError::InvalidArgumentType {
-			argument_number: index,
-			actual_type_name: self[index].get_type().name().into(),
-			expected_type_name: super::char_name().to_owned(),
-		})
+	fn as_integer(&self, index: usize, context: &Context) -> Result<&BigInt, RuntimeError> {
+		Ok(
+			self
+				.check_type(
+					index,
+					&context
+						.get_integer_type()
+						.map_err(|err| RuntimeError::InvalidCoreType(err.into()))?,
+				)?
+				.as_integer()
+				.unwrap(),
+		)
 	}
 
-	fn as_integer(&self, index: usize) -> Result<&BigInt, RuntimeError> {
-		self[index]
-			.as_integer()
-			.ok_or_else(|| RuntimeError::InvalidArgumentType {
-				argument_number: index,
-				actual_type_name: self[index].get_type().name().into(),
-				expected_type_name: super::integer_name().to_owned(),
-			})
-	}
-
-	fn as_string(&self, index: usize) -> Result<&String, RuntimeError> {
-		self[index]
-			.as_string()
-			.ok_or_else(|| RuntimeError::InvalidArgumentType {
-				argument_number: index,
-				actual_type_name: self[index].get_type().name().into(),
-				expected_type_name: super::string_name().to_owned(),
-			})
+	fn as_string(&self, index: usize, context: &Context) -> Result<&str, RuntimeError> {
+		Ok(
+			self
+				.check_type(
+					index,
+					&context
+						.get_string_type()
+						.map_err(|err| RuntimeError::InvalidCoreType(err.into()))?,
+				)?
+				.as_string()
+				.unwrap(),
+		)
 	}
 
 	fn check_type(&self, index: usize, expected_type: &TypeHandle) -> Result<&Value, RuntimeError> {

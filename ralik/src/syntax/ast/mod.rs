@@ -1,4 +1,4 @@
-use num_bigint::BigInt;
+use num::BigInt;
 use proc_macro2::Span;
 
 mod debug;

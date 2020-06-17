@@ -1,6 +1,9 @@
 #![forbid(unsafe_code)]
 
 mod cli;
+mod interpreter;
+mod stats;
+mod util;
 
 use anyhow::{Context, Result};
 use cli::{Args, ReturnCode};

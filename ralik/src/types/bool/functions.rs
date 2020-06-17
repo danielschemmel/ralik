@@ -14,6 +14,6 @@ pub(crate) fn to_string(
 	arguments: &[Value],
 ) -> Result<Value, RuntimeError> {
 	arguments.check_len(1)?;
-	let value = arguments.as_bool(0)?;
+	let value = arguments.as_bool(0, context)?;
 	Ok(Value::new_string(context, value.to_string())?)
 }

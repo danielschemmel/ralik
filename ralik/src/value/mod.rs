@@ -1,11 +1,9 @@
-use num_bigint::BigInt;
-use num_traits::ToPrimitive;
-
-use std::collections::hash_map::HashMap;
+use num::BigInt;
+use num::ToPrimitive;
 
 use crate::error::{
 	ArrayCreationError, BoolCreationError, CharCreationError, IntegerCreationError, InvalidArrayType,
-	StringCreationError, StructCreationError, TupleCreationError, UnitCreationError,
+	StringCreationError, StructCreationError, TupleCreationError,
 };
 use crate::types::{TypeKind, Variant};
 use crate::{Context, TypeHandle};
@@ -16,7 +14,7 @@ mod display;
 #[cfg(feature = "serde")]
 mod serializer;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Value {
 	r#type: TypeHandle,
 	data: Data,
@@ -24,38 +22,35 @@ pub struct Value {
 
 #[derive(Clone)]
 enum Data {
-	Unit,
+	Empty,
 	Bool(bool),
 	Integer(BigInt),
 	Char(char),
-	String(String),
-	Tuple(Vec<Value>),
-	Struct(HashMap<String, Value>),
-	EnumUnit(String),
-	EnumTuple(String, Vec<Value>),
-	EnumStruct(String, HashMap<String, Value>),
-	Array(Vec<Value>),
+	String(Box<str>),
+	Array(Box<[Value]>),
+	UnitVariant(usize),
+	Variant(usize, Box<[Value]>),
 }
 
 impl Value {
-	pub fn new_unit(context: &Context) -> Result<Value, UnitCreationError> {
+	pub fn new_unit(context: &Context) -> Result<Value, TupleCreationError> {
 		Ok(Value {
 			r#type: context.get_unit_type()?.clone(),
-			data: Data::Unit,
+			data: Data::Empty,
 		})
 	}
 
-	pub fn new_bool(context: &Context, value: bool) -> Result<Value, BoolCreationError> {
+	pub fn new_bool(context: &Context, value: impl Into<bool>) -> Result<Value, BoolCreationError> {
 		Ok(Value {
 			r#type: context.get_bool_type()?.clone(),
-			data: Data::Bool(value),
+			data: Data::Bool(value.into()),
 		})
 	}
 
-	pub fn new_char(context: &Context, value: char) -> Result<Value, CharCreationError> {
+	pub fn new_char(context: &Context, value: impl Into<char>) -> Result<Value, CharCreationError> {
 		Ok(Value {
 			r#type: context.get_char_type()?.clone(),
-			data: Data::Char(value),
+			data: Data::Char(value.into()),
 		})
 	}
 
@@ -66,125 +61,197 @@ impl Value {
 		})
 	}
 
-	pub fn new_string(context: &Context, value: impl Into<String>) -> Result<Value, StringCreationError> {
+	pub fn new_string(context: &Context, value: impl Into<Box<str>>) -> Result<Value, StringCreationError> {
 		Ok(Value {
 			r#type: context.get_string_type()?.clone(),
 			data: Data::String(value.into()),
 		})
 	}
 
-	pub fn new_tuple(context: &Context, values: impl Into<Vec<Value>>) -> Result<Value, TupleCreationError> {
-		let values: Vec<Value> = values.into();
-		let element_types = values
-			.iter()
-			.map(|value| value.get_type().name())
-			.collect::<Vec<&str>>();
-		let tuple_type = context.get_tuple_type(&element_types)?.clone();
+	pub fn new_tuple(context: &Context, values: impl Into<Box<[Value]>>) -> Result<Value, TupleCreationError> {
+		let values: Box<[Value]> = values.into();
+		let element_types = values.iter().map(|value| value.get_type().name());
+		let tuple_type = context.get_tuple_type(element_types)?.clone();
 		Ok(Value {
 			r#type: tuple_type,
-			data: Data::Tuple(values),
+			data: Data::Array(values),
 		})
 	}
 
-	pub fn new_struct(
+	pub fn new_tuple_struct(
 		context: &Context,
-		name: &str,
-		mut fields: impl Iterator<Item = (impl Into<String>, Value)>,
-	) -> Result<Value, StructCreationError> {
-		let struct_type = context
-			.get_type(name)
-			.ok_or_else(|| crate::error::InvalidStructType::Missing { type_name: name.into() })?
+		name: impl AsRef<str>,
+		values: impl Into<Box<[Value]>>,
+	) -> Result<Value, TupleCreationError> {
+		let tuple_type = context
+			.get_type(name.as_ref())
+			.ok_or_else(|| crate::error::InvalidTupleType::Missing {
+				type_name: name.as_ref().into(),
+			})?
 			.clone();
-		if struct_type.kind() != TypeKind::Struct {
-			return Err(crate::error::InvalidStructType::NotStructType { type_name: name.into() }.into());
+		if tuple_type.kind() != TypeKind::Tuple {
+			return Err(
+				crate::error::InvalidTupleType::NotTupleType {
+					type_name: name.as_ref().into(),
+				}
+				.into(),
+			);
 		}
 
-		if struct_type
-			.fields()
-			.map(|field_map| field_map.is_empty())
-			.unwrap_or(true)
-		{
-			if let Some((field_name, _field_value)) = fields.nth(0) {
-				Err(StructCreationError::SuperfluousField {
-					type_name: name.into(),
-					field_name: field_name.into(),
-				})
-			} else {
-				Ok(Value {
-					r#type: struct_type,
-					data: Data::Unit,
-				})
-			}
+		let values: Box<[Value]> = values.into();
+		let element_types = tuple_type.fields().1;
+		if values.len() != element_types.len() {
+			return Err(crate::error::TupleCreationError::ElementCount {
+				type_element_count: element_types.len(),
+				provided_element_count: values.len(),
+			});
+		}
+
+		if values.is_empty() {
+			Ok(Value {
+				r#type: tuple_type,
+				data: Data::Empty,
+			})
 		} else {
-			let field_map = struct_type.fields().unwrap();
-			let fields: HashMap<String, Value> = fields.map(|(name, value)| (name.into(), value)).collect();
-			for (field_name, field_type) in field_map {
-				let value = fields
-					.get(field_name)
-					.ok_or_else(|| StructCreationError::MissingField {
-						type_name: name.into(),
-						field_name: field_name.into(),
-					})?;
+			for (index, (value, expected_type)) in values.iter().zip(element_types.iter()).enumerate() {
 				let value_type = value.get_type();
-				if !TypeHandle::is_same(value_type, field_type) {
-					return Err(StructCreationError::FieldTypeMismatch {
-						type_name: name.into(),
-						field_name: field_name.into(),
-						field_type_name: field_type.name().into(),
-						value_type_name: value_type.name().into(),
+				if !TypeHandle::is_same(value_type, expected_type) {
+					return Err(crate::error::TupleCreationError::ElementTypeMismatch {
+						index,
+						expected: expected_type.clone(),
+						actual: value_type.clone(),
 					});
 				}
 			}
 
-			// After establishing that `field_map.keys()` ⊆ `fields.keys()`, we can shortcut the reverse check if the
-			// lengths are equal, as this implies that `field_map.keys()` = `fields.keys()`
-			if fields.len() != field_map.len() {
-				for field_name in fields.keys() {
-					field_map
-						.get(field_name)
-						.ok_or_else(|| StructCreationError::SuperfluousField {
-							type_name: name.into(),
-							field_name: field_name.into(),
-						})?;
-				}
-			}
-
 			Ok(Value {
-				r#type: struct_type,
-				data: Data::Struct(fields),
+				r#type: tuple_type,
+				data: Data::Array(values),
 			})
 		}
 	}
 
-	pub fn new_unit_struct(context: &Context, name: &str) -> Result<Value, StructCreationError> {
+	pub fn new_struct(
+		context: &Context,
+		name: impl AsRef<str>,
+		mut fields: impl Iterator<Item = (impl AsRef<str>, Value)>,
+	) -> Result<Value, StructCreationError> {
+		let name = name.as_ref();
+
 		let struct_type = context
 			.get_type(name)
 			.ok_or_else(|| crate::error::InvalidStructType::Missing { type_name: name.into() })?
 			.clone();
 		if struct_type.kind() != TypeKind::Struct {
-			return Err(crate::error::InvalidStructType::NotStructType { type_name: name.into() }.into());
+			return Err(crate::error::InvalidStructType::NotStructType { r#type: struct_type }.into());
 		}
 
-		let field_map = struct_type.fields().unwrap();
-		if field_map.is_empty() {
+		let (field_names, field_types) = struct_type.fields();
+
+		if field_types.is_empty() {
+			if let Some((field_name, _field_value)) = fields.nth(0) {
+				Err(StructCreationError::SuperfluousField {
+					r#type: struct_type,
+					field_name: field_name.as_ref().into(),
+				})
+			} else {
+				Ok(Value {
+					r#type: struct_type,
+					data: Data::Empty,
+				})
+			}
+		} else {
+			if field_names.is_none() {
+				return Err(crate::error::InvalidStructType::NoFieldNames { r#type: struct_type }.into());
+			}
+			let field_names = field_names.unwrap();
+
+			let mut fields = fields
+				.map(|(field_name, value)| {
+					if let Some(index) = field_names.get(field_name.as_ref()) {
+						Ok((*index, field_name, value))
+					} else {
+						Err(StructCreationError::SuperfluousField {
+							r#type: struct_type.clone(),
+							field_name: field_name.as_ref().into(),
+						})
+					}
+				})
+				.collect::<Result<Vec<(usize, _, Value)>, StructCreationError>>()?;
+
+			fields.sort_unstable_by_key(|(key, _name, _value)| *key);
+
+			let fields = fields
+				.into_iter()
+				.enumerate()
+				.map(|(i, (key, name, value))| {
+					if i < key {
+						Err(StructCreationError::MissingField {
+							r#type: struct_type.clone(),
+							field_name: name.as_ref().into(),
+						})
+					} else if i > key {
+						Err(StructCreationError::DuplicateField {
+							r#type: struct_type.clone(),
+							field_name: name.as_ref().into(),
+						})
+					} else if !value.has_type(&field_types[key]) {
+						Err(StructCreationError::FieldTypeMismatch {
+							r#type: struct_type.clone(),
+							field_name: name.as_ref().into(),
+							field_type: field_types[key].clone(),
+							value_type: value.get_type().clone(),
+						})
+					} else {
+						Ok(value)
+					}
+				})
+				.collect::<Result<Vec<Value>, StructCreationError>>()?;
+
 			Ok(Value {
 				r#type: struct_type,
-				data: Data::Unit,
+				data: Data::Array(fields.into_boxed_slice()),
+			})
+		}
+	}
+
+	pub fn new_unit_struct(context: &Context, name: impl AsRef<str>) -> Result<Value, StructCreationError> {
+		let name = name.as_ref();
+
+		let struct_type = context
+			.get_type(name)
+			.ok_or_else(|| crate::error::InvalidStructType::Missing { type_name: name.into() })?
+			.clone();
+		if struct_type.kind() != TypeKind::Struct {
+			return Err(crate::error::InvalidStructType::NotStructType { r#type: struct_type }.into());
+		}
+
+		let (field_names, field_types) = struct_type.fields();
+		if field_types.is_empty() {
+			Ok(Value {
+				r#type: struct_type,
+				data: Data::Empty,
 			})
 		} else {
-			Err(StructCreationError::MissingField {
-				type_name: name.into(),
-				field_name: field_map.keys().nth(0).unwrap().into(),
-			})
+			if let Some(field_names) = field_names {
+				let field_name = field_names.keys().nth(0).unwrap().clone().into_string();
+				Err(StructCreationError::MissingField {
+					r#type: struct_type,
+					field_name,
+				})
+			} else {
+				Err(crate::error::InvalidStructType::NoFieldNames { r#type: struct_type }.into())
+			}
 		}
 	}
 
 	pub fn new_array(
 		context: &Context,
 		element_type: &TypeHandle,
-		values: impl Into<Vec<Value>>,
+		values: impl Into<Box<[Value]>>,
 	) -> Result<Value, ArrayCreationError> {
-		let values: Vec<Value> = values.into();
+		let values: Box<[Value]> = values.into();
+
 		if let Some((index, value)) = values
 			.iter()
 			.enumerate()
@@ -200,7 +267,7 @@ impl Value {
 			);
 		}
 
-		let array_type = context.get_array_type(element_type.name())?.clone();
+		let array_type = context.get_array_type(element_type.name())?.into();
 		Ok(Value {
 			r#type: array_type,
 			data: Data::Array(values),
@@ -217,24 +284,11 @@ impl Value {
 		TypeHandle::is_same(&self.r#type, expected_type)
 	}
 
-	pub fn is_unit(&self) -> bool {
+	pub fn as_nothing(&self) -> Option<()> {
 		match &self.data {
-			Data::Unit => true,
-			_ => false,
-		}
-	}
-
-	pub fn as_unit(&self) -> Option<()> {
-		match &self.data {
-			Data::Unit => Some(()),
+			Data::Empty => Some(()),
+			Data::UnitVariant(_id) => Some(()),
 			_ => None,
-		}
-	}
-
-	pub fn is_bool(&self) -> bool {
-		match &self.data {
-			Data::Bool(_value) => true,
-			_ => false,
 		}
 	}
 
@@ -245,24 +299,10 @@ impl Value {
 		}
 	}
 
-	pub fn is_char(&self) -> bool {
-		match &self.data {
-			Data::Char(_value) => true,
-			_ => false,
-		}
-	}
-
 	pub fn as_char(&self) -> Option<char> {
 		match &self.data {
 			Data::Char(value) => Some(*value),
 			_ => None,
-		}
-	}
-
-	pub fn is_integer(&self) -> bool {
-		match &self.data {
-			Data::Integer(_value) => true,
-			_ => false,
 		}
 	}
 
@@ -321,60 +361,42 @@ impl Value {
 		self.as_integer().and_then(|value| value.to_usize())
 	}
 
-	pub fn is_string(&self) -> bool {
-		match &self.data {
-			Data::String(_value) => true,
-			_ => false,
-		}
-	}
-
-	pub fn as_string(&self) -> Option<&String> {
-		match &self.data {
-			Data::String(value) => Some(value),
-			_ => None,
-		}
-	}
-
-	pub fn is_tuple(&self) -> bool {
-		match &self.data {
-			Data::Tuple(_value) => true,
-			_ => false,
-		}
-	}
-
-	pub fn as_tuple(&self) -> Option<&[Value]> {
-		match &self.data {
-			Data::Tuple(value) => Some(value),
-			_ => None,
-		}
-	}
-
-	pub fn is_array(&self) -> bool {
-		match &self.data {
-			Data::Array(_value) => true,
-			_ => false,
-		}
-	}
-
 	pub fn as_array(&self) -> Option<&[Value]> {
 		match &self.data {
-			Data::Array(value) => Some(value),
+			Data::Array(value) => Some(value.as_ref()),
+			Data::Variant(_id, value) => Some(value.as_ref()),
+			_ => None,
+		}
+	}
+
+	pub fn as_string(&self) -> Option<&str> {
+		match &self.data {
+			Data::String(value) => Some(value.as_ref()),
 			_ => None,
 		}
 	}
 
 	pub fn field(&self, name: &str) -> Option<&Value> {
 		match &self.data {
-			Data::Struct(fields) => fields.get(name),
-			Data::EnumStruct(_name, fields) => fields.get(name),
+			Data::Array(fields) => {
+				let field_names = self.r#type.fields().0?;
+				Some(&fields[*field_names.get(name)?])
+			}
+			Data::Variant(id, fields) => {
+				let variant = &self.r#type.variants()?.1[*id];
+				match variant {
+					Variant::Struct(_name, field_names, _field_types) => Some(&fields[*field_names.get(name)?]),
+					_ => None,
+				}
+			}
 			_ => None,
 		}
 	}
 
 	pub fn tuple_field(&self, index: usize) -> Option<&Value> {
 		match &self.data {
-			Data::Tuple(elements) => elements.get(index),
-			Data::EnumTuple(_name, elements) => elements.get(index),
+			Data::Array(elements) => elements.get(index),
+			Data::Variant(_id, elements) => elements.get(index),
 			_ => None,
 		}
 	}

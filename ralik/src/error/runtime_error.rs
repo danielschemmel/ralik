@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use crate::TypeHandle;
+
 #[derive(Error, Debug)]
 pub enum RuntimeError {
 	#[error(
@@ -20,17 +22,14 @@ pub enum RuntimeError {
 	#[error("An operation overflowed")]
 	Overflow(#[from] Overflow),
 
+	#[error(transparent)]
+	InvalidCoreType(#[from] InvalidCoreType),
+
 	#[error("Could not create object")]
 	ValueCreationError(#[from] ValueCreationError),
 
 	#[error("Panic!")]
 	Panic(#[from] anyhow::Error),
-}
-
-impl From<UnitCreationError> for RuntimeError {
-	fn from(value: UnitCreationError) -> Self {
-		RuntimeError::ValueCreationError(value.into())
-	}
 }
 
 impl From<BoolCreationError> for RuntimeError {
@@ -92,9 +91,6 @@ pub enum Overflow {
 
 #[derive(Error, Debug)]
 pub enum ValueCreationError {
-	#[error("Could not create object of type `{}`", crate::types::unit_name())]
-	UnitCreationError(#[from] UnitCreationError),
-
 	#[error("Could not create object of type `{}`", crate::types::bool_name())]
 	BoolCreationError(#[from] BoolCreationError),
 
@@ -115,12 +111,6 @@ pub enum ValueCreationError {
 
 	#[error("Could not create object of array type")]
 	ArrayCreationError(#[from] ArrayCreationError),
-}
-
-#[derive(Error, Debug)]
-pub enum UnitCreationError {
-	#[error("Core type `{}` (Unit) is invalid", crate::types::unit_name())]
-	InvalidType(#[from] InvalidUnitType),
 }
 
 #[derive(Error, Debug)]
@@ -151,6 +141,19 @@ pub enum StringCreationError {
 pub enum TupleCreationError {
 	#[error("Type is not a valid tuple type")]
 	InvalidType(#[from] InvalidTupleType),
+
+	#[error("Tuple type expects {} elements, but {} where provided", .type_element_count, .provided_element_count)]
+	ElementCount {
+		type_element_count: usize,
+		provided_element_count: usize,
+	},
+
+	#[error("Element number {} should have type `{}`, but has type `{}`", .index, .expected.name(), .actual.name())]
+	ElementTypeMismatch {
+		index: usize,
+		expected: TypeHandle,
+		actual: TypeHandle,
+	},
 }
 
 #[derive(Error, Debug)]
@@ -158,18 +161,21 @@ pub enum StructCreationError {
 	#[error("Type is not a valid struct type")]
 	InvalidType(#[from] InvalidStructType),
 
-	#[error("Missing field `{field_name}` while creating object of type `{type_name}`")]
-	MissingField { type_name: String, field_name: String },
+	#[error("Missing field `{}` while creating object of type `{}`", .field_name, .r#type.name())]
+	MissingField { r#type: TypeHandle, field_name: String },
 
-	#[error("Superfluous field `{field_name}` while creating object of type `{type_name}`")]
-	SuperfluousField { type_name: String, field_name: String },
+	#[error("Duplicate field `{}` while creating object of type `{}`", .field_name, .r#type.name())]
+	DuplicateField { r#type: TypeHandle, field_name: String },
 
-	#[error("Cannot initialize field `{field_name}` with type `{field_type_name}` for an object of type `{type_name}` with a value of type `{value_type_name}`")]
+	#[error("Superfluous field `{}` while creating object of type `{}`", .field_name, .r#type.name())]
+	SuperfluousField { r#type: TypeHandle, field_name: String },
+
+	#[error("Cannot initialize field `{}` with type `{}` for an object of type `{}` with a value of type `{}`", .field_name, .field_type.name(), .r#type.name(), value_type.name())]
 	FieldTypeMismatch {
-		type_name: String,
+		r#type: TypeHandle,
 		field_name: String,
-		field_type_name: String,
-		value_type_name: String,
+		field_type: TypeHandle,
+		value_type: TypeHandle,
 	},
 }
 
@@ -182,19 +188,12 @@ pub enum ArrayCreationError {
 #[derive(Error, Debug)]
 #[error("Invalid core type")]
 pub enum InvalidCoreType {
-	InvalidUnitType(#[from] InvalidUnitType),
 	InvalidBoolType(#[from] InvalidBoolType),
 	InvalidIntegerType(#[from] InvalidIntegerType),
 	InvalidCharType(#[from] InvalidCharType),
 	InvalidStringType(#[from] InvalidStringType),
 	InvalidTupleType(#[from] InvalidTupleType),
 	InvalidArrayType(#[from] InvalidArrayType),
-}
-
-#[derive(Error, Debug)]
-pub enum InvalidUnitType {
-	#[error("The given context does not have a type `()` registered")]
-	Missing,
 }
 
 #[derive(Error, Debug)]
@@ -229,20 +228,17 @@ pub enum InvalidStringType {
 
 #[derive(Error, Debug)]
 pub enum InvalidTupleType {
+	#[error("The given context does not have the tuple type `{type_name}` registered")]
+	Missing { type_name: String },
+
 	#[error("The type `{type_name}` is not a tuple type")]
 	NotTupleType { type_name: String },
 
-	#[error("The given context does not have the type `{missing_element_type_name}` registered that is required to create the tuple `{tuple_name}`")]
+	#[error("The given context does not have the type `{missing_element_type_name}` registered that is required to create the tuple `{make_tuple_name}`")]
 	MissingSubtype {
-		tuple_name: String,
+		make_tuple_name: String,
 		missing_element_type_name: String,
 	},
-
-	#[error(
-		"Cannot create a tuple without any elements (note: the unit type `{}` is not a tuple)",
-		crate::types::unit_name()
-	)]
-	ZeroElements,
 }
 
 #[derive(Error, Debug)]
@@ -263,6 +259,9 @@ pub enum InvalidStructType {
 	#[error("The given context does not have the structure type `{type_name}` registered")]
 	Missing { type_name: String },
 
-	#[error("The type `{type_name}` is not a struct type")]
-	NotStructType { type_name: String },
+	#[error("The type `{}` does not have the kind `TypeKind::Struct`", .r#type.name())]
+	NotStructType { r#type: TypeHandle },
+
+	#[error("The type `{}` does not provide field names", .r#type.name())]
+	NoFieldNames { r#type: TypeHandle },
 }

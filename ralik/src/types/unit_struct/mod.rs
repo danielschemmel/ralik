@@ -3,23 +3,18 @@ use super::{BasicType, BasicTypeBase, TypeKind};
 mod functions;
 mod ops;
 
-pub type UnitType = BasicType<UnitImpl>;
-pub const fn name() -> &'static str {
-	"()"
+pub type UnitStructType = BasicType<UnitStructImpl>;
+
+pub struct UnitStructImpl {
+	name: Box<str>,
 }
 
-pub struct UnitImpl;
+impl UnitStructType {
+	pub fn new(name: impl Into<Box<str>>) -> Self {
+		let name = name.into();
 
-impl UnitType {
-	pub fn new() -> Self {
-		Self::default()
-	}
-}
-
-impl Default for UnitType {
-	fn default() -> Self {
 		BasicType::from_base_with_functions(
-			UnitImpl,
+			UnitStructImpl { name },
 			vec![
 				(crate::ops::EQUAL, ops::equal),
 				(crate::ops::NOT_EQUAL, ops::not_equal),
@@ -33,12 +28,12 @@ impl Default for UnitType {
 	}
 }
 
-impl BasicTypeBase for UnitImpl {
+impl BasicTypeBase for UnitStructImpl {
 	fn name(&self) -> &str {
-		self::name()
+		&self.name
 	}
 
 	fn kind(&self) -> TypeKind {
-		TypeKind::Unit
+		TypeKind::UnitStruct
 	}
 }
