@@ -46,8 +46,7 @@ impl RalikCrate {
 			.crate_info
 			.dependencies
 			.iter()
-			.filter(|dependency| dependency.name == "ralik")
-			.nth(0)
+			.find(|dependency| dependency.name == "ralik")
 			.unwrap();
 
 		Self {

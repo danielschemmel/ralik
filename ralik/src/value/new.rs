@@ -122,7 +122,7 @@ impl Value {
 		let (field_names, field_types) = struct_type.fields();
 
 		if field_types.is_empty() {
-			if let Some((field_name, _field_value)) = fields.nth(0) {
+			if let Some((field_name, _field_value)) = fields.next() {
 				Err(StructCreationError::SuperfluousField {
 					r#type: struct_type,
 					field_name: field_name.as_ref().into(),
@@ -384,7 +384,7 @@ impl Value {
 		match &variant_ids[variant_id] {
 			Variant::Struct(_name, field_names, field_types) => {
 				if field_types.is_empty() {
-					if let Some((field_name, _field_value)) = fields.nth(0) {
+					if let Some((field_name, _field_value)) = fields.next() {
 						Err(EnumStructVariantCreationError::SuperfluousField {
 							r#type: enum_type,
 							field_name: field_name.as_ref().into(),

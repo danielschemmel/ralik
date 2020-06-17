@@ -6,7 +6,7 @@ pub enum Enumerat0r {
 	Nuple(),
 	Tuple(i32),
 	Duple(String, Vec<i64>),
-	Struct { foo: char },
+	Struct { foozy: char },
 	EmptyStruct {},
 	Unit,
 }
@@ -52,7 +52,7 @@ impl Interpreter {
 			numerator1: Enumerat0r::Nuple(),
 			numerator2: Enumerat0r::Tuple(7),
 			numerator3: Enumerat0r::Duple("foo".into(), vec![b'b' as i64, b'a' as i64, b'r' as i64]),
-			numerator4: Enumerat0r::Struct { foo: '#' },
+			numerator4: Enumerat0r::Struct { foozy: '#' },
 			numerator5: Enumerat0r::EmptyStruct {},
 			numerator6: Enumerat0r::Unit,
 		}
@@ -106,7 +106,7 @@ impl Interpreter {
 			"Intz",
 			vec![
 				optional_integer_type.clone(),
-				optional_integer_type.clone(),
+				optional_integer_type,
 			],
 		));
 
@@ -114,8 +114,8 @@ impl Interpreter {
 			"Enumerat0r",
 			vec![
 				ralik::types::Variant::Tuple("Nuple".into(), Box::new([])),
-				ralik::types::Variant::Tuple("Tuple".into(), Box::new([integer_type.clone()])),
-				ralik::types::Variant::Tuple("Duple".into(), Box::new([string_type.clone(), array_of_integer_type])),
+				ralik::types::Variant::Tuple("Tuple".into(), Box::new([integer_type])),
+				ralik::types::Variant::Tuple("Duple".into(), Box::new([string_type, array_of_integer_type])),
 				ralik::types::Variant::Struct(
 					"EmptyStruct".into(),
 					vec![].into_iter().collect(),
@@ -123,8 +123,8 @@ impl Interpreter {
 				),
 				ralik::types::Variant::Struct(
 					"Struct".into(),
-					vec![("foo".into(), 0)].into_iter().collect(),
-					Box::new([char_type.clone()]),
+					vec![("foozy".into(), 0)].into_iter().collect(),
+					Box::new([char_type]),
 				),
 				ralik::types::Variant::Unit("Unit".into()),
 			]
@@ -133,18 +133,18 @@ impl Interpreter {
 		let mut interpreter_type = ralik::types::StructType::new(
 			"$Interpreter",
 			vec![
-				("foo1", unit_type.clone()),
-				("foo2", uniter.clone()),
-				("foo3", ntupl.clone()),
-				("foo4", nstruc.clone()),
-				("bar1", tuple_i_i_i_i_type.clone()),
-				("bar2", intz.clone()),
+				("foo1", unit_type),
+				("foo2", uniter),
+				("foo3", ntupl),
+				("foo4", nstruc),
+				("bar1", tuple_i_i_i_i_type),
+				("bar2", intz),
 				("numerator1", enumerat0r_type.clone()),
 				("numerator2", enumerat0r_type.clone()),
 				("numerator3", enumerat0r_type.clone()),
 				("numerator4", enumerat0r_type.clone()),
 				("numerator5", enumerat0r_type.clone()),
-				("numerator6", enumerat0r_type.clone()),
+				("numerator6", enumerat0r_type),
 			]
 			.into_iter(),
 		);

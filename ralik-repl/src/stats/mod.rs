@@ -2,8 +2,8 @@ use anyhow::{anyhow, Result};
 
 use crate::cli::ReturnCode;
 
-mod stats;
-use stats::Stats;
+mod stats_collector;
+use stats_collector::Stats;
 
 #[derive(structopt::StructOpt, Debug)]
 pub struct Args {
