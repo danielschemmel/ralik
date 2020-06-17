@@ -11,10 +11,10 @@ pub struct EnumImpl {
 }
 
 impl EnumType {
-	pub fn new(name: impl Into<Box<str>>, variants: impl Iterator<Item = (impl Into<Box<str>>, Variant)>) -> Self {
+	pub fn new(name: impl Into<Box<str>>, variants: impl Iterator<Item = Variant>) -> Self {
 		let variants = variants
 			.enumerate()
-			.map(|(i, (name, r#type))| ((name.into(), i), r#type))
+			.map(|(i, variant)| ((variant.name().into(), i), variant))
 			.unzip();
 
 		Self::from_base(EnumImpl {

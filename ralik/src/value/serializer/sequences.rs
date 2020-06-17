@@ -24,7 +24,9 @@ impl<'a> SerializeSequence<'a> {
 		len: impl Into<Option<usize>>,
 	) -> Result<Self, SerializerError> {
 		let element_types = match expected_type.kind() {
-			TypeKind::Tuple => ElementTypes::Consuming(expected_type.type_parameters().iter().cloned().rev().collect()),
+			TypeKind::Tuple | TypeKind::TupleStruct => {
+				ElementTypes::Consuming(expected_type.fields().1.iter().cloned().rev().collect())
+			}
 			TypeKind::Array => ElementTypes::Repeating(expected_type.type_parameters()[0].clone()),
 			_ => {
 				return Err(SerializerError::InvalidTypeForSequence {
@@ -78,6 +80,17 @@ impl<'a> SerializeSequence<'a> {
 		match self.expected_type.kind() {
 			TypeKind::Tuple => {
 				let value = Value::new_tuple(self.context, self.result)?;
+				if value.has_type(&self.expected_type) {
+					Ok(value)
+				} else {
+					Err(SerializerError::TypeMismatch {
+						expected: self.expected_type,
+						actual: value.get_type().clone(),
+					})
+				}
+			}
+			TypeKind::TupleStruct => {
+				let value = Value::new_tuple_struct(self.context, self.expected_type.name(), self.result)?;
 				if value.has_type(&self.expected_type) {
 					Ok(value)
 				} else {

@@ -70,6 +70,16 @@ pub enum Variant {
 	Struct(Box<str>, HashMap<Box<str>, usize>, Box<[TypeHandle]>),
 }
 
+impl Variant {
+	pub fn name(&self) -> &str {
+		match &self {
+			Variant::Unit(name) => name,
+			Variant::Tuple(name, _) => name,
+			Variant::Struct(name, _, _) => name,
+		}
+	}
+}
+
 pub trait Type: std::fmt::Debug {
 	fn name(&self) -> &str;
 	fn kind(&self) -> TypeKind;

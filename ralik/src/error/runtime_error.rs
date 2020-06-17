@@ -68,6 +68,18 @@ impl From<StructCreationError> for RuntimeError {
 	}
 }
 
+impl From<TupleStructCreationError> for RuntimeError {
+	fn from(value: TupleStructCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<UnitStructCreationError> for RuntimeError {
+	fn from(value: UnitStructCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
 impl From<ArrayCreationError> for RuntimeError {
 	fn from(value: ArrayCreationError) -> Self {
 		RuntimeError::ValueCreationError(value.into())
@@ -108,6 +120,21 @@ pub enum ValueCreationError {
 
 	#[error("Could not create object of struct type")]
 	StructCreationError(#[from] StructCreationError),
+
+	#[error("Could not create object of tuple struct type")]
+	TupleStructCreationError(#[from] TupleStructCreationError),
+
+	#[error("Could not create object of unit struct type")]
+	UnitStructCreationError(#[from] UnitStructCreationError),
+
+	#[error("Could not create unit variant of enum type")]
+	EnumUnitVariantCreationError(#[from] EnumUnitVariantCreationError),
+
+	#[error("Could not create tuple variant of enum type")]
+	EnumTupleVariantCreationError(#[from] EnumTupleVariantCreationError),
+
+	#[error("Could not create struct variant of enum type")]
+	EnumStructVariantCreationError(#[from] EnumStructVariantCreationError),
 
 	#[error("Could not create object of array type")]
 	ArrayCreationError(#[from] ArrayCreationError),
@@ -157,9 +184,106 @@ pub enum TupleCreationError {
 }
 
 #[derive(Error, Debug)]
+pub enum TupleStructCreationError {
+	#[error("Type is not a valid tuple type")]
+	InvalidType(#[from] InvalidTupleStructType),
+
+	#[error("Tuple type expects {} elements, but {} where provided", .type_element_count, .provided_element_count)]
+	ElementCount {
+		type_element_count: usize,
+		provided_element_count: usize,
+	},
+
+	#[error("Element number {} should have type `{}`, but has type `{}`", .index, .expected.name(), .actual.name())]
+	ElementTypeMismatch {
+		index: usize,
+		expected: TypeHandle,
+		actual: TypeHandle,
+	},
+}
+
+#[derive(Error, Debug)]
 pub enum StructCreationError {
 	#[error("Type is not a valid struct type")]
 	InvalidType(#[from] InvalidStructType),
+
+	#[error("Missing field `{}` while creating object of type `{}`", .field_name, .r#type.name())]
+	MissingField { r#type: TypeHandle, field_name: String },
+
+	#[error("Duplicate field `{}` while creating object of type `{}`", .field_name, .r#type.name())]
+	DuplicateField { r#type: TypeHandle, field_name: String },
+
+	#[error("Superfluous field `{}` while creating object of type `{}`", .field_name, .r#type.name())]
+	SuperfluousField { r#type: TypeHandle, field_name: String },
+
+	#[error("Cannot initialize field `{}` with type `{}` for an object of type `{}` with a value of type `{}`", .field_name, .field_type.name(), .r#type.name(), value_type.name())]
+	FieldTypeMismatch {
+		r#type: TypeHandle,
+		field_name: String,
+		field_type: TypeHandle,
+		value_type: TypeHandle,
+	},
+}
+
+#[derive(Error, Debug)]
+pub enum UnitStructCreationError {
+	#[error("Type is not a valid struct type")]
+	InvalidType(#[from] InvalidUnitStructType),
+
+	#[error("Field `{}` provided while creating object of unit struct type `{}`", .field_name, .r#type.name())]
+	FieldProvided { r#type: TypeHandle, field_name: String },
+}
+
+#[derive(Error, Debug)]
+pub enum EnumUnitVariantCreationError {
+	#[error("Type is not a valid struct type")]
+	InvalidType(#[from] InvalidEnumType),
+
+	#[error("Enum type `{}` does nut provide a variant `{}`", .r#type.name(), .variant_name)]
+	VariantMissing { r#type: TypeHandle, variant_name: String },
+
+	#[error("Variant `{}` of Enum type `{}` is not a unit variant", .variant_name, .r#type.name())]
+	NotUnitVariant { r#type: TypeHandle, variant_name: String },
+
+	#[error("Field `{}` provided while creating object of unit struct type `{}`", .field_name, .r#type.name())]
+	FieldProvided { r#type: TypeHandle, field_name: String },
+}
+
+#[derive(Error, Debug)]
+pub enum EnumTupleVariantCreationError {
+	#[error("Type is not a valid tuple type")]
+	InvalidType(#[from] InvalidEnumType),
+
+	#[error("Enum type `{}` does nut provide a variant `{}`", .r#type.name(), .variant_name)]
+	VariantMissing { r#type: TypeHandle, variant_name: String },
+
+	#[error("Variant `{}` of Enum type `{}` is not a tuple variant", .variant_name, .r#type.name())]
+	NotTupleVariant { r#type: TypeHandle, variant_name: String },
+
+	#[error("Tuple type expects {} elements, but {} where provided", .type_element_count, .provided_element_count)]
+	ElementCount {
+		type_element_count: usize,
+		provided_element_count: usize,
+	},
+
+	#[error("Element number {} should have type `{}`, but has type `{}`", .index, .expected.name(), .actual.name())]
+	ElementTypeMismatch {
+		index: usize,
+		expected: TypeHandle,
+		actual: TypeHandle,
+	},
+}
+
+#[derive(Error, Debug)]
+pub enum EnumStructVariantCreationError {
+	#[error("Type is not a valid struct type")]
+	InvalidType(#[from] InvalidEnumType),
+
+	#[error("Enum type `{}` does nut provide a variant `{}`", .r#type.name(), .variant_name)]
+	VariantMissing { r#type: TypeHandle, variant_name: String },
+
+	#[error("Variant `{}` of Enum type `{}` is not a struct variant", .variant_name, .r#type.name())]
+	NotStructVariant { r#type: TypeHandle, variant_name: String },
 
 	#[error("Missing field `{}` while creating object of type `{}`", .field_name, .r#type.name())]
 	MissingField { r#type: TypeHandle, field_name: String },
@@ -231,14 +355,23 @@ pub enum InvalidTupleType {
 	#[error("The given context does not have the tuple type `{type_name}` registered")]
 	Missing { type_name: String },
 
-	#[error("The type `{type_name}` is not a tuple type")]
-	NotTupleType { type_name: String },
+	#[error("The type `{}` does not have the kind `TypeKind::Tuple`", .r#type.name())]
+	NotTupleType { r#type: TypeHandle },
 
 	#[error("The given context does not have the type `{missing_element_type_name}` registered that is required to create the tuple `{make_tuple_name}`")]
 	MissingSubtype {
 		make_tuple_name: String,
 		missing_element_type_name: String,
 	},
+}
+
+#[derive(Error, Debug)]
+pub enum InvalidTupleStructType {
+	#[error("The given context does not have the tuple type `{type_name}` registered")]
+	Missing { type_name: String },
+
+	#[error("The type `{}` does not have the kind `TypeKind::TupleStruct`", .r#type.name())]
+	NotTupleStructType { r#type: TypeHandle },
 }
 
 #[derive(Error, Debug)]
@@ -255,6 +388,15 @@ pub enum InvalidArrayType {
 }
 
 #[derive(Error, Debug)]
+pub enum InvalidUnitStructType {
+	#[error("The given context does not have the structure type `{type_name}` registered")]
+	Missing { type_name: String },
+
+	#[error("The type `{}` does not have the kind `TypeKind::UnitStruct`", .r#type.name())]
+	NotUnitStructType { r#type: TypeHandle },
+}
+
+#[derive(Error, Debug)]
 pub enum InvalidStructType {
 	#[error("The given context does not have the structure type `{type_name}` registered")]
 	Missing { type_name: String },
@@ -264,4 +406,13 @@ pub enum InvalidStructType {
 
 	#[error("The type `{}` does not provide field names", .r#type.name())]
 	NoFieldNames { r#type: TypeHandle },
+}
+
+#[derive(Error, Debug)]
+pub enum InvalidEnumType {
+	#[error("The given context does not have the structure type `{type_name}` registered")]
+	Missing { type_name: String },
+
+	#[error("The type `{}` does not have the kind `TypeKind::Enum`", .r#type.name())]
+	NotEnumType { r#type: TypeHandle },
 }

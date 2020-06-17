@@ -2,7 +2,7 @@ use my_serde::ser;
 use thiserror::Error;
 
 use crate::error::InvalidStringType;
-use crate::types::TypeKind;
+use crate::types::{TypeKind, Variant};
 use crate::{Context, TypeHandle, Value};
 
 mod maps;
@@ -10,6 +10,9 @@ use maps::SerializeMap;
 
 mod sequences;
 use sequences::SerializeSequence;
+
+mod struct_variant;
+use struct_variant::SerializeStructVariant;
 
 impl Value {
 	pub fn from_serde<T: ser::Serialize>(context: &Context, value: T, type_name: &str) -> Result<Self, SerializerError> {
@@ -38,20 +41,29 @@ pub enum SerializerError {
 	#[error("Context does not contain the requested type `{type_name}`")]
 	MissingType { type_name: String },
 
-	#[error("Type mismatch: Expected type `{}`, but got `{}`", expected.name(), actual.name())]
+	#[error("Type mismatch: Expected type `{}`, but got `{}`", .expected.name(), .actual.name())]
 	TypeMismatch { expected: TypeHandle, actual: TypeHandle },
 
-	#[error("Type mismatch: Expected type `{}`, but serialized a type name `{}`", expected.name(), actual)]
+	#[error("Type mismatch: Expected type `{}`, but serialized a type name `{}`", .expected.name(), .actual)]
 	TypeNameMismatch { expected: TypeHandle, actual: String },
 
-	#[error("Type mismatch: The expected type `{}` cannot be used to serialize a sequence", expected.name())]
+	#[error("Type mismatch: The expected type `{}` cannot be used to serialize a sequence", .expected.name())]
 	InvalidTypeForSequence { expected: TypeHandle },
 
-	#[error("Type mismatch: The expected type `{}` cannot be used to serialize a map", expected.name())]
+	#[error("Type mismatch: The expected type `{}` cannot be used to serialize a map", .expected.name())]
 	InvalidTypeForMap { expected: TypeHandle },
 
-	#[error("Type mismatch: The expected type `{}` cannot be used to serialize a sequence", expected.name())]
+	#[error("Type mismatch: The expected type `{}` cannot be used to serialize a sequence", .expected.name())]
 	InvalidTypeForTuple { expected: TypeHandle },
+
+	#[error("Type mismatch: The expected type `{}` cannot be used to serialize a variant", .expected.name())]
+	InvalidTypeForVariant { expected: TypeHandle },
+
+	#[error("Type mismatch: The expected type `{}` does not contain a variant named `{}`", .expected.name(), .variant_name)]
+	InvalidVariant { expected: TypeHandle, variant_name: String },
+
+	#[error("Variant mismatch: The enum variant `{}::{}` has the wrong kind", .r#type.name(), .variant_name)]
+	VariantMismatch { r#type: TypeHandle, variant_name: String },
 
 	#[error("Cannot instantiate string type for use as key")]
 	InvalidStringTypeForKey(#[from] InvalidStringType),
@@ -59,16 +71,16 @@ pub enum SerializerError {
 	#[error("Floating point numbers are (currently?) not supported by RALIK")]
 	Float,
 
-	#[error("Encountered too many values for type `{}`", r#type.name())]
+	#[error("Encountered too many values for type `{}`", .r#type.name())]
 	TooManyValues { r#type: TypeHandle },
 
-	#[error("Constructing an object of type `{}` requires an additional {} values", r#type.name(), count)]
+	#[error("Constructing an object of type `{}` requires an additional {} values", .r#type.name(), .count)]
 	TooFewValues { r#type: TypeHandle, count: usize },
 
-	#[error("Encountered an unexpected key `{}` while constructing an object of type `{}`", key, r#type.name())]
+	#[error("Encountered an unexpected key `{}` while constructing an object of type `{}`", .key, .r#type.name())]
 	UnexpectedKey { r#type: TypeHandle, key: String },
 
-	#[error("Encountered the key `{}` multiple times while constructing an object of type `{}`", key, r#type.name())]
+	#[error("Encountered the key `{}` multiple times while constructing an object of type `{}`", .key, .r#type.name())]
 	DuplicateKey { r#type: TypeHandle, key: String },
 
 	#[error(transparent)]
@@ -117,7 +129,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	type SerializeTupleVariant = SerializeSequence<'a>;
 	type SerializeMap = SerializeMap<'a>;
 	type SerializeStruct = SerializeMap<'a>;
-	type SerializeStructVariant = SerializeMap<'a>;
+	type SerializeStructVariant = SerializeStructVariant<'a>;
 
 	fn serialize_bool(self, value: bool) -> Result<Self::Ok, Self::Error> {
 		let value = Value::new_bool(self.context, value)?;
@@ -227,7 +239,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 			})
 		} else {
 			let value = match self.expected_type.kind() {
-				TypeKind::Struct => Value::new_unit_struct(self.context, name)?,
+				TypeKind::UnitStruct => Value::new_unit_struct(self.context, name)?,
 				_ => unimplemented!(),
 			};
 			self.expect_typed_value(value)
@@ -236,25 +248,98 @@ impl<'a> ser::Serializer for Serializer<'a> {
 
 	fn serialize_unit_variant(
 		self,
-		_name: &'static str,
+		name: &'static str,
 		_variant_index: u32,
-		_variant: &'static str,
+		variant: &'static str,
 	) -> Result<Self::Ok, Self::Error> {
-		unimplemented!("`serialize_unit_variant` for type {}", self.expected_type.name())
+		if self.expected_type.name() != name {
+			Err(SerializerError::TypeNameMismatch {
+				expected: self.expected_type,
+				actual: name.into(),
+			})
+		} else {
+			match self.expected_type.kind() {
+				TypeKind::Enum => {
+					let (variant_names, variants) = self.expected_type.variants().unwrap();
+					if let Some(variant_id) = variant_names.get(variant) {
+						match variants[*variant_id] {
+							Variant::Unit(_) => Ok(Value::new_enum_unit_variant(self.context, name, variant)?),
+							Variant::Tuple(_, _) => Ok(Value::new_enum_tuple_variant(
+								self.context,
+								name,
+								variant,
+								vec![] as Vec<Value>,
+							)?),
+							Variant::Struct(_, _, _) => Ok(Value::new_enum_struct_variant(
+								self.context,
+								name,
+								variant,
+								(vec![] as Vec<(String, Value)>).into_iter(),
+							)?),
+						}
+					} else {
+						Err(SerializerError::InvalidVariant {
+							expected: self.expected_type,
+							variant_name: variant.into(),
+						})
+					}
+				}
+				_ => Err(SerializerError::InvalidTypeForVariant {
+					expected: self.expected_type,
+				}),
+			}
+		}
 	}
 
-	fn serialize_newtype_struct<T: ?Sized>(self, _name: &'static str, _value: &T) -> Result<Self::Ok, Self::Error> {
+	fn serialize_newtype_struct<T: ?Sized + ser::Serialize>(
+		self,
+		_name: &'static str,
+		_value: &T,
+	) -> Result<Self::Ok, Self::Error> {
 		unimplemented!("`serialize_newtype_struct` for type {}", self.expected_type.name())
 	}
 
-	fn serialize_newtype_variant<T: ?Sized>(
+	fn serialize_newtype_variant<T: ?Sized + ser::Serialize>(
 		self,
-		_name: &'static str,
+		name: &'static str,
 		_variant_index: u32,
-		_variant: &'static str,
-		_value: &T,
+		variant: &'static str,
+		value: &T,
 	) -> Result<Self::Ok, Self::Error> {
-		unimplemented!("`serialize_newtype_variant` for type {}", self.expected_type.name())
+		if self.expected_type.name() != name {
+			Err(SerializerError::TypeNameMismatch {
+				expected: self.expected_type,
+				actual: name.into(),
+			})
+		} else {
+			match self.expected_type.kind() {
+				TypeKind::Enum => {
+					let (variant_names, variants) = self.expected_type.variants().unwrap();
+					if let Some(variant_id) = variant_names.get(variant) {
+						match &variants[*variant_id] {
+							Variant::Tuple(_, types) => Ok(Value::new_enum_tuple_variant(
+								self.context,
+								name,
+								variant,
+								Box::new([Value::from_serde_by_type(self.context, value, types[0].clone())?]) as Box<[Value]>,
+							)?),
+							_ => Err(SerializerError::VariantMismatch {
+								r#type: self.expected_type,
+								variant_name: variant.into(),
+							}),
+						}
+					} else {
+						Err(SerializerError::InvalidVariant {
+							expected: self.expected_type,
+							variant_name: variant.into(),
+						})
+					}
+				}
+				_ => Err(SerializerError::InvalidTypeForVariant {
+					expected: self.expected_type,
+				}),
+			}
+		}
 	}
 
 	fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
@@ -303,11 +388,41 @@ impl<'a> ser::Serializer for Serializer<'a> {
 
 	fn serialize_struct_variant(
 		self,
-		_name: &'static str,
+		name: &'static str,
 		_variant_index: u32,
-		_variant: &'static str,
-		_len: usize,
+		variant: &'static str,
+		len: usize,
 	) -> Result<Self::SerializeStructVariant, Self::Error> {
-		unimplemented!("`serialize_struct_variant` for type {}", self.expected_type.name())
+		if self.expected_type.name() != name {
+			Err(SerializerError::TypeNameMismatch {
+				expected: self.expected_type,
+				actual: name.into(),
+			})
+		} else {
+			match self.expected_type.kind() {
+				TypeKind::Enum => {
+					let (variant_names, variants) = self.expected_type.variants().unwrap();
+					if let Some(&variant_id) = variant_names.get(variant) {
+						match &variants[variant_id] {
+							Variant::Struct(_, _, _) => {
+								SerializeStructVariant::new(self.context, self.expected_type, variant_id, len)
+							}
+							_ => Err(SerializerError::VariantMismatch {
+								r#type: self.expected_type,
+								variant_name: variant.into(),
+							}),
+						}
+					} else {
+						Err(SerializerError::InvalidVariant {
+							expected: self.expected_type,
+							variant_name: variant.into(),
+						})
+					}
+				}
+				_ => Err(SerializerError::InvalidTypeForVariant {
+					expected: self.expected_type,
+				}),
+			}
+		}
 	}
 }

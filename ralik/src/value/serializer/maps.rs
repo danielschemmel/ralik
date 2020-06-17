@@ -270,16 +270,3 @@ impl<'a> ser::SerializeStruct for SerializeMap<'a> {
 		Self::end(self)
 	}
 }
-
-impl<'a> ser::SerializeStructVariant for SerializeMap<'a> {
-	type Ok = Value;
-	type Error = SerializerError;
-
-	fn serialize_field<T: ser::Serialize + ?Sized>(&mut self, key: &'static str, value: &T) -> Result<(), Self::Error> {
-		Self::serialize_field(self, key, value)
-	}
-
-	fn end(self) -> Result<Self::Ok, Self::Error> {
-		Self::end(self)
-	}
-}

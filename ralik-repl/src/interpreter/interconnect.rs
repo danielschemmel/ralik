@@ -4,9 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum Enumerat0r {
 	Tuple(i32),
-	/*Struct {
-		foo: char,
-	},*/
+	Struct { foo: char },
 	Unit,
 }
 
@@ -23,6 +21,9 @@ pub struct Interpreter {
 	foo2: Uniter,
 	bar1: (i8, i16, i32, i64),
 	bar2: Intz,
+	numerator1: Enumerat0r,
+	numerator2: Enumerat0r,
+	numerator3: Enumerat0r,
 }
 
 impl Interpreter {
@@ -32,6 +33,9 @@ impl Interpreter {
 			foo2: Uniter,
 			bar1: (8, 16, 32, 64),
 			bar2: Intz(8, 16, 32, 64),
+			numerator1: Enumerat0r::Unit,
+			numerator2: Enumerat0r::Tuple(7),
+			numerator3: Enumerat0r::Struct { foo: '#' },
 		}
 	}
 
@@ -43,6 +47,11 @@ impl Interpreter {
 
 		let integer_type = context
 			.get_integer_type()
+			.map_err(|err| super::print_error_chain(&err))
+			.unwrap();
+
+		let char_type = context
+			.get_char_type()
 			.map_err(|err| super::print_error_chain(&err))
 			.unwrap();
 
@@ -63,20 +72,19 @@ impl Interpreter {
 			],
 		));
 
-		/*let t1 = context
-		.get_tuple_type(&["Integer"])
-		.map_err(|err| super::print_error_chain(&err))
-		.unwrap();*/
-		// let t2 = context.insert_type(ralik::types::StructType::new(name, fields));
-
-		/*let enumerat0r_type = context.insert_type(ralik::types::EnumType::new(
+		let enumerat0r_type = context.insert_type(ralik::types::EnumType::new(
 			"Enumerat0r",
 			vec![
-				("Tuple", ralik::types::Variant::Tuple(Box::new([t1]))),
-				("Unit", ralik::types::Variant::Unit),
+				ralik::types::Variant::Tuple("Tuple".into(), Box::new([integer_type.clone()])),
+				ralik::types::Variant::Struct(
+					"Struct".into(),
+					vec![("foo".into(), 0)].into_iter().collect(),
+					Box::new([char_type.clone()]),
+				),
+				ralik::types::Variant::Unit("Unit".into()),
 			]
 			.into_iter(),
-		));*/
+		));
 		let mut interpreter_type = ralik::types::StructType::new(
 			"$Interpreter",
 			vec![
@@ -84,6 +92,9 @@ impl Interpreter {
 				("foo2", uniter.clone()),
 				("bar1", tuple_i_i_i_i_type.clone()),
 				("bar2", intz.clone()),
+				("numerator1", enumerat0r_type.clone()),
+				("numerator2", enumerat0r_type.clone()),
+				("numerator3", enumerat0r_type.clone()),
 			]
 			.into_iter(),
 		);
