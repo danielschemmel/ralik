@@ -27,6 +27,10 @@ mod integer;
 pub use self::integer::name as integer_name;
 pub use self::integer::IntegerType;
 
+mod option;
+pub(crate) use self::option::make_option_name;
+pub(crate) use self::option::OptionType;
+
 mod string;
 pub use self::string::name as string_name;
 pub use self::string::StringType;

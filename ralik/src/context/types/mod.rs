@@ -132,6 +132,36 @@ impl Context {
 		Ok(array_type)
 	}
 
+	pub fn get_option_type(&self, element_type_name: &str) -> Result<TypeHandle, InvalidArrayType> {
+		let name = crate::types::make_option_name(element_type_name);
+		if let Some(option_type) = self.get_type(&name) {
+			return Ok(option_type);
+		}
+
+		// The fast path failed, we have to construct this tuple type. To ensure internal consistency, we have to claim a
+		// write lock at this point, and can only release it once the newly created type is inserted.
+		let mut types = self.0.types.data.write().unwrap();
+
+		// Some other thread may have concurrently created this type in between our previous check and the acquisition of
+		// the write lock, so we need to check again.
+		if let Some(option_type) = types.get(name.as_str()) {
+			return Ok(option_type.into());
+		}
+
+		let element_type =
+			types
+				.get(element_type_name)
+				.map(TypeHandle::from)
+				.ok_or_else(|| InvalidArrayType::MissingSubtype {
+					element_type_name: element_type_name.into(),
+				})?;
+
+		let option_type = TypeHandle::new(crate::types::OptionType::new(name, element_type));
+		assert!(types.insert(option_type.clone().into()) == true);
+
+		Ok(option_type)
+	}
+
 	pub fn insert_type(&self, value: impl Type + 'static) -> TypeHandle {
 		let handle = TypeHandle::new(value);
 

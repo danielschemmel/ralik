@@ -130,6 +130,14 @@ impl Value {
 		}
 	}
 
+	pub fn as_variant_id(&self) -> Option<usize> {
+		match &self.data {
+			Data::UnitVariant(id) => Some(*id),
+			Data::Variant(id, _) => Some(*id),
+			_ => None,
+		}
+	}
+
 	pub fn field(&self, name: &str) -> Option<&Value> {
 		match &self.data {
 			Data::Array(fields) => {

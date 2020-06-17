@@ -246,11 +246,53 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_none(self) -> Result<Self::Ok, Self::Error> {
-		unimplemented!("`serialize_none` for type {}", self.expected_type.name())
+		let value = match self.expected_type.kind() {
+			TypeKind::Enum => Value::new_enum_unit_variant(self.context, self.expected_type.name(), "None")?,
+			_ => unimplemented!(),
+		};
+		self.expect_typed_value(value)
 	}
 
-	fn serialize_some<T: ?Sized>(self, _value: &T) -> Result<Self::Ok, Self::Error> {
-		unimplemented!("`serialize_some` for type {}", self.expected_type.name())
+	fn serialize_some<T: ?Sized + ser::Serialize>(self, value: &T) -> Result<Self::Ok, Self::Error> {
+		let value = match self.expected_type.kind() {
+			TypeKind::Enum => {
+				let (variant_names, variants) = self.expected_type.variants().unwrap();
+				match variant_names.get("Some").map(|&id| &variants[id]) {
+					Some(Variant::Tuple(_, element_types)) => {
+						if element_types.len() != 1 {
+							return Err(SerializerError::VariantMismatch {
+								r#type: self.expected_type,
+								variant_name: "Some".into(),
+							});
+						}
+						Value::new_enum_tuple_variant(
+							self.context,
+							self.expected_type.name(),
+							"Some",
+							Box::new([Value::from_serde_by_type(
+								self.context,
+								value,
+								element_types[0].clone(),
+							)?]) as Box<[Value]>,
+						)?
+					}
+					Some(_) => {
+						return Err(SerializerError::VariantMismatch {
+							r#type: self.expected_type,
+							variant_name: "Some".into(),
+						})
+					}
+					None => {
+						return Err(SerializerError::InvalidVariant {
+							expected: self.expected_type,
+							variant_name: "Some".into(),
+						})
+					}
+				}
+			}
+			_ => unimplemented!(),
+		};
+		self.expect_typed_value(value)
 	}
 
 	fn serialize_unit(self) -> Result<Self::Ok, Self::Error> {

@@ -21,7 +21,7 @@ pub struct NTupl();
 pub struct NStruc {}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Intz(i8, i16, i32, i64);
+pub struct Intz(Option<i8>, Option<i16>);
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename = "$Interpreter")]
@@ -48,7 +48,7 @@ impl Interpreter {
 			foo3: NTupl(),
 			foo4: NStruc {},
 			bar1: (8, 16, 32, 64),
-			bar2: Intz(8, 16, 32, 64),
+			bar2: Intz(Some(8), None),
 			numerator1: Enumerat0r::Nuple(),
 			numerator2: Enumerat0r::Tuple(7),
 			numerator3: Enumerat0r::Duple("foo".into(), vec![b'b' as i64, b'a' as i64, b'r' as i64]),
@@ -68,6 +68,10 @@ impl Interpreter {
 			.get_integer_type()
 			.map_err(|err| super::print_error_chain(&err))
 			.unwrap();
+
+		let optional_integer_type = context.get_option_type("Integer")
+		.map_err(|err| super::print_error_chain(&err))
+		.unwrap();
 
 		let char_type = context
 			.get_char_type()
@@ -101,10 +105,8 @@ impl Interpreter {
 		let intz = context.insert_type(ralik::types::TupleStructType::new(
 			"Intz",
 			vec![
-				integer_type.clone(),
-				integer_type.clone(),
-				integer_type.clone(),
-				integer_type.clone(),
+				optional_integer_type.clone(),
+				optional_integer_type.clone(),
 			],
 		));
 
