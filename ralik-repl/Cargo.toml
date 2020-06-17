@@ -1,6 +1,6 @@
 [package]
 name = "ralik-repl"
-version = "0.0.0"
+version = "0.0.1-alpha.0"
 authors = ["Daniel Schemmel <daniel@schemmel.net>"]
 edition = "2018"
 publish = ["crates-io"]
@@ -20,7 +20,7 @@ serde_json = "1"
 structopt = "0.3"
 toml = "0.5"
 
-ralik = { version = "0.0.0", path = "../ralik", features = ["serde"] }
+ralik = { version = "0.0.1-alpha.0", path = "../ralik", features = ["serde"] }
 
 [dev-dependencies]
 pretty_assertions = "0.6"
