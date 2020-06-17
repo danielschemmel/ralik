@@ -117,7 +117,9 @@ impl Value {
 
 	pub fn as_array(&self) -> Option<&[Value]> {
 		match &self.data {
+			Data::Empty => Some(&[]),
 			Data::Array(value) => Some(value.as_ref()),
+			Data::UnitVariant(_id) => Some(&[]),
 			Data::Variant(_id, value) => Some(value.as_ref()),
 			_ => None,
 		}
