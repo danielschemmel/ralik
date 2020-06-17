@@ -28,11 +28,10 @@ impl<'a> SerializeSequence<'a> {
 				ElementTypes::Consuming(expected_type.fields().1.iter().cloned().rev().collect())
 			}
 			TypeKind::Array => ElementTypes::Repeating(expected_type.type_parameters()[0].clone()),
-			_ => {
+			_ => 
 				return Err(SerializerError::InvalidTypeForSequence {
 					expected: expected_type,
-				})
-			}
+				}),
 		};
 
 		Ok(Self {
@@ -137,19 +136,6 @@ impl<'a> ser::SerializeTuple for SerializeSequence<'a> {
 }
 
 impl<'a> ser::SerializeTupleStruct for SerializeSequence<'a> {
-	type Ok = Value;
-	type Error = SerializerError;
-
-	fn serialize_field<T: ser::Serialize + ?Sized>(&mut self, value: &T) -> Result<(), Self::Error> {
-		Self::serialize_element(self, value)
-	}
-
-	fn end(self) -> Result<Self::Ok, Self::Error> {
-		Self::end(self)
-	}
-}
-
-impl<'a> ser::SerializeTupleVariant for SerializeSequence<'a> {
 	type Ok = Value;
 	type Error = SerializerError;
 

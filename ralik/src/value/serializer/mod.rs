@@ -14,6 +14,9 @@ use sequences::SerializeSequence;
 mod struct_variant;
 use struct_variant::SerializeStructVariant;
 
+mod tuple_variant;
+use tuple_variant::SerializeTupleVariant;
+
 impl Value {
 	pub fn from_serde<T: ser::Serialize>(context: &Context, value: T, type_name: &str) -> Result<Self, SerializerError> {
 		let r#type = context
@@ -58,6 +61,9 @@ pub enum SerializerError {
 
 	#[error("Type mismatch: The expected type `{}` cannot be used to serialize a variant", .expected.name())]
 	InvalidTypeForVariant { expected: TypeHandle },
+
+	#[error("Type mismatch: The expected type `{}` cannot be used to serialize a string", .expected.name())]
+	InvalidTypeForString { expected: TypeHandle },
 
 	#[error("Type mismatch: The expected type `{}` does not contain a variant named `{}`", .expected.name(), .variant_name)]
 	InvalidVariant { expected: TypeHandle, variant_name: String },
@@ -126,7 +132,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	type SerializeSeq = SerializeSequence<'a>;
 	type SerializeTuple = SerializeSequence<'a>;
 	type SerializeTupleStruct = SerializeSequence<'a>;
-	type SerializeTupleVariant = SerializeSequence<'a>;
+	type SerializeTupleVariant = SerializeTupleVariant<'a>;
 	type SerializeMap = SerializeMap<'a>;
 	type SerializeStruct = SerializeMap<'a>;
 	type SerializeStructVariant = SerializeStructVariant<'a>;
@@ -200,7 +206,28 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_str(self, value: &str) -> Result<Self::Ok, Self::Error> {
-		let value = Value::new_string(self.context, value)?;
+		let value = match self.expected_type.kind() {
+			TypeKind::String => Value::new_string(self.context, value)?,
+			TypeKind::Array => {
+				let element_type = &self.expected_type.type_parameters()[0];
+				match element_type.kind() {
+					TypeKind::Char => {
+						let chars: Result<Vec<Value>, _> = value.chars().map(|c| Value::new_char(self.context, c)).collect();
+						Value::new_array(self.context, element_type, chars?)?
+					}
+					_ => {
+						return Err(SerializerError::InvalidTypeForString {
+							expected: self.expected_type,
+						})
+					}
+				}
+			}
+			_ => {
+				return Err(SerializerError::InvalidTypeForString {
+					expected: self.expected_type,
+				})
+			}
+		};
 		self.expect_typed_value(value)
 	}
 
@@ -363,12 +390,19 @@ impl<'a> ser::Serializer for Serializer<'a> {
 
 	fn serialize_tuple_variant(
 		self,
-		_name: &'static str,
+		name: &'static str,
 		_variant_index: u32,
-		_variant: &'static str,
-		_len: usize,
+		variant: &'static str,
+		len: usize,
 	) -> Result<Self::SerializeTupleVariant, Self::Error> {
-		unimplemented!("`serialize_tuple_variant` for type {}", self.expected_type.name())
+		if self.expected_type.name() != name {
+			Err(SerializerError::TypeNameMismatch {
+				expected: self.expected_type,
+				actual: name.into(),
+			})
+		} else {
+			SerializeTupleVariant::new(self.context, self.expected_type, variant, len)
+		}
 	}
 
 	fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
