@@ -3,8 +3,8 @@ use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
 pub(super) struct Stats {
-	ralik_crate: RalikCrate,
-	ralik_repl_crate: RalikReplCrate,
+	//ralik_crate: RalikCrate,
+	//ralik_repl_crate: RalikReplCrate,
 	values: Values,
 }
 
@@ -33,13 +33,14 @@ impl std::fmt::Display for Stats {
 impl Stats {
 	pub fn new() -> Self {
 		Self {
-			ralik_crate: RalikCrate::new(),
-			ralik_repl_crate: RalikReplCrate::new(),
+			//ralik_crate: RalikCrate::new(),
+			//ralik_repl_crate: RalikReplCrate::new(),
 			values: Values::new(),
 		}
 	}
 }
 
+/*
 impl RalikCrate {
 	pub fn new() -> Self {
 		let ralik = crate::build_info()
@@ -62,6 +63,7 @@ impl RalikReplCrate {
 		}
 	}
 }
+*/
 
 impl Values {
 	pub fn new() -> Self {
