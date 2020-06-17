@@ -344,7 +344,7 @@ fn parse_field_expression(input: parse::ParseStream, expression: ast::Expression
 		if lookahead.peek(syn::token::Paren) {
 			let parenthesized;
 			parenthesized!(parenthesized in input);
-			let arguments = parse_arguments(&parenthesized)?;
+			let arguments = parenthesized.parse::<ast::Arguments>()?;
 			Ok(ast::Expression::Suffix(
 				Box::new(expression),
 				ast::Suffix::FunctionCall(id.to_string(), id.span(), arguments, parenthesized.span()),
@@ -459,7 +459,7 @@ fn parse_atomic_expression(input: parse::ParseStream, lookahead: Lookahead1) -> 
 		if lookahead.peek(syn::token::Paren) {
 			let arguments;
 			parenthesized!(arguments in input);
-			let (arguments, arguments_span) = (parse_arguments(&arguments)?, arguments.span());
+			let (arguments, arguments_span) = (arguments.parse::<ast::Arguments>()?, arguments.span());
 			Ok(ast::AtomicExpression::FunctionCall(
 				id.to_string(),
 				id.span(),
@@ -472,15 +472,15 @@ fn parse_atomic_expression(input: parse::ParseStream, lookahead: Lookahead1) -> 
 			let (arguments, arguments_span) = if lookahead.peek(syn::token::Paren) {
 				let arguments;
 				parenthesized!(arguments in input);
-				(parse_arguments(&arguments)?, arguments.span())
+				(arguments.parse::<ast::Arguments>()?, arguments.span())
 			} else if lookahead.peek(syn::token::Brace) {
 				let arguments;
 				braced!(arguments in input);
-				(parse_arguments(&arguments)?, arguments.span())
+				(arguments.parse::<ast::Arguments>()?, arguments.span())
 			} else if lookahead.peek(syn::token::Bracket) {
 				let arguments;
 				bracketed!(arguments in input);
-				(parse_arguments(&arguments)?, arguments.span())
+				(arguments.parse::<ast::Arguments>()?, arguments.span())
 			} else {
 				return Err(lookahead.error());
 			};
@@ -513,22 +513,24 @@ impl parse::Parse for ast::Prefix {
 	}
 }
 
-fn parse_arguments(input: parse::ParseStream) -> parse::Result<ast::Arguments> {
-	let mut arguments = Vec::new();
-	while !input.is_empty() {
-		let (expression, lookahead) = parse_expression(input)?;
-		arguments.push(expression);
+impl parse::Parse for ast::Arguments {
+	fn parse(input: parse::ParseStream) -> parse::Result<Self> {
+		let mut arguments = Vec::new();
+		while !input.is_empty() {
+			let (expression, lookahead) = parse_expression(input)?;
+			arguments.push(expression);
 
-		if input.is_empty() {
-			break;
+			if input.is_empty() {
+				break;
+			}
+
+			if lookahead.peek(Token![,]) {
+				input.parse::<Token![,]>()?;
+			} else {
+				return Err(lookahead.error());
+			}
 		}
 
-		if lookahead.peek(Token![,]) {
-			input.parse::<Token![,]>()?;
-		} else {
-			return Err(lookahead.error());
-		}
+		Ok(ast::Arguments { arguments })
 	}
-
-	Ok(ast::Arguments { arguments })
 }

@@ -1,4 +1,7 @@
+use proc_macro2::Span;
 use thiserror::Error;
+
+use std::convert::TryInto;
 
 use super::{Location, RuntimeError};
 
@@ -89,4 +92,53 @@ pub enum EvalError {
 
 	#[error("Expressions creating empty arrays are not currently supported.")]
 	EmptyArray { at: Location },
+}
+
+impl EvalError {
+	pub fn span(&self) -> Option<Span> {
+		match self {
+			EvalError::ParseError { cause: err } => Some(err.span()),
+			EvalError::UnknownVariable { name: _, at: loc }
+			| EvalError::UnknownFunction { name: _, at: loc }
+			| EvalError::UnknownMemberFunction {
+				name: _,
+				type_name: _,
+				at: loc,
+			}
+			| EvalError::UnknownMacro { name: _, at: loc }
+			| EvalError::InvalidFieldAccess {
+				member_name: _,
+				type_name: _,
+				at: loc,
+			}
+			| EvalError::MixedArray {
+				index_1: _,
+				type_1: _,
+				index_2: _,
+				type_2: _,
+				at: loc,
+			}
+			| EvalError::NotBoolInLazyAnd { type_name: _, at: loc }
+			| EvalError::NotBoolInLazyOr { type_name: _, at: loc }
+			| EvalError::FunctionRuntimeError {
+				name: _,
+				source: _,
+				at: loc,
+			}
+			| EvalError::MacroRuntimeError {
+				name: _,
+				source: _,
+				at: loc,
+			}
+			| EvalError::MemberRuntimeError {
+				name: _,
+				type_name: _,
+				source: _,
+				at: loc,
+			}
+			| EvalError::ObjectCreationError { source: _, at: loc }
+			| EvalError::InvalidCoreType { source: _, at: loc }
+			| EvalError::EmptyArray { at: loc } => loc.try_into().ok(),
+		}
+	}
 }

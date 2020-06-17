@@ -8,7 +8,8 @@ mod runtime_error;
 pub use runtime_error::{
 	ArrayCreationError, BoolCreationError, CharCreationError, EnumStructVariantCreationError,
 	EnumTupleVariantCreationError, EnumUnitVariantCreationError, IntegerCreationError, InvalidArrayType, InvalidBoolType,
-	InvalidCharType, InvalidCoreType, InvalidEnumType, InvalidIntegerType, InvalidStringType, InvalidStructType,
-	InvalidTupleStructType, InvalidTupleType, InvalidUnitStructType, Overflow, RuntimeError, StringCreationError,
-	StructCreationError, TupleCreationError, TupleStructCreationError, UnitStructCreationError, ValueCreationError,
+	InvalidCharType, InvalidCoreType, InvalidEnumType, InvalidIntegerType, InvalidOptionType, InvalidStringType,
+	InvalidStructType, InvalidTupleStructType, InvalidTupleType, InvalidUnitStructType, Overflow, RuntimeError,
+	StringCreationError, StructCreationError, TupleCreationError, TupleStructCreationError, UnitStructCreationError,
+	ValueCreationError,
 };

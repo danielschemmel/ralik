@@ -19,6 +19,22 @@ impl From<&Span> for Location {
 	}
 }
 
+impl std::convert::TryFrom<Location> for Span {
+	type Error = ();
+	fn try_from(value: Location) -> Result<Self, Self::Error> {
+		match value {
+			Location::Spanned(span) => Ok(span),
+		}
+	}
+}
+
+impl std::convert::TryFrom<&Location> for Span {
+	type Error = ();
+	fn try_from(value: &Location) -> Result<Self, Self::Error> {
+		Span::try_from(*value)
+	}
+}
+
 impl std::fmt::Display for Location {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		match self {

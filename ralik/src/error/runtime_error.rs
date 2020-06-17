@@ -80,6 +80,24 @@ impl From<UnitStructCreationError> for RuntimeError {
 	}
 }
 
+impl From<EnumUnitVariantCreationError> for RuntimeError {
+	fn from(value: EnumUnitVariantCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<EnumTupleVariantCreationError> for RuntimeError {
+	fn from(value: EnumTupleVariantCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
+impl From<EnumStructVariantCreationError> for RuntimeError {
+	fn from(value: EnumStructVariantCreationError) -> Self {
+		RuntimeError::ValueCreationError(value.into())
+	}
+}
+
 impl From<ArrayCreationError> for RuntimeError {
 	fn from(value: ArrayCreationError) -> Self {
 		RuntimeError::ValueCreationError(value.into())
@@ -372,6 +390,19 @@ pub enum InvalidTupleStructType {
 
 	#[error("The type `{}` does not have the kind `TypeKind::TupleStruct`", .r#type.name())]
 	NotTupleStructType { r#type: TypeHandle },
+}
+
+#[derive(Error, Debug)]
+pub enum InvalidOptionType {
+	#[error("The given context does not have the type `{element_type_name}` registered to make an array out of")]
+	MissingSubtype { element_type_name: String },
+
+	#[error("The value `{value:?}` does not have the right type to be used in an array of type `{type_name}` (error occurred at index {index})")]
+	InvalidElement {
+		value: crate::Value,
+		index: usize,
+		type_name: String,
+	},
 }
 
 #[derive(Error, Debug)]

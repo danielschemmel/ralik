@@ -1,5 +1,6 @@
 use crate::error::{
-	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType,
+	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidOptionType, InvalidStringType,
+	InvalidTupleType,
 };
 use crate::{Type, TypeHandle};
 
@@ -132,7 +133,7 @@ impl Context {
 		Ok(array_type)
 	}
 
-	pub fn get_option_type(&self, element_type_name: &str) -> Result<TypeHandle, InvalidArrayType> {
+	pub fn get_option_type(&self, element_type_name: &str) -> Result<TypeHandle, InvalidOptionType> {
 		let name = crate::types::make_option_name(element_type_name);
 		if let Some(option_type) = self.get_type(&name) {
 			return Ok(option_type);
@@ -152,7 +153,7 @@ impl Context {
 			types
 				.get(element_type_name)
 				.map(TypeHandle::from)
-				.ok_or_else(|| InvalidArrayType::MissingSubtype {
+				.ok_or_else(|| InvalidOptionType::MissingSubtype {
 					element_type_name: element_type_name.into(),
 				})?;
 

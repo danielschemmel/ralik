@@ -61,6 +61,36 @@ impl Context {
 		context.insert_type(crate::types::IntegerType::new());
 		context.insert_type(crate::types::StringType::new());
 
+		context.insert_macro("concat", |context, mut arguments| {
+			let mut result = String::new();
+
+			while !arguments.is_empty() {
+				result.push_str(
+					arguments[0]
+						.as_string()
+						.ok_or_else(|| anyhow!("`include_str!` takes exactly one argument of string type"))?,
+				);
+				arguments = &arguments[1..];
+			}
+
+			Ok(Value::new_string(context, result)?)
+		});
+
+		context.insert_macro("env", |context, arguments| {
+			if arguments.len() != 1 {
+				return Err(anyhow!("`env!` takes exactly one argument of string type").into());
+			}
+			let value = arguments[0]
+				.as_string()
+				.ok_or_else(|| anyhow!("`env!` takes exactly one argument of string type"))?;
+
+			if let Ok(content) = std::env::var(value) {
+				Ok(Value::new_string(context, content)?)
+			} else {
+				Err(anyhow!("Environment variable {} is not set", value).into())
+			}
+		});
+
 		context.insert_macro("include", |context, arguments| {
 			if arguments.len() != 1 {
 				return Err(anyhow!("`include!` takes exactly one argument of string type").into());
@@ -113,6 +143,29 @@ impl Context {
 			let content = read_to_string(value).map_err(|err| anyhow!(err))?;
 
 			Ok(Value::new_string(context, content)?)
+		});
+
+		context.insert_macro("option_env", |context, arguments| {
+			if arguments.len() != 1 {
+				return Err(anyhow!("`option_env!` takes exactly one argument of string type").into());
+			}
+			let value = arguments[0]
+				.as_string()
+				.ok_or_else(|| anyhow!("`option_env!` takes exactly one argument of string type"))?;
+
+			let option_type = context
+				.get_option_type("std::string::String")
+				.map_err(|err| anyhow!("Could not create option type: {}", err))?;
+			if let Ok(content) = std::env::var(value) {
+				Ok(Value::new_enum_tuple_variant(
+					context,
+					option_type.name(),
+					"Some",
+					Box::new([Value::new_string(context, content)?]) as Box<[Value]>,
+				)?)
+			} else {
+				Ok(Value::new_enum_unit_variant(context, option_type.name(), "None")?)
+			}
 		});
 
 		context.insert_macro("panic", |_context, arguments| {
