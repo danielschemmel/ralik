@@ -1,8 +1,21 @@
+use build_info::semver::Version;
 use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
 pub(super) struct Stats {
+	ralik_crate: RalikCrate,
+	ralik_repl_crate: RalikReplCrate,
 	values: Values,
+}
+
+#[derive(Serialize, Clone, Debug)]
+struct RalikCrate {
+	version: Version,
+}
+
+#[derive(Serialize, Clone, Debug)]
+struct RalikReplCrate {
+	version: Version,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -19,7 +32,35 @@ impl std::fmt::Display for Stats {
 
 impl Stats {
 	pub fn new() -> Self {
-		Self { values: Values::new() }
+		Self {
+			ralik_crate: RalikCrate::new(),
+			ralik_repl_crate: RalikReplCrate::new(),
+			values: Values::new(),
+		}
+	}
+}
+
+impl RalikCrate {
+	pub fn new() -> Self {
+		let ralik = crate::build_info()
+			.crate_info
+			.dependencies
+			.iter()
+			.filter(|dependency| dependency.name == "ralik")
+			.nth(0)
+			.unwrap();
+
+		Self {
+			version: ralik.version.clone(),
+		}
+	}
+}
+
+impl RalikReplCrate {
+	pub fn new() -> Self {
+		Self {
+			version: crate::build_info().crate_info.version.clone(),
+		}
 	}
 }
 

@@ -8,6 +8,8 @@ mod util;
 use anyhow::{Context, Result};
 use cli::{Args, ReturnCode};
 
+build_info::build_info!(fn build_info);
+
 fn parse_arguments() -> Result<ReturnCode> {
 	use structopt::clap::ErrorKind;
 	use structopt::StructOpt;

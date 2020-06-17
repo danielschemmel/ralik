@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 anyhow = "1"
 atty = "0.2"
-build-info = { version = "0.0.19", default_features = false }
+build-info = { version = "0.0.19", features = ["serde"] }
 ctrlc = "3"
 rustyline = "6"
 serde = { version = "1", features = ["derive"] }

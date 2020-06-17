@@ -28,10 +28,11 @@ impl<'a> SerializeSequence<'a> {
 				ElementTypes::Consuming(expected_type.fields().1.iter().cloned().rev().collect())
 			}
 			TypeKind::Array => ElementTypes::Repeating(expected_type.type_parameters()[0].clone()),
-			_ => 
+			_ => {
 				return Err(SerializerError::InvalidTypeForSequence {
 					expected: expected_type,
-				}),
+				})
+			}
 		};
 
 		Ok(Self {

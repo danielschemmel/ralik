@@ -13,6 +13,7 @@
 		"ralik",
 		"readline",
 		"rustyline",
+		"semver",
 		"signum",
 		"structopt",
 		"thiserror"

@@ -18,7 +18,7 @@ pub struct Uniter;
 pub struct NTupl();
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct NStruc{}
+pub struct NStruc {}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Intz(i8, i16, i32, i64);
@@ -46,7 +46,7 @@ impl Interpreter {
 			foo1: (),
 			foo2: Uniter,
 			foo3: NTupl(),
-			foo4: NStruc{},
+			foo4: NStruc {},
 			bar1: (8, 16, 32, 64),
 			bar2: Intz(8, 16, 32, 64),
 			numerator1: Enumerat0r::Nuple(),
@@ -87,8 +87,11 @@ impl Interpreter {
 		let uniter = context.insert_type(ralik::types::UnitStructType::new("Uniter"));
 
 		let ntupl = context.insert_type(ralik::types::TupleStructType::new("NTupl", []));
-		
-		let nstruc = context.insert_type(ralik::types::StructType::new("NStruc", (vec![] as Vec<(String, ralik::types::TypeHandle)>).into_iter()));
+
+		let nstruc = context.insert_type(ralik::types::StructType::new(
+			"NStruc",
+			(vec![] as Vec<(String, ralik::types::TypeHandle)>).into_iter(),
+		));
 
 		let tuple_i_i_i_i_type = context
 			.get_tuple_type(["Integer", "Integer", "Integer", "Integer"].iter())
