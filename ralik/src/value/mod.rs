@@ -1,6 +1,7 @@
 use num::BigInt;
 use num::ToPrimitive;
 
+use crate::context::TypeId;
 use crate::types::Variant;
 use crate::TypeHandle;
 
@@ -34,8 +35,12 @@ impl Value {
 		&self.r#type
 	}
 
-	pub fn has_type(&self, expected_type: &TypeHandle) -> bool {
-		TypeHandle::is_same(&self.r#type, expected_type)
+	pub fn has_type(&self, r#type: &TypeHandle) -> bool {
+		self.r#type.is_same(r#type)
+	}
+
+	pub(crate) fn has_type_id(&self, type_id: TypeId) -> bool {
+		self.r#type.refers_to(type_id)
 	}
 
 	pub fn as_nothing(&self) -> Option<()> {
@@ -143,11 +148,11 @@ impl Value {
 	pub fn field(&self, name: &str) -> Option<&Value> {
 		match &self.data {
 			Data::Array(fields) => {
-				let field_names = self.r#type.fields().0?;
+				let field_names = self.r#type.fields().0;
 				Some(&fields[*field_names.get(name)?])
 			}
 			Data::Variant(id, fields) => {
-				let variant = &self.r#type.variants()?.1[*id];
+				let variant = &self.r#type.variants().1[*id];
 				match variant {
 					Variant::Struct(_name, field_names, _field_types) => Some(&fields[*field_names.get(name)?]),
 					_ => None,

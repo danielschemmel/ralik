@@ -1,202 +1,233 @@
-use crate::error::{
-	InvalidArrayType, InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidOptionType, InvalidStringType,
-	InvalidTupleType,
-};
-use crate::{Type, TypeHandle};
+use std::collections::hash_map::HashMap;
+use std::sync::atomic::Ordering;
+use std::sync::Arc;
 
-use super::Context;
+use crate::error::{InvalidBoolType, InvalidCharType, InvalidIntegerType, InvalidStringType, InvalidTupleType};
+use crate::types::{Type, TypeBuilder, Variant, VariantBuilder};
 
-mod type_container;
-pub(super) use type_container::TypeContainer;
+use super::{Context, Thing, TypeId};
+
+mod generics;
+mod type_handle;
+pub use type_handle::TypeHandle;
 
 impl Context {
 	pub fn get_type(&self, key: impl AsRef<str>) -> Option<TypeHandle> {
-		self
-			.0
-			.types
-			.data
-			.read()
-			.unwrap()
-			.get(key.as_ref())
-			.map(TypeHandle::from)
+		let names = self.0.names.read().unwrap();
+		match names.get(key.as_ref()) {
+			Some(Thing::Type(id)) => Some(TypeHandle::from_type_id(self.clone(), *id)),
+			_ => return None,
+		}
 	}
 
 	pub fn get_unit_type(&self) -> Result<TypeHandle, InvalidTupleType> {
-		let name = "()";
-		if let Some(tuple_type) = self.get_type(name) {
-			return Ok(tuple_type);
-		}
-
-		// The fast path failed, we have to construct this tuple type. To ensure internal consistency, we have to claim a
-		// write lock at this point, and can only release it once the newly created type is inserted.
-		let mut types = self.0.types.data.write().unwrap();
-
-		// Some other thread may have concurrently created this type in between our previous check and the acquisition of
-		// the write lock, so we need to check again.
-		if let Some(tuple_type) = types.get(name) {
-			return Ok(tuple_type.into());
-		}
-
-		let tuple_type = TypeHandle::new(crate::types::TupleType::new_unit("()"));
-		assert!(types.insert(tuple_type.clone().into()) == true);
-
-		Ok(tuple_type)
+		unimplemented!()
 	}
 
 	pub fn get_bool_type(&self) -> Result<TypeHandle, InvalidBoolType> {
 		self
-			.get_type(crate::types::bool_name())
+			.get_type(crate::types::make_bool_name())
 			.ok_or_else(|| InvalidBoolType::Missing)
 	}
 
 	pub fn get_char_type(&self) -> Result<TypeHandle, InvalidCharType> {
 		self
-			.get_type(crate::types::char_name())
+			.get_type(crate::types::make_char_name())
 			.ok_or_else(|| InvalidCharType::Missing)
 	}
 
 	pub fn get_integer_type(&self) -> Result<TypeHandle, InvalidIntegerType> {
 		self
-			.get_type(crate::types::integer_name())
+			.get_type(crate::types::make_integer_name())
 			.ok_or_else(|| InvalidIntegerType::Missing)
 	}
 
 	pub fn get_string_type(&self) -> Result<TypeHandle, InvalidStringType> {
 		self
-			.get_type(crate::types::string_name())
+			.get_type(crate::types::make_string_name())
 			.ok_or_else(|| InvalidStringType::Missing)
 	}
 
-	pub fn get_tuple_type(
-		&self,
-		element_type_names: impl Iterator<Item = impl AsRef<str> + std::fmt::Debug> + Clone,
-	) -> Result<TypeHandle, InvalidTupleType> {
-		let name = crate::types::make_tuple_name(element_type_names.clone());
-		if let Some(tuple_type) = self.get_type(&name) {
-			return Ok(tuple_type);
-		}
+	pub fn register_types(&self, type_builders: Vec<TypeBuilder>) {
+		let mut names = self.0.names.write().unwrap();
 
-		// The fast path failed, we have to construct this tuple type. To ensure internal consistency, we have to claim a
-		// write lock at this point, and can only release it once the newly created type is inserted.
-		let mut types = self.0.types.data.write().unwrap();
-
-		// Some other thread may have concurrently created this type in between our previous check and the acquisition of
-		// the write lock, so we need to check again.
-		if let Some(tuple_type) = types.get(name.as_str()) {
-			return Ok(tuple_type.into());
-		}
-
-		let element_types: Result<Vec<TypeHandle>, _> = element_type_names
-			.map(|name| types.get(name.as_ref()).map(TypeHandle::from).ok_or(name))
-			.collect();
-		if let Err(element_type_name) = element_types {
-			return Err(InvalidTupleType::MissingSubtype {
-				make_tuple_name: name,
-				missing_element_type_name: element_type_name.as_ref().into(),
-			});
-		}
-		let element_types = element_types.unwrap();
-
-		let tuple_type = TypeHandle::new(crate::types::TupleType::new(name, element_types));
-		assert!(types.insert(tuple_type.clone().into()) == true);
-
-		Ok(tuple_type)
-	}
-
-	pub fn get_array_type(&self, element_type_name: &str) -> Result<TypeHandle, InvalidArrayType> {
-		let name = crate::types::array_name(element_type_name);
-		if let Some(array_type) = self.get_type(&name) {
-			return Ok(array_type);
-		}
-
-		// The fast path failed, we have to construct this tuple type. To ensure internal consistency, we have to claim a
-		// write lock at this point, and can only release it once the newly created type is inserted.
-		let mut types = self.0.types.data.write().unwrap();
-
-		// Some other thread may have concurrently created this type in between our previous check and the acquisition of
-		// the write lock, so we need to check again.
-		if let Some(array_type) = types.get(name.as_str()) {
-			return Ok(array_type.into());
-		}
-
-		let element_type =
-			types
-				.get(element_type_name)
-				.map(TypeHandle::from)
-				.ok_or_else(|| InvalidArrayType::MissingSubtype {
-					element_type_name: element_type_name.into(),
-				})?;
-
-		let array_type = TypeHandle::new(crate::types::ArrayType::new(name, element_type));
-		assert!(types.insert(array_type.clone().into()) == true);
-
-		Ok(array_type)
-	}
-
-	pub fn get_option_type(&self, element_type_name: &str) -> Result<TypeHandle, InvalidOptionType> {
-		let name = crate::types::make_option_name(element_type_name);
-		if let Some(option_type) = self.get_type(&name) {
-			return Ok(option_type);
-		}
-
-		// The fast path failed, we have to construct this tuple type. To ensure internal consistency, we have to claim a
-		// write lock at this point, and can only release it once the newly created type is inserted.
-		let mut types = self.0.types.data.write().unwrap();
-
-		// Some other thread may have concurrently created this type in between our previous check and the acquisition of
-		// the write lock, so we need to check again.
-		if let Some(option_type) = types.get(name.as_str()) {
-			return Ok(option_type.into());
-		}
-
-		let element_type =
-			types
-				.get(element_type_name)
-				.map(TypeHandle::from)
-				.ok_or_else(|| InvalidOptionType::MissingSubtype {
-					element_type_name: element_type_name.into(),
-				})?;
-
-		let option_type = TypeHandle::new(crate::types::OptionType::new(name, element_type));
-		assert!(types.insert(option_type.clone().into()) == true);
-
-		Ok(option_type)
-	}
-
-	pub fn insert_type(&self, value: impl Type + 'static) -> TypeHandle {
-		let handle = TypeHandle::new(value);
-
-		// check for consistency
-		{
-			let types = self.0.types.data.read().unwrap();
-			let type_parameters = handle.type_parameters().iter();
-			let field_types = handle.fields().1.iter();
-			let variant_types = handle
-				.variants()
-				.into_iter()
-				.flat_map(|(_variant_names, variants)| variants)
-				.flat_map(|variant| {
-					use crate::types::Variant;
-					match variant {
-						Variant::Unit(_id) => None,
-						Variant::Tuple(_id, types) => Some(types.iter()),
-						Variant::Struct(_id, _names, types) => Some(types.iter()),
-					}
-				})
-				.flatten();
-
-			for type_parameter in type_parameters.chain(field_types).chain(variant_types) {
-				let registered = types.get(type_parameter.name());
-				assert!(registered.is_some(), "All dependent types must be registered first");
-				assert!(
-					TypeHandle::is_same(type_parameter, registered.unwrap().into()),
-					"All dependent types must refer to the exact same object that is registered under that name"
-				);
+		for type_builder in &type_builders {
+			if names.get(&type_builder.name).is_some() {
+				panic!("Name {} is already in use", type_builder.name);
 			}
 		}
 
-		let mut types = self.0.types.data.write().unwrap();
-		assert!(types.insert(handle.clone().into()) == true);
-		handle
+		let mut types = self.0.types.write().unwrap();
+
+		let new_type_map = type_builders
+			.iter()
+			.map(|builder| builder.name.clone())
+			.zip(
+				types
+					.iter()
+					.map(|(_type, reference_count)| reference_count.load(Ordering::SeqCst) == 0)
+					.chain(std::iter::repeat(true))
+					.enumerate()
+					.filter_map(|(index, free)| if free { Some(index) } else { None }),
+			)
+			.collect::<HashMap<String, usize>>();
+
+		for (name, resolution) in type_builders
+			.iter()
+			.flat_map(|type_builder| {
+				type_builder
+					.type_parameters
+					.iter()
+					.chain(type_builder.field_types.iter())
+					.chain(type_builder.variants.iter().flat_map(|variant| match variant {
+						VariantBuilder::Unit(_name) => [].iter(),
+						VariantBuilder::Tuple(_name, types) => types.iter(),
+						VariantBuilder::Struct(_name, _names, types) => types.iter(),
+					}))
+			})
+			.map(|type_name| (type_name, names.get(type_name)))
+		{
+			match resolution {
+				Some(Thing::Type(_)) => (),
+				Some(_) => panic!(
+					"The dependent type {} resolved to something that is not actually a type",
+					name
+				),
+				None => {
+					if new_type_map.get(name).is_none() {
+						panic!("The dependent type {} could not be resolved", name);
+					}
+				}
+			}
+		}
+
+		// At this point, we have ensured that anything that we need later on is available
+
+		for type_builder in type_builders {
+			let id = *new_type_map.get(&type_builder.name).unwrap();
+			if types.len() <= id {
+				debug_assert!(types.len() == id);
+				types.push((Default::default(), 1.into()));
+			} else {
+				let previous = types[id].1.fetch_add(1, Ordering::SeqCst);
+				debug_assert!(previous == 0);
+			}
+
+			types[id].0 = Type {
+				name: type_builder.name.into(),
+				kind: type_builder.kind,
+				type_parameters: type_builder
+					.type_parameters
+					.iter()
+					.map(|name| {
+						names
+							.get(name)
+							.map(|thing| match thing {
+								Thing::Type(id) => *id,
+								_ => unreachable!(),
+							})
+							.ok_or_else(|| new_type_map.get(name).unwrap())
+							.unwrap()
+					})
+					.collect(),
+				field_names: Arc::new(
+					type_builder
+						.field_names
+						.into_iter()
+						.map(|(name, index)| (name.into_boxed_str(), index))
+						.collect(),
+				),
+				field_types: type_builder
+					.field_types
+					.iter()
+					.map(|name| {
+						names
+							.get(name)
+							.map(|thing| match thing {
+								Thing::Type(id) => *id,
+								_ => unreachable!(),
+							})
+							.ok_or_else(|| new_type_map.get(name).unwrap())
+							.unwrap()
+					})
+					.collect(),
+				variant_names: Arc::new(
+					type_builder
+						.variant_names
+						.into_iter()
+						.map(|(name, index)| (name.into_boxed_str(), index))
+						.collect(),
+				),
+				variants: type_builder
+					.variants
+					.into_iter()
+					.map(|variant_builder| match variant_builder {
+						VariantBuilder::Unit(name) => Variant::Unit(name.into_boxed_str()),
+						VariantBuilder::Tuple(name, field_types) => Variant::Tuple(
+							name.into_boxed_str(),
+							field_types
+								.iter()
+								.map(|name| {
+									names
+										.get(name)
+										.map(|thing| match thing {
+											Thing::Type(id) => *id,
+											_ => unreachable!(),
+										})
+										.ok_or_else(|| new_type_map.get(name).unwrap())
+										.unwrap()
+								})
+								.collect(),
+						),
+						VariantBuilder::Struct(name, field_names, field_types) => Variant::Struct(
+							name.into_boxed_str(),
+							field_names
+								.into_iter()
+								.map(|(name, index)| (name.into_boxed_str(), index))
+								.collect(),
+							field_types
+								.iter()
+								.map(|name| {
+									names
+										.get(name)
+										.map(|thing| match thing {
+											Thing::Type(id) => *id,
+											_ => unreachable!(),
+										})
+										.ok_or_else(|| new_type_map.get(name).unwrap())
+										.unwrap()
+								})
+								.collect(),
+						),
+					})
+					.collect(),
+				functions: Arc::new(
+					type_builder
+						.functions
+						.into_iter()
+						.map(|(name, function)| (name.into_boxed_str(), function))
+						.collect(),
+				),
+			};
+
+			let this_type = &types[id].0;
+			for id in this_type
+				.type_parameters
+				.iter()
+				.chain(this_type.field_types.iter())
+				.chain(this_type.variants.iter().flat_map(|variant| match variant {
+					Variant::Unit(_name) => [].iter(),
+					Variant::Tuple(_name, types) => types.iter(),
+					Variant::Struct(_name, _names, types) => types.iter(),
+				})) {
+				let previous = types[id.0].1.fetch_add(1, Ordering::SeqCst);
+				if previous == isize::MAX || previous <= 0 {
+					types[id.0].1.fetch_sub(1, Ordering::Relaxed);
+					panic!("Reference count overflow!");
+				}
+			}
+
+			names.insert((&*this_type.name).into(), Thing::Type(TypeId(id)));
+		}
 	}
 }

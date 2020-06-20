@@ -49,7 +49,7 @@ impl Value {
 	pub fn new_tuple(context: &Context, values: impl Into<Box<[Value]>>) -> Result<Value, TupleCreationError> {
 		let values: Box<[Value]> = values.into();
 		let element_types = values.iter().map(|value| value.get_type().name());
-		let tuple_type = context.get_tuple_type(element_types)?.clone();
+		let tuple_type = context.get_tuple_type(element_types.collect())?.clone();
 		Ok(Value {
 			r#type: tuple_type,
 			data: Data::Array(values),
@@ -88,10 +88,10 @@ impl Value {
 		} else {
 			for (index, (value, expected_type)) in values.iter().zip(element_types.iter()).enumerate() {
 				let value_type = value.get_type();
-				if !TypeHandle::is_same(value_type, expected_type) {
+				if !value_type.refers_to(*expected_type) {
 					return Err(TupleStructCreationError::ElementTypeMismatch {
 						index,
-						expected: expected_type.clone(),
+						expected: TypeHandle::from_type_id(context.clone(), *expected_type),
 						actual: value_type.clone(),
 					});
 				}
@@ -134,11 +134,6 @@ impl Value {
 				})
 			}
 		} else {
-			if field_names.is_none() {
-				return Err(crate::error::InvalidStructType::NoFieldNames { r#type: struct_type }.into());
-			}
-			let field_names = field_names.unwrap();
-
 			let fields = fields
 				.map(|(field_name, value)| {
 					if let Some(index) = field_names.get(field_name.as_ref()) {
@@ -175,11 +170,11 @@ impl Value {
 							r#type: struct_type.clone(),
 							field_name: name.as_ref().into(),
 						})
-					} else if !value.has_type(&field_types[key]) {
+					} else if !value.has_type_id(field_types[key]) {
 						Err(StructCreationError::FieldTypeMismatch {
 							r#type: struct_type.clone(),
 							field_name: name.as_ref().into(),
-							field_type: field_types[key].clone(),
+							field_type: TypeHandle::from_type_id(context.clone(), field_types[key]),
 							value_type: value.get_type().clone(),
 						})
 					} else {
@@ -228,13 +223,13 @@ impl Value {
 				InvalidArrayType::InvalidElement {
 					value: value.clone(),
 					index,
-					type_name: crate::types::array_name(element_type.name()),
+					type_name: crate::types::make_array_name(&*element_type.name()),
 				}
 				.into(),
 			);
 		}
 
-		let array_type = context.get_array_type(element_type.name())?.into();
+		let array_type = context.get_array_type(&*element_type.name())?.into();
 		Ok(Value {
 			r#type: array_type,
 			data: Data::Array(values),
@@ -256,14 +251,7 @@ impl Value {
 		}
 
 		let variant_name = variant_name.as_ref();
-		let (variant_names, variant_ids) = if let Some(variants) = enum_type.variants() {
-			variants
-		} else {
-			return Err(EnumUnitVariantCreationError::VariantMissing {
-				r#type: enum_type,
-				variant_name: variant_name.into(),
-			});
-		};
+		let (variant_names, variant_ids) = enum_type.variants();
 
 		let variant_id = if let Some(variant_id) = variant_names.get(variant_name) {
 			*variant_id
@@ -302,14 +290,7 @@ impl Value {
 		}
 
 		let variant_name = variant_name.as_ref();
-		let (variant_names, variant_ids) = if let Some(variants) = enum_type.variants() {
-			variants
-		} else {
-			return Err(EnumTupleVariantCreationError::VariantMissing {
-				r#type: enum_type,
-				variant_name: variant_name.into(),
-			});
-		};
+		let (variant_names, variant_ids) = enum_type.variants();
 
 		let variant_id = if let Some(variant_id) = variant_names.get(variant_name) {
 			*variant_id
@@ -326,10 +307,10 @@ impl Value {
 			Variant::Tuple(_name, element_types) => {
 				for (index, (value, expected_type)) in values.iter().zip(element_types.iter()).enumerate() {
 					let value_type = value.get_type();
-					if !TypeHandle::is_same(value_type, expected_type) {
+					if !value_type.refers_to(*expected_type) {
 						return Err(EnumTupleVariantCreationError::ElementTypeMismatch {
 							index,
-							expected: expected_type.clone(),
+							expected: TypeHandle::from_type_id(context.clone(), *expected_type),
 							actual: value_type.clone(),
 						});
 					}
@@ -363,14 +344,7 @@ impl Value {
 		}
 
 		let variant_name = variant_name.as_ref();
-		let (variant_names, variant_ids) = if let Some(variants) = enum_type.variants() {
-			variants
-		} else {
-			return Err(EnumStructVariantCreationError::VariantMissing {
-				r#type: enum_type,
-				variant_name: variant_name.into(),
-			});
-		};
+		let (variant_names, variant_ids) = enum_type.variants();
 
 		let variant_id = if let Some(variant_id) = variant_names.get(variant_name) {
 			*variant_id
@@ -432,11 +406,11 @@ impl Value {
 									r#type: enum_type.clone(),
 									field_name: name.as_ref().into(),
 								})
-							} else if !value.has_type(&field_types[key]) {
+							} else if !value.has_type_id(field_types[key]) {
 								Err(EnumStructVariantCreationError::FieldTypeMismatch {
 									r#type: enum_type.clone(),
 									field_name: name.as_ref().into(),
-									field_type: field_types[key].clone(),
+									field_type: TypeHandle::from_type_id(context.clone(), field_types[key]),
 									value_type: value.get_type().clone(),
 								})
 							} else {

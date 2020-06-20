@@ -3,19 +3,21 @@ use anyhow::anyhow;
 use std::collections::HashMap;
 use std::fs::{read_to_string, File};
 use std::io::Read;
+use std::sync::atomic::AtomicIsize;
 use std::sync::{Arc, RwLock};
 
 use crate::error::RuntimeError;
+use crate::types::{GenericTypeBuilder, Type};
 use crate::Value;
 
 mod debug;
 mod functions;
 mod macros;
-mod types;
-mod variables;
 
-pub type Function = fn(&Context, &[Value]) -> Result<Value, RuntimeError>;
-pub type Macro = fn(&Context, &[Value]) -> Result<Value, RuntimeError>;
+mod types;
+pub use types::TypeHandle;
+
+mod variables;
 
 /**
 The `Context` stores all types, free functions and global variables.
@@ -46,20 +48,42 @@ Value::new_bool(&context, true).unwrap_err();
 pub struct Context(Arc<ContextImpl>);
 
 struct ContextImpl {
-	types: types::TypeContainer,
-	variables: RwLock<HashMap<String, Value>>,
-	functions: RwLock<HashMap<String, Function>>,
+	arrays: RwLock<Option<GenericTypeCreator>>,
+	tuples: RwLock<Option<GenericTypeCreator>>,
+
+	types: RwLock<Vec<(Type, AtomicIsize)>>,
+	names: RwLock<HashMap<String, Thing>>,
 	macros: RwLock<HashMap<String, Macro>>,
+}
+
+pub type Function = fn(&Context, &[Value]) -> Result<Value, RuntimeError>;
+pub type GenericTypeCreator = fn(&Context, &[&str]) -> Result<GenericTypeBuilder, anyhow::Error>;
+pub type Macro = fn(&Context, &[Value]) -> Result<Value, RuntimeError>;
+
+#[derive(Copy, Clone)]
+pub(crate) struct TypeId(usize);
+
+enum Thing {
+	Variable(Value),
+	Function(Function),
+	Type(TypeId),
+	Generic(Arc<Generic>),
+}
+
+struct Generic {
+	name: String,
+	creator: GenericTypeCreator,
 }
 
 impl Context {
 	pub fn new() -> Self {
 		let context = Self::new_empty();
 
-		context.insert_type(crate::types::BoolType::new());
-		context.insert_type(crate::types::CharType::new());
-		context.insert_type(crate::types::IntegerType::new());
-		context.insert_type(crate::types::StringType::new());
+		context.register_types(vec![crate::types::new_bool_type()]);
+		context.register_types(vec![crate::types::new_char_type()]);
+		context.register_types(vec![crate::types::new_integer_type()]);
+		context.register_types(vec![crate::types::new_string_type()]);
+		context.register_array_generic(crate::types::array_generic);
 
 		context.insert_macro("concat", |context, mut arguments| {
 			let mut result = String::new();
@@ -145,7 +169,7 @@ impl Context {
 			Ok(Value::new_string(context, content)?)
 		});
 
-		context.insert_macro("option_env", |context, arguments| {
+		/*context.insert_macro("option_env", |context, arguments| {
 			if arguments.len() != 1 {
 				return Err(anyhow!("`option_env!` takes exactly one argument of string type").into());
 			}
@@ -166,7 +190,7 @@ impl Context {
 			} else {
 				Ok(Value::new_enum_unit_variant(context, option_type.name(), "None")?)
 			}
-		});
+		});*/
 
 		context.insert_macro("panic", |_context, arguments| {
 			use std::fmt::Write;
@@ -199,10 +223,11 @@ impl Context {
 
 	pub fn new_empty() -> Self {
 		Context(Arc::new(ContextImpl {
+			tuples: Default::default(),
+			arrays: Default::default(),
 			types: Default::default(),
-			variables: RwLock::new(HashMap::new()),
-			functions: RwLock::new(HashMap::new()),
-			macros: RwLock::new(HashMap::new()),
+			names: Default::default(),
+			macros: Default::default(),
 		}))
 	}
 }

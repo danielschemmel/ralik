@@ -1,46 +1,38 @@
-use super::{BasicType, BasicTypeBase, TypeHandle, TypeKind};
+use anyhow::ensure;
+
+use super::{GenericTypeBuilder, MemberFunction, TypeKind};
+use crate::context::Context;
 
 mod functions;
 mod ops;
 
-pub(crate) type ArrayType = BasicType<ArrayImpl>;
-
-pub(crate) struct ArrayImpl {
-	name: String,
-	element_type: [TypeHandle; 1],
-}
-
-pub fn name(element_type: &str) -> String {
+pub fn make_array_name(element_type: &str) -> String {
 	format!("[{}]", element_type)
 }
 
-impl ArrayType {
-	pub fn new(name: impl Into<String>, element_type: TypeHandle) -> Self {
-		Self::from_base_with_functions(
-			ArrayImpl {
-				name: name.into(),
-				element_type: [element_type],
-			},
-			vec![
-				(crate::ops::INDEX, ops::index),
-				("clone", functions::clone), // FIXME: only insert if it makes sense
-				("is_empty", functions::is_empty),
-				("len", functions::len),
-			],
-		)
-	}
-}
+pub fn array_generic(_context: &Context, element_type: &[&str]) -> Result<GenericTypeBuilder, anyhow::Error> {
+	ensure!(
+		element_type.len() == 1,
+		"Can only create arrays with exactly one element type ({} provided)",
+		element_type.len()
+	);
+	let element_type = element_type[0];
 
-impl BasicTypeBase for ArrayImpl {
-	fn name(&self) -> &str {
-		&self.name
-	}
-
-	fn kind(&self) -> TypeKind {
-		TypeKind::Array
-	}
-
-	fn type_parameters(&self) -> &[TypeHandle] {
-		&self.element_type
-	}
+	Ok(GenericTypeBuilder {
+		kind: TypeKind::Array,
+		type_parameters: vec![element_type.into()],
+		field_names: Default::default(),
+		field_types: Default::default(),
+		variant_names: Default::default(),
+		variants: Default::default(),
+		functions: [
+			(crate::ops::INDEX, ops::index as MemberFunction),
+			("clone", functions::clone),
+			("is_empty", functions::is_empty),
+			("len", functions::len),
+		]
+		.iter()
+		.map(|(name, function)| ((*name).to_owned(), *function))
+		.collect(),
+	})
 }

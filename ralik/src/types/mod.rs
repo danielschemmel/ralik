@@ -1,55 +1,46 @@
 use std::collections::hash_map::HashMap;
+use std::sync::Arc;
 
-use crate::error::{Overflow, RuntimeError};
+use crate::context::{TypeHandle, TypeId};
+use crate::error::RuntimeError;
 use crate::{Context, Value};
 
 mod arguments;
 
 mod array;
-pub(crate) use self::array::name as array_name;
-pub(crate) use self::array::ArrayType;
-
-mod basic;
-pub use basic::{BasicType, BasicTypeBase};
+pub(crate) use self::array::{array_generic, make_array_name};
 
 mod bool;
-pub use self::bool::name as bool_name;
-pub use self::bool::BoolType;
+pub use self::bool::{make_bool_name, new_bool_type};
 
 mod char;
-pub use self::char::name as char_name;
-pub use self::char::CharType;
+pub use self::char::{make_char_name, new_char_type};
 
 mod r#enum;
-pub use self::r#enum::EnumType;
+pub use self::r#enum::new_enum_type;
 
 mod integer;
-pub use self::integer::name as integer_name;
-pub use self::integer::IntegerType;
+pub use self::integer::{make_integer_name, new_integer_type};
 
-mod option;
-pub(crate) use self::option::make_option_name;
-pub(crate) use self::option::OptionType;
+//mod option;
+//pub(crate) use self::option::make_option_name;
+//pub(crate) use self::option::option_generic;
 
 mod string;
-pub use self::string::name as string_name;
-pub use self::string::StringType;
+pub use self::string::{make_string_name, new_string_type};
 
 mod r#struct;
-pub use self::r#struct::StructType;
+pub use self::r#struct::new_struct_type;
 
 mod tuple;
-pub(crate) use self::tuple::make_name as make_tuple_name;
-pub(crate) use self::tuple::TupleType;
-
-mod type_handle;
-pub use self::type_handle::TypeHandle;
+pub(crate) use self::tuple::make_tuple_name;
+//pub(crate) use self::tuple::tuple_generic;
 
 mod tuple_struct;
-pub use self::tuple_struct::TupleStructType;
+pub use self::tuple_struct::new_tuple_struct_type;
 
 mod unit_struct;
-pub use self::unit_struct::UnitStructType;
+pub use self::unit_struct::new_unit_struct_type;
 
 pub type MemberFunction = fn(&Context, &TypeHandle, &[Value]) -> Result<Value, RuntimeError>;
 
@@ -67,11 +58,10 @@ pub enum TypeKind {
 	Array,
 }
 
-#[derive(Clone, Debug)]
-pub enum Variant {
+pub(crate) enum Variant {
 	Unit(Box<str>),
-	Tuple(Box<str>, Box<[TypeHandle]>),
-	Struct(Box<str>, HashMap<Box<str>, usize>, Box<[TypeHandle]>),
+	Tuple(Box<str>, Box<[TypeId]>),
+	Struct(Box<str>, HashMap<Box<str>, usize>, Box<[TypeId]>),
 }
 
 impl Variant {
@@ -84,15 +74,94 @@ impl Variant {
 	}
 }
 
-pub trait Type: std::fmt::Debug {
-	fn name(&self) -> &str;
-	fn kind(&self) -> TypeKind;
+pub(crate) struct Type {
+	pub name: Arc<str>,
+	pub kind: TypeKind,
 
-	fn type_parameters(&self) -> &[TypeHandle];
-	fn fields(&self) -> (Option<&HashMap<Box<str>, usize>>, &[TypeHandle]);
-	fn variants(&self) -> Option<(&HashMap<Box<str>, usize>, &[Variant])>;
+	pub type_parameters: Arc<[TypeId]>,
 
-	fn get_function(&self, key: &str) -> Option<&MemberFunction>;
-	fn insert_function(&mut self, key: Box<str>, value: MemberFunction) -> Option<MemberFunction>;
-	fn remove_function(&mut self, key: &str) -> Option<(Box<str>, MemberFunction)>;
+	pub field_names: Arc<HashMap<Box<str>, usize>>,
+	pub field_types: Arc<[TypeId]>,
+
+	pub variant_names: Arc<HashMap<Box<str>, usize>>,
+	pub variants: Arc<[Variant]>,
+
+	pub functions: Arc<HashMap<Box<str>, MemberFunction>>,
+}
+
+impl Default for Type {
+	fn default() -> Self {
+		Self {
+			name: "".into(),
+			kind: TypeKind::Tuple,
+			type_parameters: Arc::new([]),
+			field_names: Default::default(),
+			field_types: Arc::new([]),
+			variant_names: Default::default(),
+			variants: Arc::new([]),
+			functions: Default::default(),
+		}
+	}
+}
+
+pub enum VariantBuilder {
+	Unit(String),
+	Tuple(String, Vec<String>),
+	Struct(String, HashMap<String, usize>, Vec<String>),
+}
+
+pub struct TypeBuilder {
+	pub name: String,
+	pub kind: TypeKind,
+
+	pub type_parameters: Vec<String>,
+
+	pub field_names: HashMap<String, usize>,
+	pub field_types: Vec<String>,
+
+	pub variant_names: HashMap<String, usize>,
+	pub variants: Vec<VariantBuilder>,
+
+	pub functions: HashMap<String, MemberFunction>,
+}
+
+impl TypeBuilder {
+	pub fn new(name: impl Into<String>, kind: TypeKind) -> Self {
+		Self {
+			name: name.into(),
+			kind,
+			type_parameters: Default::default(),
+			field_names: Default::default(),
+			field_types: Default::default(),
+			variant_names: Default::default(),
+			variants: Default::default(),
+			functions: Default::default(),
+		}
+	}
+
+	pub fn from_generic_type_builder(name: impl Into<String>, generic_type_builder: GenericTypeBuilder) -> Self {
+		Self {
+			name: name.into(),
+			kind: generic_type_builder.kind,
+			type_parameters: generic_type_builder.type_parameters,
+			field_names: generic_type_builder.field_names,
+			field_types: generic_type_builder.field_types,
+			variant_names: generic_type_builder.variant_names,
+			variants: generic_type_builder.variants,
+			functions: generic_type_builder.functions,
+		}
+	}
+}
+
+pub struct GenericTypeBuilder {
+	pub kind: TypeKind,
+	pub type_parameters: Vec<String>,
+
+	pub field_names: HashMap<String, usize>,
+	pub field_types: Vec<String>,
+
+	pub variant_names: HashMap<String, usize>,
+	pub variants: Vec<VariantBuilder>,
+
+	pub functions: HashMap<String, MemberFunction>,
 }

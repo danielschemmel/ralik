@@ -29,13 +29,13 @@ impl Eval for Expression {
 					Suffix::Unwrap(span) => call_member_function_0(context, crate::ops::UNWRAP, value, span),
 					Suffix::Field(name, span) => value.field(name).cloned().ok_or_else(|| EvalError::InvalidFieldAccess {
 						member_name: name.clone(),
-						type_name: value.get_type().name().into(),
+						type_name: (&*value.get_type().name()).into(),
 						at: span.into(),
 					}),
 					Suffix::TupleIndex(index, span) => {
 						let index = usize::try_from(*index).map_err(|_| EvalError::InvalidFieldAccess {
 							member_name: index.to_string(),
-							type_name: value.get_type().name().into(),
+							type_name: (&*value.get_type().name()).into(),
 							at: span.into(),
 						})?;
 						value
@@ -43,7 +43,7 @@ impl Eval for Expression {
 							.cloned()
 							.ok_or_else(|| EvalError::InvalidFieldAccess {
 								member_name: index.to_string(),
-								type_name: value.get_type().name().into(),
+								type_name: (&*value.get_type().name()).into(),
 								at: span.into(),
 							})
 					}
@@ -86,7 +86,7 @@ impl Eval for Expression {
 
 						if !lhs_value.has_type(&bool_type) {
 							return Err(EvalError::NotBoolInLazyAnd {
-								type_name: lhs_value.get_type().name().into(),
+								type_name: (&*lhs_value.get_type().name()).into(),
 								at: span.into(), // TODO: use the lhs span instead of the operator span here
 							});
 						}
@@ -100,7 +100,7 @@ impl Eval for Expression {
 								Ok(rhs_value)
 							} else {
 								Err(EvalError::NotBoolInLazyAnd {
-									type_name: rhs_value.get_type().name().into(),
+									type_name: (&*rhs_value.get_type().name()).into(),
 									at: span.into(), // TODO: use the lhs span instead of the operator span here
 								})
 							}
@@ -114,7 +114,7 @@ impl Eval for Expression {
 
 						if !lhs_value.has_type(&bool_type) {
 							return Err(EvalError::NotBoolInLazyAnd {
-								type_name: lhs_value.get_type().name().into(),
+								type_name: (&*lhs_value.get_type().name()).into(),
 								at: span.into(), // TODO: use the lhs span instead of the operator span here
 							});
 						}
@@ -128,7 +128,7 @@ impl Eval for Expression {
 								Ok(rhs_value)
 							} else {
 								Err(EvalError::NotBoolInLazyAnd {
-									type_name: rhs_value.get_type().name().into(),
+									type_name: (&*rhs_value.get_type().name()).into(),
 									at: span.into(), // TODO: use the lhs span instead of the operator span here
 								})
 							}
@@ -176,9 +176,9 @@ impl Eval for AtomicExpression {
 				{
 					return Err(EvalError::MixedArray {
 						index_1: 0,
-						type_1: type_0.name().to_owned(),
+						type_1: (&*type_0.name()).to_owned(),
 						index_2: index + 1,
-						type_2: value.get_type().name().to_owned(),
+						type_2: (&*value.get_type().name()).to_owned(),
 						at: span.into(),
 					});
 				}

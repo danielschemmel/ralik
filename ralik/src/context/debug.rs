@@ -3,23 +3,8 @@ use std::collections::HashMap;
 use super::{Context, Function, Macro};
 
 impl std::fmt::Debug for Context {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		f.debug_struct("Context")
-			.field("types", &self.0.types)
-			.field("variables", &*self.0.variables.read().unwrap())
-			.field(
-				"functions",
-				&FunctionNameListFormatter {
-					functions: &*self.0.functions.read().unwrap(),
-				},
-			)
-			.field(
-				"macros",
-				&MacroNameListFormatter {
-					macros: &*self.0.macros.read().unwrap(),
-				},
-			)
-			.finish()
+	fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		unimplemented!()
 	}
 }
 

@@ -71,7 +71,7 @@ impl fmt::Display for Value {
 				match &self.data {
 					Data::Empty => {}
 					Data::Array(value) => {
-						for (i, (name, id)) in self.r#type.fields().0.unwrap().iter().enumerate() {
+						for (i, (name, id)) in self.r#type.fields().0.iter().enumerate() {
 							if i > 0 {
 								write!(f, ", {}: {}", name, value[*id])?;
 							} else {
@@ -86,12 +86,12 @@ impl fmt::Display for Value {
 			TypeKind::Enum => {
 				write!(f, "{}::", self.r#type.name())?;
 				match &self.data {
-					Data::UnitVariant(id) => match &self.r#type.variants().unwrap().1[*id] {
+					Data::UnitVariant(id) => match &self.r#type.variants().1[*id] {
 						Variant::Unit(name) => write!(f, "{}", name),
 						Variant::Tuple(name, _field_types) => write!(f, "{}()", name),
 						Variant::Struct(name, _field_names, _field_types) => write!(f, "{} {{ }}", name),
 					},
-					Data::Variant(id, value) => match &self.r#type.variants().unwrap().1[*id] {
+					Data::Variant(id, value) => match &self.r#type.variants().1[*id] {
 						Variant::Unit(name) => write!(f, "{}", name),
 						Variant::Tuple(name, _field_types) => {
 							write!(f, "{}(", name)?;

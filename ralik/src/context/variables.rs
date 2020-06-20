@@ -1,17 +1,24 @@
+use std::collections::hash_map::Entry;
+
 use crate::Value;
 
-use super::Context;
+use super::{Context, Thing};
 
 impl Context {
 	pub fn get_variable(&self, key: &str) -> Option<Value> {
-		self.0.variables.read().unwrap().get(key).cloned()
+		match self.0.names.read().unwrap().get(key) {
+			Some(Thing::Variable(value)) => Some(value.clone()),
+			_ => None,
+		}
 	}
 
-	pub fn insert_variable(&self, key: impl Into<String>, value: impl Into<Value>) -> Option<Value> {
-		self.0.variables.write().unwrap().insert(key.into(), value.into())
-	}
-
-	pub fn remove_variable(&self, key: &str) -> Option<(String, Value)> {
-		self.0.variables.write().unwrap().remove_entry(key)
+	pub fn insert_variable(&self, key: impl Into<String>, value: impl Into<Value>) {
+		let mut names = self.0.names.write().unwrap();
+		match names.entry(key.into()) {
+			Entry::Occupied(entry) => panic!("The name `{}` is defined multiple times", entry.key()),
+			Entry::Vacant(entry) => {
+				entry.insert(Thing::Variable(value.into()));
+			}
+		}
 	}
 }

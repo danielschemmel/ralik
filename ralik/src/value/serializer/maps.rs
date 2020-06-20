@@ -88,11 +88,12 @@ impl<'a> SerializeMap<'a> {
 				let value = match self.expected_type.kind() {
 					TypeKind::Struct => {
 						let (field_names, field_types) = self.expected_type.fields();
-						if let Some(key_type) = field_names
-							.and_then(|field_names| field_names.get(&key as &str))
-							.map(|id| &field_types[*id])
-						{
-							Value::from_serde_by_type(self.context, value, key_type.clone())?
+						if let Some(key_type) = field_names.get(&key as &str).map(|id| &field_types[*id]) {
+							Value::from_serde_by_type(
+								self.context,
+								value,
+								TypeHandle::from_type_id(self.context.clone(), *key_type),
+							)?
 						} else {
 							return Err(SerializerError::UnexpectedKey {
 								r#type: self.expected_type.clone(),
@@ -136,11 +137,12 @@ impl<'a> SerializeMap<'a> {
 				let value = match self.expected_type.kind() {
 					TypeKind::Struct => {
 						let (field_names, field_types) = self.expected_type.fields();
-						if let Some(key_type) = field_names
-							.and_then(|field_names| field_names.get(&key as &str))
-							.map(|id| &field_types[*id])
-						{
-							Value::from_serde_by_type(self.context, value, key_type.clone())?
+						if let Some(key_type) = field_names.get(&key as &str).map(|id| &field_types[*id]) {
+							Value::from_serde_by_type(
+								self.context,
+								value,
+								TypeHandle::from_type_id(self.context.clone(), *key_type),
+							)?
 						} else {
 							return Err(SerializerError::UnexpectedKey {
 								r#type: self.expected_type.clone(),
@@ -182,11 +184,12 @@ impl<'a> SerializeMap<'a> {
 				let value = match self.expected_type.kind() {
 					TypeKind::Struct => {
 						let (field_names, field_types) = self.expected_type.fields();
-						if let Some(key_type) = field_names
-							.and_then(|field_names| field_names.get(&key as &str))
-							.map(|id| &field_types[*id])
-						{
-							Value::from_serde_by_type(self.context, value, key_type.clone())?
+						if let Some(key_type) = field_names.get(&key as &str).map(|id| &field_types[*id]) {
+							Value::from_serde_by_type(
+								self.context,
+								value,
+								TypeHandle::from_type_id(self.context.clone(), *key_type),
+							)?
 						} else {
 							return Err(SerializerError::UnexpectedKey {
 								r#type: self.expected_type.clone(),

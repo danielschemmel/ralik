@@ -22,7 +22,7 @@ impl<'a> SerializeStructVariant<'a> {
 		len: usize,
 	) -> Result<Self, SerializerError> {
 		match expected_type.kind() {
-			TypeKind::Enum => match &expected_type.variants().unwrap().1[variant_id] {
+			TypeKind::Enum => match &expected_type.variants().1[variant_id] {
 				Variant::Struct(_, _, _) => Ok(Self {
 					context,
 					expected_type,
@@ -50,10 +50,14 @@ impl<'a> SerializeStructVariant<'a> {
 		key: &'static str,
 		value: &T,
 	) -> Result<(), SerializerError> {
-		match &self.expected_type.variants().unwrap().1[self.variant_id] {
+		match &self.expected_type.variants().1[self.variant_id] {
 			Variant::Struct(_, field_names, field_types) => {
 				let value = if let Some(key_type) = field_names.get(key).map(|id| &field_types[*id]) {
-					Value::from_serde_by_type(self.context, value, key_type.clone())?
+					Value::from_serde_by_type(
+						self.context,
+						value,
+						TypeHandle::from_type_id(self.context.clone(), *key_type),
+					)?
 				} else {
 					return Err(SerializerError::UnexpectedKey {
 						r#type: self.expected_type.clone(),
@@ -83,7 +87,7 @@ impl<'a> SerializeStructVariant<'a> {
 		let value = Value::new_enum_struct_variant(
 			self.context,
 			self.expected_type.name(),
-			self.expected_type.variants().unwrap().1[self.variant_id].name(),
+			self.expected_type.variants().1[self.variant_id].name(),
 			self.result.into_iter(),
 		)?;
 		assert!(value.has_type(&self.expected_type));

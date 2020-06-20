@@ -121,16 +121,16 @@ pub enum Overflow {
 
 #[derive(Error, Debug)]
 pub enum ValueCreationError {
-	#[error("Could not create object of type `{}`", crate::types::bool_name())]
+	#[error("Could not create object of type `{}`", crate::types::make_bool_name())]
 	BoolCreationError(#[from] BoolCreationError),
 
-	#[error("Could not create object of type `{}`", crate::types::integer_name())]
+	#[error("Could not create object of type `{}`", crate::types::make_integer_name())]
 	IntegerCreationError(#[from] IntegerCreationError),
 
-	#[error("Could not create object of type `{}`", crate::types::char_name())]
+	#[error("Could not create object of type `{}`", crate::types::make_char_name())]
 	CharCreationError(#[from] CharCreationError),
 
-	#[error("Could not create object of type `{}`", crate::types::string_name())]
+	#[error("Could not create object of type `{}`", crate::types::make_string_name())]
 	StringCreationError(#[from] StringCreationError),
 
 	#[error("Could not create object of tuple type")]
@@ -160,25 +160,25 @@ pub enum ValueCreationError {
 
 #[derive(Error, Debug)]
 pub enum BoolCreationError {
-	#[error("Core type `{}` is invalid", crate::types::bool_name())]
+	#[error("Core type `{}` is invalid", crate::types::make_bool_name())]
 	InvalidType(#[from] InvalidBoolType),
 }
 
 #[derive(Error, Debug)]
 pub enum IntegerCreationError {
-	#[error("Core type `{}` is invalid", crate::types::integer_name())]
+	#[error("Core type `{}` is invalid", crate::types::make_integer_name())]
 	InvalidType(#[from] InvalidIntegerType),
 }
 
 #[derive(Error, Debug)]
 pub enum CharCreationError {
-	#[error("Core type `{}` is invalid", crate::types::char_name())]
+	#[error("Core type `{}` is invalid", crate::types::make_char_name())]
 	InvalidType(#[from] InvalidCharType),
 }
 
 #[derive(Error, Debug)]
 pub enum StringCreationError {
-	#[error("Core type `{}` is invalid", crate::types::string_name())]
+	#[error("Core type `{}` is invalid", crate::types::make_string_name())]
 	InvalidType(#[from] InvalidStringType),
 }
 
@@ -340,13 +340,19 @@ pub enum InvalidCoreType {
 
 #[derive(Error, Debug)]
 pub enum InvalidBoolType {
-	#[error("The given context does not have a type `{}` registered", crate::types::bool_name())]
+	#[error(
+		"The given context does not have a type `{}` registered",
+		crate::types::make_bool_name()
+	)]
 	Missing,
 }
 
 #[derive(Error, Debug)]
 pub enum InvalidCharType {
-	#[error("The given context does not have a type `{}` registered", crate::types::char_name())]
+	#[error(
+		"The given context does not have a type `{}` registered",
+		crate::types::make_char_name()
+	)]
 	Missing,
 }
 
@@ -354,7 +360,7 @@ pub enum InvalidCharType {
 pub enum InvalidIntegerType {
 	#[error(
 		"The given context does not have a type `{}` registered",
-		crate::types::integer_name()
+		crate::types::make_integer_name()
 	)]
 	Missing,
 }
@@ -363,13 +369,23 @@ pub enum InvalidIntegerType {
 pub enum InvalidStringType {
 	#[error(
 		"The given context does not have a type `{}` registered",
-		crate::types::string_name()
+		crate::types::make_string_name()
 	)]
 	Missing,
 }
 
 #[derive(Error, Debug)]
 pub enum InvalidTupleType {
+	#[error("No array generic is registered to the given context")]
+	MissingGeneric,
+
+	#[error("No array generic was not successful in creating the tuple `{}`", .name)]
+	GenericFailed {
+		name: String,
+		#[source]
+		error: anyhow::Error,
+	},
+
 	#[error("The given context does not have the tuple type `{type_name}` registered")]
 	Missing { type_name: String },
 
@@ -407,6 +423,16 @@ pub enum InvalidOptionType {
 
 #[derive(Error, Debug)]
 pub enum InvalidArrayType {
+	#[error("No array generic is registered to the given context")]
+	MissingGeneric,
+
+	#[error("No array generic was not successful in creating the array `{}`", .name)]
+	GenericFailed {
+		name: String,
+		#[source]
+		error: anyhow::Error,
+	},
+
 	#[error("The given context does not have the type `{element_type_name}` registered to make an array out of")]
 	MissingSubtype { element_type_name: String },
 

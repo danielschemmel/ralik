@@ -22,10 +22,14 @@ impl<'a> SerializeTupleVariant<'a> {
 	) -> Result<Self, SerializerError> {
 		match expected_type.kind() {
 			TypeKind::Enum => {
-				let (variant_names, variants) = expected_type.variants().unwrap();
+				let (variant_names, variants) = expected_type.variants();
 				match variant_names.get(variant_name).map(|id| &variants[*id]) {
 					Some(Variant::Tuple(_, types)) => {
-						let element_types = types.iter().rev().cloned().collect();
+						let element_types = types
+							.iter()
+							.rev()
+							.map(|type_id| TypeHandle::from_type_id(context.clone(), *type_id))
+							.collect();
 						Ok(Self {
 							context,
 							expected_type,

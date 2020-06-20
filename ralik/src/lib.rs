@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 pub mod error;
 
 mod context;
-pub use context::Context;
+pub use context::{Context, TypeHandle};
 
 mod eval;
 
@@ -15,7 +15,6 @@ mod syntax;
 pub use syntax::ast;
 
 pub mod types;
-pub use types::{Type, TypeHandle};
 
 mod value;
 pub use value::Value;

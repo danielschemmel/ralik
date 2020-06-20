@@ -1,48 +1,24 @@
-use std::collections::HashMap;
+use super::{TypeBuilder, TypeKind};
 
-use super::{BasicType, BasicTypeBase, TypeHandle, TypeKind};
+//mod functions;
+//mod ops;
 
-pub type StructType = BasicType<StructImpl>;
-
-pub struct StructImpl {
-	name: Box<str>,
-	field_names: HashMap<Box<str>, usize>,
-	field_types: Vec<TypeHandle>,
-}
-
-impl StructType {
-	pub fn new(name: impl Into<Box<str>>, fields: impl Iterator<Item = (impl Into<Box<str>>, TypeHandle)>) -> Self {
-		let fields = fields
-			.enumerate()
-			.map(|(i, (name, r#type))| ((name.into(), i), r#type))
-			.unzip();
-
-		Self::from_base(StructImpl {
-			name: name.into(),
-			field_names: fields.0,
-			field_types: fields.1,
-		})
-	}
-
-	pub fn new_empty(name: impl Into<Box<str>>) -> Self {
-		Self::from_base(StructImpl {
-			name: name.into(),
-			field_names: HashMap::new(),
-			field_types: Vec::new(),
-		})
-	}
-}
-
-impl BasicTypeBase for StructImpl {
-	fn name(&self) -> &str {
-		&self.name
-	}
-
-	fn kind(&self) -> TypeKind {
-		TypeKind::Struct
-	}
-
-	fn fields(&self) -> (Option<&HashMap<Box<str>, usize>>, &[TypeHandle]) {
-		(Some(&self.field_names), &self.field_types)
+pub fn new_struct_type(
+	name: impl Into<String>,
+	fields: impl Iterator<Item = (impl Into<String>, impl Into<String>)>,
+) -> TypeBuilder {
+	let (field_names, field_types) = fields
+		.enumerate()
+		.map(|(i, (field_name, field_type))| ((field_name.into(), i), field_type.into()))
+		.unzip();
+	TypeBuilder {
+		name: name.into(),
+		kind: TypeKind::Struct,
+		type_parameters: Default::default(),
+		field_names,
+		field_types,
+		variant_names: Default::default(),
+		variants: Default::default(),
+		functions: Default::default(),
 	}
 }

@@ -24,10 +24,19 @@ impl<'a> SerializeSequence<'a> {
 		len: impl Into<Option<usize>>,
 	) -> Result<Self, SerializerError> {
 		let element_types = match expected_type.kind() {
-			TypeKind::Tuple | TypeKind::TupleStruct => {
-				ElementTypes::Consuming(expected_type.fields().1.iter().cloned().rev().collect())
-			}
-			TypeKind::Array => ElementTypes::Repeating(expected_type.type_parameters()[0].clone()),
+			TypeKind::Tuple | TypeKind::TupleStruct => ElementTypes::Consuming(
+				expected_type
+					.fields()
+					.1
+					.iter()
+					.map(|type_id| TypeHandle::from_type_id(context.clone(), *type_id))
+					.rev()
+					.collect(),
+			),
+			TypeKind::Array => ElementTypes::Repeating(TypeHandle::from_type_id(
+				context.clone(),
+				expected_type.type_parameters()[0],
+			)),
 			_ => {
 				return Err(SerializerError::InvalidTypeForSequence {
 					expected: expected_type,
@@ -101,7 +110,11 @@ impl<'a> SerializeSequence<'a> {
 				}
 			}
 			TypeKind::Array => {
-				let value = Value::new_array(self.context, &self.expected_type.type_parameters()[0], self.result)?;
+				let value = Value::new_array(
+					self.context,
+					&TypeHandle::from_type_id(self.context.clone(), self.expected_type.type_parameters()[0]),
+					self.result,
+				)?;
 				assert!(value.has_type(&self.expected_type));
 				Ok(value)
 			}

@@ -1,32 +1,17 @@
-use std::collections::HashMap;
+use super::{TypeBuilder, TypeKind};
 
-use super::{BasicType, BasicTypeBase, TypeHandle, TypeKind};
+//mod functions;
+//mod ops;
 
-pub type TupleStructType = BasicType<TupleStructImpl>;
-
-pub struct TupleStructImpl {
-	name: Box<str>,
-	element_types: Vec<TypeHandle>,
-}
-
-impl TupleStructType {
-	pub fn new(name: impl Into<Box<str>>, element_types: impl Into<Vec<TypeHandle>>) -> Self {
-		let (name, element_types) = (name.into(), element_types.into());
-
-		Self::from_base(TupleStructImpl { name, element_types })
-	}
-}
-
-impl BasicTypeBase for TupleStructImpl {
-	fn name(&self) -> &str {
-		&self.name
-	}
-
-	fn kind(&self) -> TypeKind {
-		TypeKind::TupleStruct
-	}
-
-	fn fields(&self) -> (Option<&HashMap<Box<str>, usize>>, &[TypeHandle]) {
-		(None, &self.element_types)
+pub fn new_tuple_struct_type(name: impl Into<String>, field_types: impl Into<Vec<String>>) -> TypeBuilder {
+	TypeBuilder {
+		name: name.into(),
+		kind: TypeKind::TupleStruct,
+		type_parameters: Default::default(),
+		field_names: Default::default(),
+		field_types: field_types.into(),
+		variant_names: Default::default(),
+		variants: Default::default(),
+		functions: Default::default(),
 	}
 }

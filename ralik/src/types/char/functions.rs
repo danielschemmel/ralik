@@ -1,10 +1,9 @@
 use num::ToPrimitive;
 
-use crate::error::RuntimeError;
+use crate::error::{Overflow, RuntimeError};
 use crate::{Context, TypeHandle, Value};
 
 use super::super::arguments::Arguments;
-use super::super::Overflow;
 
 pub(crate) fn clone(_context: &Context, this_type: &TypeHandle, arguments: &[Value]) -> Result<Value, RuntimeError> {
 	arguments.check_len(1)?;

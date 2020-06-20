@@ -89,8 +89,8 @@ impl Arguments for [Value] {
 		} else {
 			Err(RuntimeError::InvalidArgumentType {
 				argument_number: index,
-				actual_type_name: self[index].get_type().name().into(),
-				expected_type_name: expected_type.name().to_owned(),
+				actual_type_name: (&*self[index].get_type().name()).into(),
+				expected_type_name: (&*expected_type.name()).to_owned(),
 			})
 		}
 	}

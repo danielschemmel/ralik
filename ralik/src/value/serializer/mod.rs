@@ -209,11 +209,11 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		let value = match self.expected_type.kind() {
 			TypeKind::String => Value::new_string(self.context, value)?,
 			TypeKind::Array => {
-				let element_type = &self.expected_type.type_parameters()[0];
+				let element_type = TypeHandle::from_type_id(self.context.clone(), self.expected_type.type_parameters()[0]);
 				match element_type.kind() {
 					TypeKind::Char => {
 						let chars: Result<Vec<Value>, _> = value.chars().map(|c| Value::new_char(self.context, c)).collect();
-						Value::new_array(self.context, element_type, chars?)?
+						Value::new_array(self.context, &element_type, chars?)?
 					}
 					_ => {
 						return Err(SerializerError::InvalidTypeForString {
@@ -256,7 +256,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	fn serialize_some<T: ?Sized + ser::Serialize>(self, value: &T) -> Result<Self::Ok, Self::Error> {
 		let value = match self.expected_type.kind() {
 			TypeKind::Enum => {
-				let (variant_names, variants) = self.expected_type.variants().unwrap();
+				let (variant_names, variants) = self.expected_type.variants();
 				match variant_names.get("Some").map(|&id| &variants[id]) {
 					Some(Variant::Tuple(_, element_types)) => {
 						if element_types.len() != 1 {
@@ -272,7 +272,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 							Box::new([Value::from_serde_by_type(
 								self.context,
 								value,
-								element_types[0].clone(),
+								TypeHandle::from_type_id(self.context.clone(), element_types[0]),
 							)?]) as Box<[Value]>,
 						)?
 					}
@@ -301,7 +301,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_unit_struct(self, name: &'static str) -> Result<Self::Ok, Self::Error> {
-		if self.expected_type.name() != name {
+		if (&*self.expected_type.name()) != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
 				actual: name.into(),
@@ -321,7 +321,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		_variant_index: u32,
 		variant: &'static str,
 	) -> Result<Self::Ok, Self::Error> {
-		if self.expected_type.name() != name {
+		if (&*self.expected_type.name()) != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
 				actual: name.into(),
@@ -329,7 +329,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		} else {
 			match self.expected_type.kind() {
 				TypeKind::Enum => {
-					let (variant_names, variants) = self.expected_type.variants().unwrap();
+					let (variant_names, variants) = self.expected_type.variants();
 					if let Some(variant_id) = variant_names.get(variant) {
 						match variants[*variant_id] {
 							Variant::Unit(_) => Ok(Value::new_enum_unit_variant(self.context, name, variant)?),
@@ -375,7 +375,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		variant: &'static str,
 		value: &T,
 	) -> Result<Self::Ok, Self::Error> {
-		if self.expected_type.name() != name {
+		if (&*self.expected_type.name()) != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
 				actual: name.into(),
@@ -383,14 +383,18 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		} else {
 			match self.expected_type.kind() {
 				TypeKind::Enum => {
-					let (variant_names, variants) = self.expected_type.variants().unwrap();
+					let (variant_names, variants) = self.expected_type.variants();
 					if let Some(variant_id) = variant_names.get(variant) {
 						match &variants[*variant_id] {
 							Variant::Tuple(_, types) => Ok(Value::new_enum_tuple_variant(
 								self.context,
 								name,
 								variant,
-								Box::new([Value::from_serde_by_type(self.context, value, types[0].clone())?]) as Box<[Value]>,
+								Box::new([Value::from_serde_by_type(
+									self.context,
+									value,
+									TypeHandle::from_type_id(self.context.clone(), types[0]),
+								)?]) as Box<[Value]>,
 							)?),
 							_ => Err(SerializerError::VariantMismatch {
 								r#type: self.expected_type,
@@ -420,7 +424,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_tuple_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
-		if self.expected_type.name() != name {
+		if (&*self.expected_type.name()) != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
 				actual: name.into(),
@@ -437,7 +441,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		variant: &'static str,
 		len: usize,
 	) -> Result<Self::SerializeTupleVariant, Self::Error> {
-		if self.expected_type.name() != name {
+		if (&*self.expected_type.name()) != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
 				actual: name.into(),
@@ -452,7 +456,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 	}
 
 	fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct, Self::Error> {
-		if self.expected_type.name() != name {
+		if (&*self.expected_type.name()) != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
 				actual: name.into(),
@@ -469,7 +473,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		variant: &'static str,
 		len: usize,
 	) -> Result<Self::SerializeStructVariant, Self::Error> {
-		if self.expected_type.name() != name {
+		if (&*self.expected_type.name()) != name {
 			Err(SerializerError::TypeNameMismatch {
 				expected: self.expected_type,
 				actual: name.into(),
@@ -477,7 +481,7 @@ impl<'a> ser::Serializer for Serializer<'a> {
 		} else {
 			match self.expected_type.kind() {
 				TypeKind::Enum => {
-					let (variant_names, variants) = self.expected_type.variants().unwrap();
+					let (variant_names, variants) = self.expected_type.variants();
 					if let Some(&variant_id) = variant_names.get(variant) {
 						match &variants[variant_id] {
 							Variant::Struct(_, _, _) => {
