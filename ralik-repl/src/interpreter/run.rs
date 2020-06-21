@@ -29,7 +29,7 @@ pub fn main(args: Args) -> Result<ReturnCode> {
 
 	match ralik::eval_str(&args.command, &context) {
 		Ok(expr) => {
-			println!("{:+#?}", expr);
+			println!("{}", expr);
 			Ok(ReturnCode::Success)
 		}
 		Err(err) => {
