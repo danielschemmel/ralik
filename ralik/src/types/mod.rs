@@ -8,7 +8,8 @@ use crate::{Context, Value};
 mod arguments;
 
 mod array;
-pub(crate) use self::array::{array_generic, make_array_name};
+pub use self::array::array_generic;
+pub(crate) use self::array::make_array_name;
 
 mod bool;
 pub use self::bool::{make_bool_name, new_bool_type};
@@ -34,7 +35,7 @@ pub use self::r#struct::new_struct_type;
 
 mod tuple;
 pub(crate) use self::tuple::make_tuple_name;
-//pub(crate) use self::tuple::tuple_generic;
+pub use self::tuple::tuple_generic;
 
 mod tuple_struct;
 pub use self::tuple_struct::new_tuple_struct_type;

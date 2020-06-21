@@ -43,14 +43,14 @@ impl Context {
 
 	pub fn get_tuple_type(&self, element_type_names: Vec<impl AsRef<str>>) -> Result<TypeHandle, InvalidTupleType> {
 		let name = crate::types::make_tuple_name(element_type_names.iter().map(|name| name.as_ref()));
-		if let Some(array_type) = self.get_type(&name) {
-			return Ok(array_type);
+		if let Some(tuple_type) = self.get_type(&name) {
+			return Ok(tuple_type);
 		}
 
 		let element_type_names = element_type_names.iter().map(|name| name.as_ref()).collect::<Vec<_>>();
 		let generic_type_build = match self
 			.0
-			.arrays
+			.tuples
 			.read()
 			.unwrap()
 			.ok_or_else(|| InvalidTupleType::MissingGeneric)?(self, &element_type_names)

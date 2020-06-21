@@ -83,6 +83,7 @@ impl Context {
 		context.register_types(vec![crate::types::new_char_type()]);
 		context.register_types(vec![crate::types::new_integer_type()]);
 		context.register_types(vec![crate::types::new_string_type()]);
+		context.register_tuple_generic(crate::types::tuple_generic);
 		context.register_array_generic(crate::types::array_generic);
 
 		context.insert_macro("concat", |context, mut arguments| {
