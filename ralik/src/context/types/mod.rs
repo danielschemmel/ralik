@@ -21,7 +21,7 @@ impl Context {
 	}
 
 	pub fn get_unit_type(&self) -> Result<TypeHandle, InvalidTupleType> {
-		unimplemented!()
+		self.get_tuple_type(vec![] as Vec<String>)
 	}
 
 	pub fn get_bool_type(&self) -> Result<TypeHandle, InvalidBoolType> {

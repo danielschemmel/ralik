@@ -36,10 +36,18 @@ impl fmt::Display for Value {
 				Data::Array(value) => {
 					assert!(value.len() > 0);
 					write!(f, "(")?;
-					for element in value.iter() {
-						write!(f, "{}, ", &element)?;
+					for (i, element) in value.iter().enumerate() {
+						if i > 0 {
+							write!(f, ", {}", element)?;
+						} else {
+							write!(f, "{}", element)?;
+						}
 					}
-					write!(f, ")")
+					if value.len() == 1 {
+						write!(f, ", )")
+					} else {
+						write!(f, ")")
+					}
 				}
 				_ => panic!("Invalid tuple representation"),
 			},
@@ -122,6 +130,7 @@ impl fmt::Display for Value {
 			TypeKind::Array => match &self.data {
 				Data::Empty => write!(f, "[]"),
 				Data::Array(value) => {
+					write!(f, "[")?;
 					for (i, element) in value.iter().enumerate() {
 						if i > 0 {
 							write!(f, ", {}", element)?;
@@ -129,7 +138,7 @@ impl fmt::Display for Value {
 							write!(f, "{}", element)?;
 						}
 					}
-					Ok(())
+					write!(f, "]")
 				}
 				_ => panic!("Invalid array representation"),
 			},
