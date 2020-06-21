@@ -1,9 +1,26 @@
+use anyhow::anyhow;
 use num::ToPrimitive;
 
 use crate::error::{Overflow, RuntimeError};
 use crate::{Context, TypeHandle, Value};
 
 use super::super::arguments::Arguments;
+
+pub(crate) fn as_bytes(context: &Context, _this_type: &TypeHandle, arguments: &[Value]) -> Result<Value, RuntimeError> {
+	arguments.check_len(1)?;
+	let this = arguments.as_string(0, context)?;
+	let array = this
+		.as_bytes()
+		.iter()
+		.map(|byte| Value::new_integer(context, *byte))
+		.collect::<Result<Vec<_>, _>>()?;
+
+	Ok(Value::new_array(
+		context,
+		&context.get_integer_type().map_err(|err| anyhow!(err))?,
+		array,
+	)?)
+}
 
 pub(crate) fn clone(_context: &Context, this_type: &TypeHandle, arguments: &[Value]) -> Result<Value, RuntimeError> {
 	arguments.check_len(1)?;

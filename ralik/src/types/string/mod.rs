@@ -24,6 +24,7 @@ pub fn new_string_type() -> TypeBuilder {
 			(crate::ops::LESS_OR_EQUAL, ops::less_or_equal),
 			(crate::ops::GREATER, ops::greater),
 			(crate::ops::GREATER_OR_EQUAL, ops::greater_or_equal),
+			("as_bytes", functions::as_bytes),
 			("clone", functions::clone),
 			("eq_ignore_ascii_case", functions::eq_ignore_ascii_case),
 			("is_ascii", functions::is_ascii),
