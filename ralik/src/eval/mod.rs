@@ -136,6 +136,11 @@ impl Eval for Expression {
 					}
 				}
 			}
+			Expression::Block(_) => unimplemented!(),
+			Expression::If(_, _, _) => unimplemented!(),
+			Expression::Else(_, _, _) => unimplemented!(),
+			Expression::While(_, _, _) => unimplemented!(),
+			Expression::Loop(_, _, _) => unimplemented!(),
 		}
 	}
 }

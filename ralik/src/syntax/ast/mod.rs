@@ -9,6 +9,11 @@ pub enum Expression {
 	Suffix(Box<Expression>, Suffix),
 	Prefix(Box<Expression>, Prefix),
 	Binary(Box<Expression>, Box<Expression>, BinaryOperator),
+	Block(Block),
+	If(Span, Box<Expression>, Block),
+	Else(Box<Expression>, Span, Block),
+	While(Span, Box<Expression>, Block),
+	Loop(Option<(String, Span)>, Span, Block),
 }
 
 impl Expression {
@@ -18,6 +23,52 @@ impl Expression {
 			Expression::Suffix(_, suffix) => suffix.span(),
 			Expression::Prefix(_, prefix) => prefix.span(),
 			Expression::Binary(_lhs, _rhs, op) => op.span(),
+			Expression::Block(block) => block.span(),
+			Expression::If(if_span, _condition, _body) => *if_span,
+			Expression::Else(_lhs, else_span, _body) => *	else_span,
+			Expression::While(while_span, _condition, _body) => *while_span,
+			Expression::Loop(_label, loop_span, _body) => *loop_span,
+		}
+	}
+}
+
+#[derive(Clone, Debug)]
+pub struct Block {
+	pub statements: Vec<Statement>,
+	pub expression: Option<Box<Expression>>,
+	pub span: Span,
+}
+
+impl Block {
+	pub fn span(&self) -> Span {
+		self.span
+	}
+}
+
+#[derive(Clone, Debug)]
+pub enum Statement {
+	Expression(Expression),
+	Let(Span, bool, Pattern, Option<Expression>),
+}
+
+impl Statement {
+	pub fn span(&self) -> Span {
+		match self {
+			Statement::Expression(expression) => expression.span(),
+			Statement::Let(let_span, _is_mut, _pattern, _assignment) => *let_span,
+		}
+	}
+}
+
+#[derive(Clone, Debug)]
+pub enum Pattern {
+	Identifier(String, Span),
+}
+
+impl Pattern {
+	pub fn span(&self) -> Span {
+		match self {
+			Pattern::Identifier(_id, span ) => *span,
 		}
 	}
 }
