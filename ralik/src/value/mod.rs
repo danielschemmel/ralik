@@ -12,13 +12,13 @@ mod new;
 #[cfg(feature = "serde")]
 mod serializer;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Value {
 	r#type: TypeHandle,
 	data: Data,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 enum Data {
 	Empty,
 	Bool(bool),

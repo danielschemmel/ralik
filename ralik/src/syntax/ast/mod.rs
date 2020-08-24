@@ -25,7 +25,7 @@ impl Expression {
 			Expression::Binary(_lhs, _rhs, op) => op.span(),
 			Expression::Block(block) => block.span(),
 			Expression::If(if_span, _condition, _body) => *if_span,
-			Expression::Else(_lhs, else_span, _body) => *	else_span,
+			Expression::Else(_lhs, else_span, _body) => *else_span,
 			Expression::While(while_span, _condition, _body) => *while_span,
 			Expression::Loop(_label, loop_span, _body) => *loop_span,
 		}
@@ -68,7 +68,7 @@ pub enum Pattern {
 impl Pattern {
 	pub fn span(&self) -> Span {
 		match self {
-			Pattern::Identifier(_id, span ) => *span,
+			Pattern::Identifier(_id, span) => *span,
 		}
 	}
 }

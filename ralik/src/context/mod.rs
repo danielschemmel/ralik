@@ -22,8 +22,8 @@ mod variables;
 /**
 The `Context` stores all types, free functions and global variables.
 
-While it can be customized to a large extent, it is suggested to start with the default context, which contains working
-types for the core types:
+While it can be customized to a large extent, it is suggested to start with the default context, which contains
+reasonable implementations of the core types:
 ```rust
 # use ralik::Context;
 let context = Context::new();
@@ -47,6 +47,13 @@ Value::new_bool(&context, true).unwrap_err();
 #[derive(Clone)]
 pub struct Context(Arc<ContextImpl>);
 
+impl PartialEq for Context {
+	fn eq(&self, other: &Self) -> bool {
+		Arc::ptr_eq(&self.0, &other.0)
+	}
+}
+impl Eq for Context {}
+
 struct ContextImpl {
 	arrays: RwLock<Option<GenericTypeCreator>>,
 	tuples: RwLock<Option<GenericTypeCreator>>,
@@ -60,7 +67,7 @@ pub type Function = fn(&Context, &[Value]) -> Result<Value, RuntimeError>;
 pub type GenericTypeCreator = fn(&Context, &[&str]) -> Result<GenericTypeBuilder, anyhow::Error>;
 pub type Macro = fn(&Context, &[Value]) -> Result<Value, RuntimeError>;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub(crate) struct TypeId(usize);
 
 enum Thing {

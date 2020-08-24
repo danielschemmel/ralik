@@ -6,6 +6,7 @@ use crate::types::{MemberFunction, TypeKind, Variant};
 
 use super::super::{Context, TypeId};
 
+#[derive(Eq, PartialEq)]
 pub struct TypeHandle {
 	context: Context,
 	type_id: TypeId,
