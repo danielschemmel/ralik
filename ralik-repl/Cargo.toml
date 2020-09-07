@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 anyhow = "1"
 atty = "0.2"
-build-info = { version = "0.0.19", features = ["serde"] }
+build-info = { version = "0.0.20", features = ["serde"] }
 ctrlc = "3"
 rustyline = "6"
 serde = { version = "1", features = ["derive"] }
@@ -26,4 +26,4 @@ ralik = { version = "0.0.1-alpha.0", path = "../ralik", features = ["serde"] }
 pretty_assertions = "0.6"
 
 [build-dependencies]
-build-info-build = "0.0.19"
+build-info-build = "0.0.20"
