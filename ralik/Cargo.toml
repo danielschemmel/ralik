@@ -2,7 +2,7 @@
 name = "ralik"
 version = "0.0.1-alpha.0"
 authors = ["Daniel Schemmel <daniel@schemmel.net>"]
-edition = "2018"
+edition = "2021"
 publish = ["crates-io"]
 repository = "https://github.com/danielschemmel/ralik/"
 description = "The Rust ALIKe language"
